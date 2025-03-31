@@ -1,114 +1,124 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform, Dimensions } from 'react-native';
 
-const styles = StyleSheet.create({
-  loginContainer: {
+const { width, height } = Dimensions.get('window');
+
+export default StyleSheet.create({
+  container: {
     flex: 1,
-    justifyContent: 'center',
+  },
+  gradientBackground: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  keyboardAvoidView: {
+    flex: 1,
+    paddingHorizontal: 24,
+    justifyContent: 'space-between',
+  },
+  logoContainer: {
     alignItems: 'center',
-    backgroundColor: '#a7dcd9',
-    padding: 16,
+    marginTop: Platform.OS === 'ios' ? 60 : 40,
   },
   logo: {
-    width: 100,
-    height: 100,
+    width: 80,
+    height: 80,
     marginBottom: 20,
   },
   welcomeText: {
-    fontSize: 24,
+    fontSize: 36,
     fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#162e99',
+    color: '#fff',
+    marginBottom: 8,
   },
   tagline: {
     fontSize: 16,
-    color: '#333',
-    marginBottom: 30,
+    color: 'rgba(255,255,255,0.8)',
     textAlign: 'center',
+    marginBottom: 10,
   },
-  inputContainer: {
+  formContainer: {
     width: '100%',
     marginBottom: 20,
   },
-  input: {
-    width: '100%',
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    marginBottom: 10,
-    fontSize: 16,
-    backgroundColor: '#fff',
+  inputContainer: {
+    marginBottom: 25,
   },
-  passwordInputContainer: {
+  inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    width: '100%',
-    position: 'relative',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 12,
+    height: 55,
+    marginBottom: 16,
+    paddingHorizontal: 15,
   },
-  passwordInput: {
+  inputIcon: {
+    marginRight: 10,
+  },
+  input: {
     flex: 1,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
+    color: '#fff',
     fontSize: 16,
-    backgroundColor: '#fff',
+    height: '100%',
   },
   visibilityButton: {
-    position: 'absolute',
-    right: 10,
-    top: '50%',
-    transform: [{ translateY: -12 }],
-  },
-  visibilityText: {
-    color: '#007BFF',
-    fontSize: 14,
+    padding: 8,
   },
   loginButton: {
-    width: '100%',
-    padding: 12,
-    backgroundColor: '#162e99',
-    borderRadius: 8,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    height: 55,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+    marginBottom: 16,
   },
   loginButtonText: {
-    color: '#fff',
-    fontSize: 18,
+    color: '#2c3e50',
+    fontSize: 16,
     fontWeight: 'bold',
   },
   forgotPasswordButton: {
-    marginBottom: 10,
+    alignSelf: 'center',
   },
   forgotPasswordText: {
-    color: '#007BFF',
+    color: 'rgba(255,255,255,0.8)',
     fontSize: 14,
+    textAlign: 'center',
+  },
+  footer: {
+    marginBottom: Platform.OS === 'ios' ? 40 : 30,
   },
   signupContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  signupText: {
-    fontSize: 14,
-    color: '#333',
-  },
-  signupButtonText: {
-    color: '#007BFF',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  loginContainer: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    marginBottom: 30,
   },
-  logo: {
-    width: 100,
-    height: 100,
-    marginBottom: 20,
+  signupText: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 15,
+  },
+  signupButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: 'bold',
+  },
+  socialLogin: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  socialButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 10,
   },
 });
-
-export default styles;

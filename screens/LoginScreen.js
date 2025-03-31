@@ -6,104 +6,142 @@ import {
   Text,
   View,
   Image,
+  StatusBar,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
-import styles from "../styles/LoginScreenStyle"; // Import the styles
-import { useNavigation } from '@react-navigation/native'; // useNavigation'ı import edin
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
+import styles from '../styles/LoginScreenStyle'; // Import the styles
 
-class LoginScreen extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      email: '',
-      password: '',
-      isPasswordVisible: false,
-    };
-  }
-  
+const LoginScreen = (props) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const navigation = useNavigation();
 
-  togglePasswordVisibility = () => {
-    this.setState((prevState) => ({
-      isPasswordVisible: !prevState.isPasswordVisible,
-    }));
+  const togglePasswordVisibility = () => {
+    setIsPasswordVisible(!isPasswordVisible);
   };
 
-  handleLogin = () => {
-    const { email, password } = this.state;
-    // Giriş işlemleri burada yapılacak
+  const handleLogin = () => {
     console.log('Giriş yapılıyor:', email, password);
-    // Giriş başarılıysa ana ekrana yönlendirilebilir
-    this.props.navigation.navigate('Home'); // HomeScreen'e yönlendir
+    navigation.navigate('Home');
   };
 
-  render() {
-    const { email, password, isPasswordVisible } = this.state;
-
-    return (
-      <SafeAreaView style={styles.loginContainer}>
-        
-        {/* <Image
-          source={require('../assets/logo.png')} // Şirket logosu
-          style={styles.logo}
-        /> */}
-        
-        <Text style={styles.welcomeText}>Welcome to Tradebase</Text>
-        <Text style={styles.tagline}>
-          Login to access your account and start trading.
-        </Text>
-
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            value={email}
-            onChangeText={(text) => this.setState({ email: text })}
-            keyboardType="email-address"
-          />
-          <View style={styles.passwordInputContainer}>
-            <TextInput
-              style={styles.passwordInput}
-              placeholder="Password"
-              value={password}
-              onChangeText={(text) => this.setState({ password: text })}
-              secureTextEntry={!isPasswordVisible}
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" />
+      <LinearGradient
+        colors={['#2c3e50', '#3498db']}
+        style={styles.gradientBackground}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardAvoidView}
+        >
+          <View style={styles.logoContainer}>
+            <Image
+              source={require('../assets/logo.png')}
+              style={[
+                styles.logo,
+                {
+                  shadowColor: '#000',
+                  shadowOffset: { width: 5, height: 4 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 6,
+                  elevation: 8,
+                },
+              ]}
+              resizeMode="contain"
             />
-            <TouchableOpacity
-              style={styles.visibilityButton}
-              onPress={this.togglePasswordVisibility}
+            <Text
+              style={[
+                styles.tagline,
+                {
+                  fontSize: 18,
+                  fontFamily: 'System',
+                  color: 'rgba(255, 255, 255, 0.95)',
+                  letterSpacing: 0.5,
+                  lineHeight: 24,
+                  textAlign: 'center',
+                  marginBottom: 20, // Reduced marginBottom
+                },
+              ]}
             >
-              <Text style={styles.visibilityText}>
-                {isPasswordVisible ? 'Hide' : 'Show'}
-              </Text>
+              Finansal geleceğinizi yönetin
+            </Text>
+          </View>
+
+          <View style={styles.formContainer}>
+            <View style={styles.inputContainer}>
+              <View style={styles.inputWrapper}>
+                <Ionicons name="mail-outline" size={22} color="#fff" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Email"
+                  placeholderTextColor="rgba(255,255,255,0.7)"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={styles.inputWrapper}>
+                <Ionicons name="lock-closed-outline" size={22} color="#fff" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Şifre"
+                  placeholderTextColor="rgba(255,255,255,0.7)"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!isPasswordVisible}
+                />
+                <TouchableOpacity onPress={togglePasswordVisibility} style={styles.visibilityButton}>
+                  <Ionicons
+                    name={isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
+                    size={22}
+                    color="#fff"
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+              <Text style={styles.loginButtonText}>GİRİŞ YAP</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.forgotPasswordButton}>
+              <Text style={styles.forgotPasswordText}>Şifremi Unuttum</Text>
             </TouchableOpacity>
           </View>
-        </View>
 
-        <TouchableOpacity
-          style={styles.loginButton}
-          onPress={this.handleLogin}
-        >
-          <Text style={styles.loginButtonText}>Login</Text>
-        </TouchableOpacity>
+          <View style={styles.footer}>
+            <View style={styles.signupContainer}>
+              <Text style={styles.signupText}>Hesabınız yok mu? </Text>
+              <TouchableOpacity>
+                <Text style={styles.signupButtonText}>Kayıt Ol</Text>
+              </TouchableOpacity>
+            </View>
 
-        <TouchableOpacity style={styles.forgotPasswordButton}>
-          <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-        </TouchableOpacity>
+            <View style={styles.socialLogin}>
+              <TouchableOpacity style={styles.socialButton}>
+                <Ionicons name="logo-google" size={20} color="#fff" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.socialButton}>
+                <Ionicons name="logo-apple" size={20} color="#fff" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.socialButton}>
+                <Ionicons name="logo-facebook" size={20} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </LinearGradient>
+    </SafeAreaView>
+  );
+};
 
-        <View style={styles.signupContainer}>
-          <Text style={styles.signupText}>Don't have an account? </Text>
-          <TouchableOpacity>
-            <Text style={styles.signupButtonText}>Sign Up</Text>
-          </TouchableOpacity>
-        </View>
-        
-      </SafeAreaView>
-    );
-  }
-}
-
-
-
-export default function(props) {
-  const navigation = useNavigation();
-  return <LoginScreen {...props} navigation={navigation} />;
-}
+export default LoginScreen;
