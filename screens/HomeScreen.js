@@ -23,6 +23,10 @@ const HomeScreen = () => {
     navigation.navigate('Market'); // FAQScreen'e yönlendirme
   };
 
+  const handleSettingsPress2 = () => {
+    navigation.navigate('Profile'); // FAQScreen'e yönlendirme
+  };
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -173,7 +177,7 @@ const HomeScreen = () => {
           <Text style={[styles.footerText, styles.activeTab]}>Ana Sayfa</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.footerTab}>
+        <TouchableOpacity style={styles.footerTab} onPress={handleSettingsPress2}> {/* onPress ekleyin */}
           <Ionicons name="wallet-outline" size={22} color="#95a5a6" />
           <Text style={styles.footerText}>Portföyüm</Text>
         </TouchableOpacity>

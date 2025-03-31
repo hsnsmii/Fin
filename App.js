@@ -5,6 +5,7 @@ import HomeScreen from './screens/HomeScreen';
 import FAQScreen from './screens/FAQScreen';
 import MarketScreen from './screens/MarketScreen';
 import LoginScreen from './screens/LoginScreen';
+import ProfileScreen from './screens/ProfileScreen';
 
 const Stack = createStackNavigator();
 
@@ -16,6 +17,7 @@ const App = () => {
         <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
         <Stack.Screen name="FAQ" component={FAQScreen} options={{ title: 'Sıkça Sorulan Sorular' }} />
         <Stack.Screen name="Market" component={MarketScreen} options={{  }} />
+        <Stack.Screen name="Profile" component={ProfileScreen} options={{  }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
