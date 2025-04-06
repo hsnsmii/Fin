@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-const MarketScreenStyle = StyleSheet.create({
+const styles = {
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
@@ -261,6 +261,6 @@ const MarketScreenStyle = StyleSheet.create({
     color: '#3498db',
     fontWeight: '600',
   },
-});
+};
 
-export default MarketScreenStyle;
+export default styles;
