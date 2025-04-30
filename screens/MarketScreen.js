@@ -1,286 +1,72 @@
-import React from 'react';
-import {
-  SafeAreaView,
-  TextInput,
-  TouchableOpacity,
-  Text,
-  View,
-  ScrollView,
-  StatusBar,
-  Image,
-  Animated,
-} from 'react-native';
-import { Ionicons, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import styles from '../styles/MarketScreenStyle'; 
+// screens/MarketScreen.js
+import React, { useEffect, useState } from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { getSelectedStocks } from '../services/fmpApi';
+import { useNavigation } from '@react-navigation/native';
 
-class MarketScreen extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      searchQuery: '',
-      favorites: {},
-      favoriteStocks: [],
-      activeTab: 'all',
-      stockData: [
-        { name: 'Apple Inc.', symbol: 'AAPL', price: 120, prevPrice: 115, volume: '75.2M', marketCap: '2.3T' },
-        { name: 'Tesla Inc.', symbol: 'TSLA', price: 150, prevPrice: 145, volume: '32.5M', marketCap: '551.8B' },
-        { name: 'Amazon.com Inc.', symbol: 'AMZN', price: 90, prevPrice: 95, volume: '28.7M', marketCap: '1.2T' },
-        { name: 'Microsoft Corporation', symbol: 'MSFT', price: 200, prevPrice: 210, volume: '25.1M', marketCap: '2.1T' },
-        { name: 'NVIDIA Corporation', symbol: 'NVDA', price: 50, prevPrice: 55, volume: '43.6M', marketCap: '780.5B' },
-        { name: 'Netflix Inc.', symbol: 'NFLX', price: 75, prevPrice: 72, volume: '18.9M', marketCap: '325.7B' },
-        { name: 'Alphabet Inc.', symbol: 'GOOGL', price: 180, prevPrice: 175, volume: '22.3M', marketCap: '1.9T' },
-        { name: 'Meta Platforms Inc.', symbol: 'META', price: 320, prevPrice: 310, volume: '19.5M', marketCap: '821.4B' },
-        { name: 'Berkshire Hathaway Inc.', symbol: 'BRK.B', price: 3200, prevPrice: 3100, volume: '5.2M', marketCap: '782.9B' },
-        { name: 'Johnson & Johnson', symbol: 'JNJ', price: 160, prevPrice: 155, volume: '8.7M', marketCap: '421.5B' },
-        { name: 'Procter & Gamble Co.', symbol: 'PG', price: 135, prevPrice: 130, volume: '7.1M', marketCap: '318.9B' },
-        { name: 'Coca-Cola Company', symbol: 'KO', price: 55, prevPrice: 52, volume: '12.8M', marketCap: '237.6B' },
-        { name: 'Walmart Inc.', symbol: 'WMT', price: 135, prevPrice: 130, volume: '9.3M', marketCap: '384.2B' },
-        { name: 'Visa Inc.', symbol: 'V', price: 240, prevPrice: 245, volume: '6.9M', marketCap: '495.3B' },
-        { name: 'Pfizer Inc.', symbol: 'PFE', price: 40, prevPrice: 42, volume: '17.5M', marketCap: '225.1B' },
-        { name: 'The Walt Disney Company', symbol: 'DIS', price: 115, prevPrice: 110, volume: '14.2M', marketCap: '210.8B' },
-        { name: 'Intel Corporation', symbol: 'INTC', price: 45, prevPrice: 47, volume: '23.6M', marketCap: '189.4B' },
-        { name: 'Exxon Mobil Corporation', symbol: 'XOM', price: 80, prevPrice: 85, volume: '16.4M', marketCap: '345.7B' },
-        { name: 'Chevron Corporation', symbol: 'CVX', price: 160, prevPrice: 165, volume: '11.3M', marketCap: '312.9B' },
-        { name: 'General Electric Company', symbol: 'GE', price: 90, prevPrice: 92, volume: '8.9M', marketCap: '97.8B' },
-        { name: 'IBM Corporation', symbol: 'IBM', price: 145, prevPrice: 140, volume: '5.6M', marketCap: '134.2B' },
-      ],
-    };
-  }
+const MarketScreen = () => {
+  const [stocks, setStocks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigation = useNavigation();
 
-  handleFavoriteToggle = (stockName) => {
-    this.setState(
-      (prevState) => {
-        const updatedFavorites = {
-          ...prevState.favorites,
-          [stockName]: !prevState.favorites[stockName],
-        };
-
-        const updatedFavoriteStocks = updatedFavorites[stockName]
-          ? [...prevState.favoriteStocks, stockName]
-          : prevState.favoriteStocks.filter((name) => name !== stockName);
-
-        return {
-          favorites: updatedFavorites,
-          favoriteStocks: updatedFavoriteStocks,
-        };
+  useEffect(() => {
+    const fetchStocks = async () => {
+      try {
+        const data = await getSelectedStocks();
+        setStocks(data);
+      } catch (error) {
+        console.error('Stock fetch error:', error);
+      } finally {
+        setLoading(false);
       }
-    );
-  };
+    };
 
-  calculatePercentageChange = (price, prevPrice) => {
-    return (((price - prevPrice) / prevPrice) * 100).toFixed(2);
-  };
+    fetchStocks();
+  }, []);
 
-  setActiveTab = (tab) => {
-    this.setState({ activeTab: tab });
-  };
-
-  render() {
-    const { searchQuery, stockData, favorites, favoriteStocks, activeTab } = this.state;
-    
-    let displayStockData = stockData;
-    
-    if (activeTab === 'favorites') {
-      displayStockData = stockData.filter((stock) => favorites[stock.name]);
-    } else if (searchQuery) {
-      displayStockData = stockData.filter((stock) =>
-        stock.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        stock.symbol.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
+  const renderItem = ({ item }) => {
+    const price = Number(item.price).toFixed(2);
     return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="light-content" />
-        
-        {/* Header with gradient */}
-        <LinearGradient
-          colors={["#2c3e50", "#3498db"]}
-          style={styles.header}
-        >
-          <View style={styles.headerContent}>
-            <TouchableOpacity style={styles.backButton}>
-              <Ionicons name="chevron-back" size={24} color="white" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Piyasalar</Text>
-            <TouchableOpacity style={styles.filterButton}>
-              <Ionicons name="options-outline" size={22} color="white" />
-            </TouchableOpacity>
-          </View>
-          
-          {/* Search Bar */}
-          <View style={styles.searchContainer}>
-            <Ionicons name="search" size={20} color="#8e8e93" style={styles.searchIcon} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Hisse senedi ara..."
-              placeholderTextColor="#8e8e93"
-              value={searchQuery}
-              onChangeText={(text) => this.setState({ searchQuery: text })}
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity 
-                onPress={() => this.setState({ searchQuery: '' })}
-                style={styles.clearButton}
-              >
-                <Ionicons name="close-circle" size={18} color="#8e8e93" />
-              </TouchableOpacity>
-            )}
-          </View>
-        </LinearGradient>
-        
-        {/* Tab Selector */}
-        <View style={styles.tabContainer}>
-          <TouchableOpacity 
-            style={[styles.tab, activeTab === 'all' && styles.activeTab]}
-            onPress={() => this.setActiveTab('all')}
-          >
-            <Text style={[styles.tabText, activeTab === 'all' && styles.activeTabText]}>
-              Tüm Hisseler
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.tab, activeTab === 'favorites' && styles.activeTab]}
-            onPress={() => this.setActiveTab('favorites')}
-          >
-            <Text style={[styles.tabText, activeTab === 'favorites' && styles.activeTabText]}>
-              Favorilerim
-            </Text>
-            {favoriteStocks.length > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{favoriteStocks.length}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.item}
+        onPress={() => navigation.navigate('StockDetail', { symbol: item.symbol })}
+      >
+        <View>
+          <Text style={styles.symbol}>{item.symbol}</Text>
+          <Text style={styles.name}>{item.companyName}</Text>
         </View>
-        
-        {/* Column Headers */}
-        <View style={styles.columnHeaders}>
-          <Text style={[styles.columnHeader, { flex: 2.5 }]}>Hisse Senedi</Text>
-          <Text style={[styles.columnHeader, { flex: 1.2, textAlign: 'right' }]}>Fiyat</Text>
-          <Text style={[styles.columnHeader, { flex: 1, textAlign: 'right' }]}>Değişim</Text>
-          <Text style={[styles.columnHeader, { flex: 0.6 }]}></Text>
-        </View>
-        
-        {/* Stock List */}
-        <ScrollView style={styles.stockList}>
-          {displayStockData.length > 0 ? (
-            displayStockData.map((stock, index) => {
-              const percentChange = this.calculatePercentageChange(stock.price, stock.prevPrice);
-              const isPositive = stock.price > stock.prevPrice;
-              
-              return (
-                <TouchableOpacity 
-                  key={index} 
-                  style={[
-                    styles.stockCard,
-                    index === displayStockData.length - 1 && { marginBottom: 20 }
-                  ]}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.stockInfo}>
-                    <Text style={styles.stockSymbol}>{stock.symbol}</Text>
-                    <Text style={styles.stockName} numberOfLines={1}>
-                      {stock.name}
-                    </Text>
-                    <View style={styles.stockDetails}>
-                      <Text style={styles.stockDetail}>
-                        <Text style={styles.detailLabel}>Hacim: </Text>
-                        {stock.volume}
-                      </Text>
-                    </View>
-                  </View>
-                  
-                  <View style={styles.priceContainer}>
-                    <Text style={styles.stockPrice}>${stock.price.toFixed(2)}</Text>
-                    <Text style={styles.marketCap}>{stock.marketCap}</Text>
-                  </View>
-                  
-                  <View style={styles.changeContainer}>
-                    <View style={[
-                      styles.changeBox,
-                      isPositive ? styles.positiveChange : styles.negativeChange
-                    ]}>
-                      <Ionicons 
-                        name={isPositive ? 'caret-up' : 'caret-down'} 
-                        size={12} 
-                        color="white" 
-                        style={styles.changeIcon}
-                      />
-                      <Text style={styles.changeText}>
-                        {Math.abs(percentChange)}%
-                      </Text>
-                    </View>
-                  </View>
-                  
-                  <TouchableOpacity 
-                    style={styles.favoriteButton}
-                    onPress={() => this.handleFavoriteToggle(stock.name)}
-                  >
-                    <Ionicons
-                      name={favorites[stock.name] ? 'heart' : 'heart-outline'}
-                      size={22}
-                      color={favorites[stock.name] ? '#ff3b30' : '#8e8e93'}
-                    />
-                  </TouchableOpacity>
-                </TouchableOpacity>
-              );
-            })
-          ) : (
-            <View style={styles.emptyState}>
-              {activeTab === 'favorites' ? (
-                <>
-                  <Ionicons name="heart" size={60} color="#e0e0e0" />
-                  <Text style={styles.emptyStateTitle}>Favori Hisseniz Yok</Text>
-                  <Text style={styles.emptyStateText}>
-                    Takip etmek istediğiniz hisseleri favorilerinize ekleyin
-                  </Text>
-                </>
-              ) : (
-                <>
-                  <Ionicons name="search" size={60} color="#e0e0e0" />
-                  <Text style={styles.emptyStateTitle}>Sonuç Bulunamadı</Text>
-                  <Text style={styles.emptyStateText}>
-                    Arama kriterlerinize uygun hisse senedi bulunamadı
-                  </Text>
-                </>
-              )}
-            </View>
-          )}
-        </ScrollView>
-        
-        {/* Footer */}
-        <View style={styles.footer}>
-          <TouchableOpacity style={styles.footerTab}>
-            <Ionicons name="home-outline" size={22} color="#95a5a6" />
-            <Text style={styles.footerText}>Ana Sayfa</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.footerTab}>
-            <Ionicons name="wallet-outline" size={22} color="#95a5a6" />
-            <Text style={styles.footerText}>Portföyüm</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.footerMainButton}>
-            <Ionicons name="trending-up" size={26} color="white" />
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={[styles.footerTab, styles.activeFooterTab]}>
-            <Ionicons name="bar-chart" size={22} color="#3498db" />
-            <Text style={[styles.footerText, styles.activeFooterText]}>Piyasalar</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.footerTab}>
-            <Ionicons name="settings-outline" size={22} color="#95a5a6" />
-            <Text style={styles.footerText}>Ayarlar</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+        <Text style={styles.price}>${price}</Text>
+      </TouchableOpacity>
     );
+  };
+
+  if (loading) {
+    return <ActivityIndicator size="large" style={{ flex: 1 }} />;
   }
-}
 
+  return (
+    <View style={styles.container}>
+      <FlatList
+        data={stocks}
+        keyExtractor={(item) => item.symbol}
+        renderItem={renderItem}
+      />
+    </View>
+  );
+};
 
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 16 },
+  item: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderColor: '#ddd',
+  },
+  symbol: { fontWeight: 'bold', fontSize: 16 },
+  name: { color: '#555', maxWidth: 200 },
+  price: { fontSize: 16, color: '#0a0' },
+});
 
 export default MarketScreen;

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
@@ -7,15 +9,23 @@ export default function LoginScreen({ navigation }) {
 
   const handleLogin = async () => {
     try {
-      const response = await fetch('http://192.168.1.191:3000/login', {
-
+      const response = await fetch('http://192.168.1.26:3000/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-
+  
       const data = await response.json();
+  
       if (response.ok) {
+        console.log('Gelen UserID:', data.userId); // 1️⃣ kontrol
+  
+        await AsyncStorage.setItem('token', data.token);
+        await AsyncStorage.setItem('userId', data.userId.toString());
+  
+        const stored = await AsyncStorage.getItem('userId'); // 2️⃣ tekrar oku
+        console.log('Kaydedilen UserID:', stored);
+  
         Alert.alert('Success', 'Login successful!');
         navigation.reset({
           index: 0,
@@ -29,6 +39,7 @@ export default function LoginScreen({ navigation }) {
       Alert.alert('Error', 'Something went wrong');
     }
   };
+  
 
   return (
     <View style={styles.container}>

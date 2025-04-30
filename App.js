@@ -8,6 +8,9 @@ import MarketScreen from './screens/MarketScreen';
 import LoginScreen from './screens/LoginScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import RegisterScreen from './screens/RegisterScreen'; // 🌟 Eklediğimiz yeni ekran
+import StockDetailScreen from './screens/StockDetailScreen'; // ✅
+import WatchlistScreen from './screens/WatchlistScreen';
+import WatchlistDetailScreen from './screens/WatchlistDetailScreen';
 
 const Stack = createStackNavigator();
 
@@ -45,6 +48,20 @@ const App = () => {
           component={ProfileScreen}
           options={{}}
         />
+        <Stack.Screen 
+          name="StockDetail" 
+          component={StockDetailScreen} 
+          options={{ title: 'Hisse Detayı' }} 
+        />
+        <Stack.Screen 
+        name="Watchlist" 
+        component={WatchlistScreen} 
+        />
+        <Stack.Screen 
+        name="WatchlistDetail" 
+        component={WatchlistDetailScreen} 
+        />
+
       </Stack.Navigator>
     </NavigationContainer>
   );
