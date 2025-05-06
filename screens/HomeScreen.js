@@ -24,6 +24,7 @@ const HomeScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [newListName, setNewListName] = useState('');
   const [loading, setLoading] = useState(true);
+  const handleSettingsPress1 = () => navigation.navigate('Market');
 
   const fetchWatchlists = async () => {
     try {
@@ -62,7 +63,7 @@ const HomeScreen = () => {
   }, []);
 
   const handleSettingsPress = () => navigation.navigate('FAQ');
-  const handleSettingsPress1 = () => navigation.navigate('Market');
+  //const handleSettingsPress1 = () => navigation.navigate('Market');
   const handleSettingsPress2 = () => navigation.navigate('Profile');
 
   const openWatchlist = (listId) => {
@@ -195,17 +196,18 @@ const HomeScreen = () => {
       </Modal>
 
       {/* Footer */}
-      <View style={styles.footer}>
+      {/* <View style={styles.footer}>
         <TouchableOpacity style={styles.footerTab}>
           <Ionicons name="home" size={22} color="#3498db" />
           <Text style={[styles.footerText, styles.activeTab]}>Ana Sayfa</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.footerTab} onPress={handleSettingsPress2}>
           <Ionicons name="wallet-outline" size={22} color="#95a5a6" />
-          <Text style={styles.footerText}>Portföyüm</Text>
+          <Text style={styles.footerText}>Enflasyon</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.footerMainButton}>
           <Ionicons name="trending-up" size={26} color="white" />
+          <Text style={styles.footerText}>Risk</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.footerTab} onPress={handleSettingsPress1}>
           <Ionicons name="bar-chart-outline" size={22} color="#95a5a6" />
@@ -215,7 +217,7 @@ const HomeScreen = () => {
           <Ionicons name="settings-outline" size={22} color="#95a5a6" />
           <Text style={styles.footerText}>Ayarlar</Text>
         </TouchableOpacity>
-      </View>
+      </View> */}
     </SafeAreaView>
   );
 };

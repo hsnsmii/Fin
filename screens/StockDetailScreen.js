@@ -1,26 +1,30 @@
 // StockDetailScreen.js 
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Modal, Alert } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, Modal, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getStockDetails, getStockHistory } from '../services/fmpApi';
 import { LineChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { styles } from "../styles/StockDetailStyle";
+
 
 const screenWidth = Dimensions.get('window').width;
 
-const StockDetailScreen = ({ route }) => {
+const StockDetailScreen = ({ route, navigation }) => {
   const { symbol } = route.params;
   const [stock, setStock] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [watchlists, setWatchlists] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
+  const [timeRange, setTimeRange] = useState('week'); // 'week', 'month', 'year'
 
   useEffect(() => {
     const fetchDetail = async () => {
       try {
         const detail = await getStockDetails(symbol);
-        const historical = await getStockHistory(symbol);
+        const historical = await getStockHistory(symbol, timeRange);
         setStock(detail);
         setHistory(historical);
       } catch (error) {
@@ -37,13 +41,28 @@ const StockDetailScreen = ({ route }) => {
         const data = await response.json();
         setWatchlists(data);
       } catch (err) {
-        console.error('Liste alma hatasi:', err);
+        console.error('Liste alma hatası:', err);
       }
     };
 
     fetchDetail();
     fetchWatchlists();
-  }, [symbol]);
+  }, [symbol, timeRange]);
+
+  useEffect(() => {
+    // Set header title
+    navigation.setOptions({
+      title: symbol,
+      headerStyle: {
+        backgroundColor: '#fff',
+        elevation: 0,
+        shadowOpacity: 0,
+      },
+      headerTitleStyle: {
+        fontWeight: 'bold',
+      },
+    });
+  }, [navigation, symbol]);
 
   const handleAddToWatchlist = async (listId) => {
     try {
@@ -80,74 +99,175 @@ const StockDetailScreen = ({ route }) => {
     }
   };
 
-  if (loading || !stock) return <ActivityIndicator size="large" style={{ flex: 1 }} />;
+  const getChartData = () => {
+    if (!history || history.length === 0) return { labels: [], datasets: [{ data: [0] }] };
+    
+    const chartLabels = history.map(h => h.date).slice().reverse().map(date => date.slice(5));
+    const chartPrices = history.map(h => h.close).slice().reverse();
+    
+    return {
+      labels: chartLabels,
+      datasets: [{ data: chartPrices }]
+    };
+  };
 
-  const chartLabels = history.map(h => h.date).slice().reverse().map(date => date.slice(5));
-  const chartPrices = history.map(h => h.close).slice().reverse();
+  const renderPriceChange = () => {
+    if (!stock) return null;
+    
+    const change = (stock.changes || 0);
+    const changePercent = (stock.changesPercentage || 0);
+    const isPositive = change >= 0;
+    
+    return (
+      <View style={styles.changeContainer}>
+        <Text style={[styles.change, isPositive ? styles.positive : styles.negative]}>
+          {isPositive ? '+' : ''}{change.toFixed(2)} ({isPositive ? '+' : ''}{changePercent.toFixed(2)}%)
+        </Text>
+        <Feather 
+          name={isPositive ? 'arrow-up' : 'arrow-down'} 
+          size={18} 
+          color={isPositive ? '#2ecc71' : '#e74c3c'} 
+        />
+      </View>
+    );
+  };
+
+  if (loading || !stock) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.symbol}>{stock.symbol} - {stock.companyName}</Text>
-      <Text style={styles.price}>${Number(stock.price).toFixed(2)}</Text>
-      <Text style={styles.change}>Sektör: {stock.sector}</Text>
-      <Text style={styles.desc}>{stock.description}</Text>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <View style={styles.header}>
+        <View style={styles.companyInfo}>
+          <Text style={styles.companyName}>{stock.companyName}</Text>
+          <Text style={styles.symbol}>{symbol}</Text>
+        </View>
+        
+        <TouchableOpacity style={styles.addButton} onPress={handleAddWithFallback}>
+          <Feather name="plus" size={20} color="#fff" />
+          <Text style={styles.addText}>İzleme Listesine Ekle</Text>
+        </TouchableOpacity>
+      </View>
 
-      <TouchableOpacity style={styles.addButton} onPress={handleAddWithFallback}>
-        <Text style={styles.addText}>+ Takip Listesine Ekle</Text>
-      </TouchableOpacity>
+      <View style={styles.priceCard}>
+        <Text style={styles.price}>${Number(stock.price).toFixed(2)}</Text>
+        {renderPriceChange()}
+      </View>
+
+      <View style={styles.chartCard}>
+        <View style={styles.chartHeader}>
+          <Text style={styles.chartTitle}>Fiyat Grafiği</Text>
+          <View style={styles.timeRangeSelector}>
+            <TouchableOpacity 
+              style={[styles.rangeButton, timeRange === 'week' && styles.activeRange]} 
+              onPress={() => setTimeRange('week')}
+            >
+              <Text style={[styles.rangeText, timeRange === 'week' && styles.activeRangeText]}>1H</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.rangeButton, timeRange === 'month' && styles.activeRange]} 
+              onPress={() => setTimeRange('month')}
+            >
+              <Text style={[styles.rangeText, timeRange === 'month' && styles.activeRangeText]}>1A</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.rangeButton, timeRange === 'year' && styles.activeRange]}
+              onPress={() => setTimeRange('year')}
+            >
+              <Text style={[styles.rangeText, timeRange === 'year' && styles.activeRangeText]}>1Y</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <LineChart
+          data={getChartData()}
+          width={screenWidth - 40}
+          height={220}
+          yAxisLabel="$"
+          withInnerLines={false}
+          withOuterLines={false}
+          chartConfig={{
+            backgroundColor: '#fff',
+            backgroundGradientFrom: '#fff',
+            backgroundGradientTo: '#fff',
+            decimalPlaces: 2,
+            color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
+            labelColor: (opacity = 1) => `rgba(128, 128, 128, ${opacity})`,
+            propsForDots: {
+              r: '4',
+              strokeWidth: '2',
+              stroke: '#007AFF'
+            },
+            propsForLabels: {
+              fontSize: 10,
+            },
+          }}
+          bezier
+          style={styles.chart}
+        />
+      </View>
+
+      <View style={styles.infoCard}>
+        <Text style={styles.sectionTitle}>Şirket Bilgileri</Text>
+        
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Sektör:</Text>
+          <Text style={styles.infoValue}>{stock.sector || 'Bilinmiyor'}</Text>
+        </View>
+        
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Piyasa Değeri:</Text>
+          <Text style={styles.infoValue}>${(stock.marketCap / 1000000000).toFixed(2)} Milyar</Text>
+        </View>
+        
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>F/K Oranı:</Text>
+          <Text style={styles.infoValue}>{stock.pe ? stock.pe.toFixed(2) : 'N/A'}</Text>
+        </View>
+        
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Beta:</Text>
+          <Text style={styles.infoValue}>{stock.beta ? stock.beta.toFixed(2) : 'N/A'}</Text>
+        </View>
+      </View>
+
+      <View style={styles.descriptionCard}>
+        <Text style={styles.sectionTitle}>Şirket Açıklaması</Text>
+        <Text style={styles.descriptionText}>{stock.description}</Text>
+      </View>
 
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text>Liste seç:</Text>
+            <Text style={styles.modalTitle}>Liste Seçin</Text>
+            
             {watchlists.map(list => (
-              <TouchableOpacity key={list.id} onPress={() => handleAddToWatchlist(list.id)}>
-                <Text style={styles.modalItem}>{list.name}</Text>
+              <TouchableOpacity 
+                key={list.id} 
+                style={styles.modalItem}
+                onPress={() => handleAddToWatchlist(list.id)}
+              >
+                <Feather name="list" size={18} color="#007AFF" />
+                <Text style={styles.modalItemText}>{list.name}</Text>
               </TouchableOpacity>
             ))}
-            <TouchableOpacity onPress={() => setModalVisible(false)}>
-              <Text style={{ color: 'red', marginTop: 10 }}>Kapat</Text>
+            
+            <TouchableOpacity 
+              style={styles.closeButton}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.closeButtonText}>Kapat</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
-
-      <Text style={styles.chartTitle}>Son 7 Gün Fiyat Grafiği</Text>
-      <LineChart
-        data={{ labels: chartLabels, datasets: [{ data: chartPrices }] }}
-        width={screenWidth - 32}
-        height={240}
-        yAxisLabel="$"
-        fromZero
-        chartConfig={{
-          backgroundColor: '#fff',
-          backgroundGradientFrom: '#f5f5f5',
-          backgroundGradientTo: '#fff',
-          decimalPlaces: 2,
-          color: (opacity = 1) => `rgba(0, 0, 200, ${opacity})`,
-          labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-          propsForLabels: { fontSize: 10 },
-          propsForDots: { r: '3', strokeWidth: '2', stroke: '#1e90ff' },
-        }}
-        bezier
-        style={{ marginVertical: 20, borderRadius: 12 }}
-      />
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { padding: 16 },
-  symbol: { fontSize: 20, fontWeight: 'bold' },
-  price: { fontSize: 28, fontWeight: 'bold', color: '#2ecc71' },
-  change: { fontSize: 16, marginBottom: 8 },
-  desc: { fontSize: 14, color: '#444', marginVertical: 10 },
-  chartTitle: { fontSize: 18, fontWeight: 'bold', marginTop: 16 },
-  addButton: { backgroundColor: '#2980b9', padding: 10, borderRadius: 8, alignItems: 'center', marginTop: 10 },
-  addText: { color: 'white', fontWeight: 'bold' },
-  modalContainer: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-  modalContent: { backgroundColor: 'white', padding: 20, borderRadius: 10 },
-  modalItem: { fontSize: 16, paddingVertical: 8 }
-});
 
 export default StockDetailScreen;

@@ -3,87 +3,136 @@ import { StyleSheet } from 'react-native';
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    backgroundColor: '#f5f5f5',
+    padding: 20,
+    backgroundColor: '#f8f9fa',
+  },
+  titleContainer: {
+    marginBottom: 24,
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#7f8c8d',
+    textAlign: 'center',
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    marginBottom: 20,
+    backgroundColor: '#ffffff',
+    borderRadius: 28,
+    paddingHorizontal: 15,
+    marginBottom: 24,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
     elevation: 3,
+    height: 56,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
   },
   searchInput: {
     flex: 1,
-    padding: 10,
+    padding: 12,
     fontSize: 16,
+    color: '#2c3e50',
   },
   searchIcon: {
+    color: '#3498db',
+    marginRight: 5,
+  },
+  categoryChip: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
     marginRight: 10,
-    color: '#888',
+    backgroundColor: '#f5f7fa',
+    minWidth: 100,
+    alignItems: 'center',
+  },
+  categoryChipActive: {
+    backgroundColor: '#3498db',
+  },
+  categoryText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#7f8c8d',
+  },
+  categoryTextActive: {
+    color: '#ffffff',
+    fontWeight: '600',
   },
   questionsContainer: {
     flex: 1,
   },
   questionContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    marginBottom: 15,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    marginBottom: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-    padding: 0, // Removed padding from here
-    margin: 0
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
   },
   questionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 15, // Added padding here
-    borderBottomWidth: 1,  // Added border only to the header
-    borderBottomColor: '#eee', // Light border color
-    },
+    padding: 18,
+  },
   questionText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    flex: 1, // Added flex to question text to take up available space
-    marginRight: 10, // Added some margin to separate question and icon
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#2c3e50',
+    flex: 1,
+    marginRight: 12,
+    lineHeight: 24,
+  },
+  questionIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#f1f8fe',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   answerContainer: {
-    padding: 15,
-    paddingTop: 0, // Removed top padding, so answer is closer to header
+    padding: 18,
+    paddingTop: 0,
+    backgroundColor: '#f9fafb',
+    borderTopWidth: 1,
+    borderTopColor: '#ecf0f1',
   },
   answerText: {
     fontSize: 16,
-    color: '#555',
+    color: '#34495e',
     lineHeight: 24,
   },
-  showAllButton: {
-    marginTop: 20,
+  // "Tüm Soruları Göster" butonuna ait stiller kaldırıldı
+  noResultsContainer: {
     alignItems: 'center',
-    padding: 12,
-    backgroundColor: '#007BFF',
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    justifyContent: 'center',
+    paddingVertical: 40,
   },
-  showAllButtonText: {
-    color: '#fff',
+  noResultsText: {
     fontSize: 18,
-    fontWeight: 'bold',
+    color: '#7f8c8d',
+    textAlign: 'center',
   },
+  noResultsIcon: {
+    marginBottom: 16,
+    color: '#bdc3c7',
+  }
 });
 
 export default styles;

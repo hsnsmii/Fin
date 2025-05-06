@@ -29,8 +29,9 @@ export default function LoginScreen({ navigation }) {
         Alert.alert('Success', 'Login successful!');
         navigation.reset({
           index: 0,
-          routes: [{ name: 'Home' }],
+          routes: [{ name: 'Main' }],
         });
+        
       } else {
         Alert.alert('Error', data.error || 'Login failed');
       }
