@@ -6,7 +6,7 @@ import HomeScreen from '../screens/HomeScreen';
 import MarketScreen from '../screens/MarketScreen';
 import FAQScreen from '../screens/FAQScreen';
 import ProfileScreen from '../screens/ProfileScreen';
-import RiskScreen from '../screens/RiskScreen';
+import PortfolioRiskScreen from '../screens/PortfolioRiskScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -65,7 +65,7 @@ export default function MainTabs() {
       />
       <Tab.Screen
         name="Risk"
-        component={RiskScreen}
+        component={PortfolioRiskScreen}
         options={{
           tabBarLabel: 'Risk',
           tabBarIcon: ({ color, size, focused }) => (

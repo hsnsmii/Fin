@@ -41,7 +41,7 @@ export const getStockDetails = async (symbol) => {
 
 export const getStockHistory = async (symbol) => {
     try {
-      const res = await fetch(`https://financialmodelingprep.com/api/v3/historical-price-full/${symbol}?timeseries=7&apikey=${FMP_API_KEY}`);
+      const res = await fetch(`https://financialmodelingprep.com/api/v3/historical-price-full/${symbol}?timeseries=60&apikey=${FMP_API_KEY}`);
       const data = await res.json();
       return data.historical || [];
     } catch (error) {

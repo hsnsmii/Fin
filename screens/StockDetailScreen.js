@@ -1,4 +1,4 @@
-// StockDetailScreen.js 
+// StockDetailScreen.js
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, Modal, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -8,59 +8,95 @@ import { Dimensions } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { styles } from "../styles/StockDetailStyle";
 
-
 const screenWidth = Dimensions.get('window').width;
 
+// Teknik göstergeleri hesaplayan fonksiyon
+const calculateIndicators = (history) => {
+  const closes = history.map(h => h.close).reverse();
+  if (closes.length < 20) return null;
+
+  let gains = 0, losses = 0;
+  for (let i = 1; i < 15; i++) {
+    const change = closes[i] - closes[i - 1];
+    if (change > 0) gains += change;
+    else losses -= change;
+  }
+
+  const avgGain = gains / 14;
+  const avgLoss = losses / 14;
+  const rs = avgGain / avgLoss;
+  const rsi = 100 - (100 / (1 + rs));
+
+  const sma_20 = closes.slice(0, 20).reduce((sum, val) => sum + val, 0) / 20;
+  const mean = sma_20;
+  const variance = closes.slice(0, 20).reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / 20;
+  const volatility = Math.sqrt(variance);
+
+  return { rsi, sma_20, volatility };
+};
+
 const StockDetailScreen = ({ route, navigation }) => {
+  const [riskLevel, setRiskLevel] = useState(null);
   const { symbol } = route.params;
   const [stock, setStock] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [watchlists, setWatchlists] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
-  const [timeRange, setTimeRange] = useState('week'); // 'week', 'month', 'year'
+  const [timeRange, setTimeRange] = useState('month');
 
   useEffect(() => {
-    const fetchDetail = async () => {
+    const fetchAll = async () => {
       try {
         const detail = await getStockDetails(symbol);
         const historical = await getStockHistory(symbol, timeRange);
         setStock(detail);
         setHistory(historical);
-      } catch (error) {
-        console.error('Stock detail error:', error);
+
+        const indicators = calculateIndicators(historical);
+        console.log("Gelen teknik veriler:", indicators);
+
+        if (!indicators) {
+          setRiskLevel("Yetersiz veri");
+          return;
+        }
+
+        const response = await fetch("http://192.168.1.26:5050/predict-risk", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(indicators),
+        });
+
+        const data = await response.json();
+        console.log("Tahmin sonucu:", data);
+        setRiskLevel(data.risk_level || "Bilinmiyor");
+      } catch (err) {
+        console.error("Veri çekme hatası:", err);
+        setRiskLevel("Hesaplanamadı");
       } finally {
         setLoading(false);
       }
-    };
 
-    const fetchWatchlists = async () => {
-      const userId = await AsyncStorage.getItem('userId');
       try {
+        const userId = await AsyncStorage.getItem('userId');
+        if (!userId) return;
+
         const response = await fetch(`http://192.168.1.26:3000/api/watchlists/${userId}`);
         const data = await response.json();
         setWatchlists(data);
       } catch (err) {
-        console.error('Liste alma hatası:', err);
+        console.error("Liste alma hatası:", err);
       }
     };
 
-    fetchDetail();
-    fetchWatchlists();
+    fetchAll();
   }, [symbol, timeRange]);
 
   useEffect(() => {
-    // Set header title
     navigation.setOptions({
       title: symbol,
-      headerStyle: {
-        backgroundColor: '#fff',
-        elevation: 0,
-        shadowOpacity: 0,
-      },
-      headerTitleStyle: {
-        fontWeight: 'bold',
-      },
+      headerStyle: { backgroundColor: '#fff', elevation: 0, shadowOpacity: 0 },
+      headerTitleStyle: { fontWeight: 'bold' },
     });
   }, [navigation, symbol]);
 
@@ -86,7 +122,6 @@ const StockDetailScreen = ({ route, navigation }) => {
   const handleAddWithFallback = async () => {
     const userId = await AsyncStorage.getItem('userId');
     if (watchlists.length === 0) {
-      // Favoriler listesini otomatik oluştur
       const response = await fetch(`http://192.168.1.26:3000/api/watchlists`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -101,33 +136,22 @@ const StockDetailScreen = ({ route, navigation }) => {
 
   const getChartData = () => {
     if (!history || history.length === 0) return { labels: [], datasets: [{ data: [0] }] };
-    
     const chartLabels = history.map(h => h.date).slice().reverse().map(date => date.slice(5));
     const chartPrices = history.map(h => h.close).slice().reverse();
-    
-    return {
-      labels: chartLabels,
-      datasets: [{ data: chartPrices }]
-    };
+    return { labels: chartLabels, datasets: [{ data: chartPrices }] };
   };
 
   const renderPriceChange = () => {
     if (!stock) return null;
-    
     const change = (stock.changes || 0);
     const changePercent = (stock.changesPercentage || 0);
     const isPositive = change >= 0;
-    
     return (
       <View style={styles.changeContainer}>
         <Text style={[styles.change, isPositive ? styles.positive : styles.negative]}>
           {isPositive ? '+' : ''}{change.toFixed(2)} ({isPositive ? '+' : ''}{changePercent.toFixed(2)}%)
         </Text>
-        <Feather 
-          name={isPositive ? 'arrow-up' : 'arrow-down'} 
-          size={18} 
-          color={isPositive ? '#2ecc71' : '#e74c3c'} 
-        />
+        <Feather name={isPositive ? 'arrow-up' : 'arrow-down'} size={18} color={isPositive ? '#2ecc71' : '#e74c3c'} />
       </View>
     );
   };
@@ -147,7 +171,6 @@ const StockDetailScreen = ({ route, navigation }) => {
           <Text style={styles.companyName}>{stock.companyName}</Text>
           <Text style={styles.symbol}>{symbol}</Text>
         </View>
-        
         <TouchableOpacity style={styles.addButton} onPress={handleAddWithFallback}>
           <Feather name="plus" size={20} color="#fff" />
           <Text style={styles.addText}>İzleme Listesine Ekle</Text>
@@ -159,26 +182,24 @@ const StockDetailScreen = ({ route, navigation }) => {
         {renderPriceChange()}
       </View>
 
+      <View style={styles.infoCard}>
+        <Text style={styles.sectionTitle}>Yapay Zeka Risk Değerlendirmesi</Text>
+        <Text style={{ fontSize: 16, fontWeight: '600', color: '#e67e22', marginBottom: 10 }}>
+          Risk Skoru: {riskLevel || 'Hesaplanıyor...'}
+        </Text>
+      </View>
+
       <View style={styles.chartCard}>
         <View style={styles.chartHeader}>
           <Text style={styles.chartTitle}>Fiyat Grafiği</Text>
           <View style={styles.timeRangeSelector}>
-            <TouchableOpacity 
-              style={[styles.rangeButton, timeRange === 'week' && styles.activeRange]} 
-              onPress={() => setTimeRange('week')}
-            >
+            <TouchableOpacity style={[styles.rangeButton, timeRange === 'week' && styles.activeRange]} onPress={() => setTimeRange('week')}>
               <Text style={[styles.rangeText, timeRange === 'week' && styles.activeRangeText]}>1H</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.rangeButton, timeRange === 'month' && styles.activeRange]} 
-              onPress={() => setTimeRange('month')}
-            >
+            <TouchableOpacity style={[styles.rangeButton, timeRange === 'month' && styles.activeRange]} onPress={() => setTimeRange('month')}>
               <Text style={[styles.rangeText, timeRange === 'month' && styles.activeRangeText]}>1A</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.rangeButton, timeRange === 'year' && styles.activeRange]}
-              onPress={() => setTimeRange('year')}
-            >
+            <TouchableOpacity style={[styles.rangeButton, timeRange === 'year' && styles.activeRange]} onPress={() => setTimeRange('year')}>
               <Text style={[styles.rangeText, timeRange === 'year' && styles.activeRangeText]}>1Y</Text>
             </TouchableOpacity>
           </View>
@@ -198,14 +219,8 @@ const StockDetailScreen = ({ route, navigation }) => {
             decimalPlaces: 2,
             color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
             labelColor: (opacity = 1) => `rgba(128, 128, 128, ${opacity})`,
-            propsForDots: {
-              r: '4',
-              strokeWidth: '2',
-              stroke: '#007AFF'
-            },
-            propsForLabels: {
-              fontSize: 10,
-            },
+            propsForDots: { r: '4', strokeWidth: '2', stroke: '#007AFF' },
+            propsForLabels: { fontSize: 10 },
           }}
           bezier
           style={styles.chart}
@@ -214,26 +229,10 @@ const StockDetailScreen = ({ route, navigation }) => {
 
       <View style={styles.infoCard}>
         <Text style={styles.sectionTitle}>Şirket Bilgileri</Text>
-        
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Sektör:</Text>
-          <Text style={styles.infoValue}>{stock.sector || 'Bilinmiyor'}</Text>
-        </View>
-        
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Piyasa Değeri:</Text>
-          <Text style={styles.infoValue}>${(stock.marketCap / 1000000000).toFixed(2)} Milyar</Text>
-        </View>
-        
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>F/K Oranı:</Text>
-          <Text style={styles.infoValue}>{stock.pe ? stock.pe.toFixed(2) : 'N/A'}</Text>
-        </View>
-        
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Beta:</Text>
-          <Text style={styles.infoValue}>{stock.beta ? stock.beta.toFixed(2) : 'N/A'}</Text>
-        </View>
+        <View style={styles.infoRow}><Text style={styles.infoLabel}>Sektör:</Text><Text style={styles.infoValue}>{stock.sector || 'Bilinmiyor'}</Text></View>
+        <View style={styles.infoRow}><Text style={styles.infoLabel}>Piyasa Değeri:</Text><Text style={styles.infoValue}>${(stock.marketCap / 1000000000).toFixed(2)} Milyar</Text></View>
+        <View style={styles.infoRow}><Text style={styles.infoLabel}>F/K Oranı:</Text><Text style={styles.infoValue}>{stock.pe ? stock.pe.toFixed(2) : 'N/A'}</Text></View>
+        <View style={styles.infoRow}><Text style={styles.infoLabel}>Beta:</Text><Text style={styles.infoValue}>{stock.beta ? stock.beta.toFixed(2) : 'N/A'}</Text></View>
       </View>
 
       <View style={styles.descriptionCard}>
@@ -245,22 +244,13 @@ const StockDetailScreen = ({ route, navigation }) => {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Liste Seçin</Text>
-            
             {watchlists.map(list => (
-              <TouchableOpacity 
-                key={list.id} 
-                style={styles.modalItem}
-                onPress={() => handleAddToWatchlist(list.id)}
-              >
+              <TouchableOpacity key={list.id} style={styles.modalItem} onPress={() => handleAddToWatchlist(list.id)}>
                 <Feather name="list" size={18} color="#007AFF" />
                 <Text style={styles.modalItemText}>{list.name}</Text>
               </TouchableOpacity>
             ))}
-            
-            <TouchableOpacity 
-              style={styles.closeButton}
-              onPress={() => setModalVisible(false)}
-            >
+            <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
               <Text style={styles.closeButtonText}>Kapat</Text>
             </TouchableOpacity>
           </View>
