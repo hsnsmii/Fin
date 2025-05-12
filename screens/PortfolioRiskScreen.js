@@ -40,7 +40,7 @@ const PortfolioRiskScreen = () => {
       
       try {
         const userId = await AsyncStorage.getItem('userId');
-        const res = await fetch(`http://192.168.1.26:3000/api/watchlists/${userId}`);
+        const res = await fetch(`http://192.168.1.37:3000/api/watchlists/${userId}`);
         const data = await res.json();
         console.log("Gelen Watchlists:", data); // fetchWatchlists içinde
 
@@ -63,7 +63,7 @@ const PortfolioRiskScreen = () => {
         const indicators = calculateIndicators(history);
         if (!indicators) continue;
 
-        const res = await fetch("http://192.168.1.26:5050/predict-risk", {
+        const res = await fetch("http://192.168.1.37:5050/predict-risk", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(indicators),

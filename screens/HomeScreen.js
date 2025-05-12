@@ -33,7 +33,7 @@ const HomeScreen = () => {
         console.warn('User ID bulunamadı. Kullanıcı giriş yapmamış olabilir.');
         return;
       }
-      const res = await axios.get(`http://192.168.1.26:3000/api/watchlists/${userId}`);
+      const res = await axios.get(`http://192.168.1.37:3000/api/watchlists/${userId}`);
       setWatchlists(res.data);
     } catch (err) {
       console.error('Liste çekme hatası', err);
@@ -45,7 +45,7 @@ const HomeScreen = () => {
   const createWatchlist = async () => {
     try {
       const userId = await AsyncStorage.getItem('userId');
-      const res = await axios.post('http://192.168.1.26:3000/api/watchlists', {
+      const res = await axios.post('http://192.168.1.37:3000/api/watchlists', {
         name: newListName,
         user_id: userId,
       });
@@ -175,49 +175,29 @@ const HomeScreen = () => {
 
       {/* Modal */}
       <Modal transparent visible={modalVisible} animationType="slide">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text>Liste Adı:</Text>
-            <TextInput
-              value={newListName}
-              onChangeText={setNewListName}
-              style={styles.modalInput}
-            />
-            <View style={styles.modalActions}>
-              <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <Text>İptal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={createWatchlist}>
-                <Text>Oluştur</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+  <View style={styles.modalContainer}>
+    <View style={styles.modalContent}>
+      <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 10 }}>Yeni Liste Oluştur</Text>
+      <TextInput
+        value={newListName}
+        onChangeText={setNewListName}
+        placeholder="Liste adı girin"
+        style={styles.modalInput}
+      />
+      <View style={styles.modalActions}>
+        <TouchableOpacity onPress={() => setModalVisible(false)}>
+          <Text style={{ color: '#e74c3c' }}>İptal</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={createWatchlist}>
+          <Text style={{ color: '#3498db', fontWeight: 'bold' }}>Oluştur</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </View>
+</Modal>
 
-      {/* Footer */}
-      {/* <View style={styles.footer}>
-        <TouchableOpacity style={styles.footerTab}>
-          <Ionicons name="home" size={22} color="#3498db" />
-          <Text style={[styles.footerText, styles.activeTab]}>Ana Sayfa</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.footerTab} onPress={handleSettingsPress2}>
-          <Ionicons name="wallet-outline" size={22} color="#95a5a6" />
-          <Text style={styles.footerText}>Enflasyon</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.footerMainButton}>
-          <Ionicons name="trending-up" size={26} color="white" />
-          <Text style={styles.footerText}>Risk</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.footerTab} onPress={handleSettingsPress1}>
-          <Ionicons name="bar-chart-outline" size={22} color="#95a5a6" />
-          <Text style={styles.footerText}>market</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.footerTab} onPress={handleSettingsPress}>
-          <Ionicons name="settings-outline" size={22} color="#95a5a6" />
-          <Text style={styles.footerText}>Ayarlar</Text>
-        </TouchableOpacity>
-      </View> */}
+
+      
     </SafeAreaView>
   );
 };

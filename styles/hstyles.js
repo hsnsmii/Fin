@@ -282,6 +282,41 @@ const styles = StyleSheet.create({
       color: "#3498db",
       fontWeight: "600",
     },
+
+    //yeni liste
+    // styles/hstyles.js içine ekle:
+modalContainer: {
+  flex: 1,
+  backgroundColor: 'rgba(0,0,0,0.5)',  // arka planı karartır
+  justifyContent: 'center',            // dikey ortalama
+  alignItems: 'center',                // yatay ortalama
+},
+
+modalContent: {
+  backgroundColor: 'white',
+  width: '80%',
+  padding: 20,
+  borderRadius: 10,
+  elevation: 5, // Android için gölge
+  shadowColor: '#000', // iOS için gölge
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.25,
+  shadowRadius: 4,
+},
+
+modalInput: {
+  borderColor: '#ccc',
+  borderWidth: 1,
+  borderRadius: 6,
+  padding: 10,
+  marginVertical: 10,
+},
+
+modalActions: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+},
+
   
 });
 

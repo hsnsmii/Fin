@@ -1,16 +1,16 @@
 import { FMP_API_KEY } from '@env';
 
 export const getSelectedStocks = async () => {
-  // const symbols = [
-  //   'AAPL', 'AMZN', 'BRK-B', 'BRK-A', 'META', 'MSFT', 'NVDA', 'TSLA',
-  //   'GM', 'FLNC', 'RC', 'APP', 'VTRS', 'GOOG', 'GOOGL', 'GTLL', 'USO',
-  //   'BNO', 'OIH', 'DBO', 'OIL', 'PXJ', 'IEO', 'UCO', 'XOP', 'GUSH',
-  //   'TBBK', 'SOUN', 'NPWR', 'BBAI'
-  // ];
-
   const symbols = [
-    'AAPL', 'AMZN', 
+    'AAPL', 'AMZN', 'BRK-B', 'BRK-A', 'META', 'MSFT', 'NVDA', 'TSLA',
+    'GM', 'FLNC', 'RC', 'APP', 'VTRS', 'GOOG', 'GOOGL', 'GTLL', 'USO',
+    'BNO', 'OIH', 'DBO', 'OIL', 'PXJ', 'IEO', 'UCO', 'XOP', 'GUSH',
+    'TBBK', 'SOUN', 'NPWR', 'BBAI','TKKYY', 'TKGBY'
   ];
+
+  // const symbols = [
+  //   'AAPL', 'AMZN', 
+  // ];
 
   try {
     const requests = symbols.map(symbol =>

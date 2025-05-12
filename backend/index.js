@@ -73,3 +73,4 @@ app.use('/api/watchlists', watchlistsRoute);
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
+

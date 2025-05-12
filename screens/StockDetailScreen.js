@@ -61,7 +61,7 @@ const StockDetailScreen = ({ route, navigation }) => {
           return;
         }
 
-        const response = await fetch("http://192.168.1.26:5050/predict-risk", {
+        const response = await fetch("http://192.168.1.37:5050/predict-risk", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(indicators),
@@ -81,7 +81,7 @@ const StockDetailScreen = ({ route, navigation }) => {
         const userId = await AsyncStorage.getItem('userId');
         if (!userId) return;
 
-        const response = await fetch(`http://192.168.1.26:3000/api/watchlists/${userId}`);
+        const response = await fetch(`http://192.168.1.37:3000/api/watchlists/${userId}`);
         const data = await response.json();
         setWatchlists(data);
       } catch (err) {
@@ -102,7 +102,7 @@ const StockDetailScreen = ({ route, navigation }) => {
 
   const handleAddToWatchlist = async (listId) => {
     try {
-      const response = await fetch(`http://192.168.1.26:3000/api/watchlists/${listId}/stocks`, {
+      const response = await fetch(`http://192.168.1.37:3000/api/watchlists/${listId}/stocks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ symbol }),
@@ -122,7 +122,7 @@ const StockDetailScreen = ({ route, navigation }) => {
   const handleAddWithFallback = async () => {
     const userId = await AsyncStorage.getItem('userId');
     if (watchlists.length === 0) {
-      const response = await fetch(`http://192.168.1.26:3000/api/watchlists`, {
+      const response = await fetch(`http://192.168.1.37:3000/api/watchlists`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: 'Favoriler', user_id: userId }),

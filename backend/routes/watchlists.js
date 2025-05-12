@@ -3,15 +3,32 @@ module.exports = (pool) => {
   const router = express.Router();
 
   // GET /api/watchlists/:userId
-  router.get('/:userId', async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const result = await pool.query('SELECT * FROM watchlists WHERE user_id = $1', [userId]);
-      res.json(result.rows);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  });
+ router.get('/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // 1. Watchlist'leri al
+    const watchlistsResult = await pool.query('SELECT * FROM watchlists WHERE user_id = $1', [userId]);
+    const watchlists = watchlistsResult.rows;
+
+    // 2. Her watchlist için ilgili hisseleri çek
+    const finalData = await Promise.all(watchlists.map(async (list) => {
+      const stocksResult = await pool.query(
+        'SELECT symbol FROM watchlist_stocks WHERE watchlist_id = $1',
+        [list.id]
+      );
+      return {
+        ...list,
+        stocks: stocksResult.rows,
+      };
+    }));
+
+    res.json(finalData);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
   // POST /api/watchlists
   router.post('/', async (req, res) => {

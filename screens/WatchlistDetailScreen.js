@@ -10,7 +10,7 @@ const WatchlistDetailScreen = ({ route }) => {
 
   const fetchStocks = async () => {
     try {
-      const res = await axios.get(`http://192.168.1.26:3000/api/watchlists/${listId}/stocks`);
+      const res = await axios.get(`http://192.168.1.37:3000/api/watchlists/${listId}/stocks`);
       setStocks(res.data);
     } catch (err) {
       console.error('Liste içeriği çekilemedi', err);
