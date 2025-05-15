@@ -5,8 +5,10 @@ import { View, Text, StyleSheet } from 'react-native';
 import HomeScreen from '../screens/HomeScreen';
 import MarketScreen from '../screens/MarketScreen';
 import FAQScreen from '../screens/FAQScreen';
-import ProfileScreen from '../screens/ProfileScreen';
+import AssetsScreen from '../screens/AssetsScreen'
 import PortfolioRiskScreen from '../screens/PortfolioRiskScreen';
+import PortfolioDetailScreen from '../screens/PortfolioDetailScreen';
+
 
 const Tab = createBottomTabNavigator();
 
@@ -79,9 +81,9 @@ export default function MainTabs() {
       />
       <Tab.Screen
         name="Profile"
-        component={ProfileScreen}
+        component={AssetsScreen}
         options={{
-          tabBarLabel: 'Profil',
+          tabBarLabel: 'Assests',
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons 
               name="person" 

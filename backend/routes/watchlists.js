@@ -4,11 +4,17 @@ module.exports = (pool) => {
 
   // GET /api/watchlists/:userId
  router.get('/:userId', async (req, res) => {
-  try {
-    const { userId } = req.params;
+  const { userId } = req.params;
+  const type = req.query.type; // Önemli: type opsiyonel
 
-    // 1. Watchlist'leri al
-    const watchlistsResult = await pool.query('SELECT * FROM watchlists WHERE user_id = $1', [userId]);
+  try {
+    // 1. Watchlist'leri al (type varsa ona göre filtrele)
+    const query = type
+      ? 'SELECT * FROM watchlists WHERE user_id = $1 AND type = $2'
+      : 'SELECT * FROM watchlists WHERE user_id = $1';
+
+    const values = type ? [userId, type] : [userId];
+    const watchlistsResult = await pool.query(query, values);
     const watchlists = watchlistsResult.rows;
 
     // 2. Her watchlist için ilgili hisseleri çek
@@ -30,24 +36,28 @@ module.exports = (pool) => {
 });
 
 
-  // POST /api/watchlists
-  router.post('/', async (req, res) => {
-    const { name, user_id } = req.body;
-  
-    if (!user_id || !name) {
-      return res.status(400).json({ error: 'Liste adı veya kullanıcı ID eksik' });
-    }
-  
-    try {
-      const result = await pool.query(
-        'INSERT INTO watchlists (name, user_id) VALUES ($1, $2) RETURNING *',
-        [name, user_id]
-      );
-      res.json(result.rows[0]);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  });
+
+  // POST /api/watchlists/:listId/stocks
+router.post('/:listId/stocks', async (req, res) => {
+  const { symbol, quantity, price, note, date } = req.body;
+  const { listId } = req.params;
+
+  if (!symbol || !quantity || !price) {
+    return res.status(400).json({ error: 'Eksik pozisyon bilgisi' });
+  }
+
+  try {
+    const result = await pool.query(
+      'INSERT INTO watchlist_stocks (watchlist_id, symbol, quantity, price, note, date) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [listId, symbol, quantity, price, note || '', date || new Date()]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
   
 
   // POST /api/watchlists/:listId/stocks
