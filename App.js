@@ -2,12 +2,12 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
-import LoginScreen from './screens/LoginScreen';
-import RegisterScreen from './screens/RegisterScreen';
-import StockDetailScreen from './screens/StockDetailScreen';
-import WatchlistDetailScreen from './screens/WatchlistDetailScreen';
-import PortfolioDetailScreen from './screens/PortfolioDetailScreen';
-import AddPositionScreen from './screens/AddPositionScreen';
+import LoginScreen from './screens/auth/LoginScreen';
+import RegisterScreen from './screens/auth/RegisterScreen';
+import StockDetailScreen from './screens/market/StockDetailScreen';
+import WatchlistDetailScreen from './screens/home/WatchlistDetailScreen';
+import PortfolioDetailScreen from './screens/asset/PortfolioDetailScreen';
+import AddPositionScreen from './screens/asset/AddPositionScreen';
 
 import MainTabs from './screens/TabBar'; // <--- Tab yapısı buradan gelecek
 

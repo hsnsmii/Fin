@@ -2,12 +2,12 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { View, Text, StyleSheet } from 'react-native';
-import HomeScreen from '../screens/HomeScreen';
-import MarketScreen from '../screens/MarketScreen';
+import HomeScreen from '../screens/home/HomeScreen';
+import MarketScreen from '../screens/market/MarketScreen';
 import FAQScreen from '../screens/FAQScreen';
-import AssetsScreen from '../screens/AssetsScreen'
+import AssetsScreen from '../screens/asset/AssetsScreen'
 import PortfolioRiskScreen from '../screens/PortfolioRiskScreen';
-import PortfolioDetailScreen from '../screens/PortfolioDetailScreen';
+import PortfolioDetailScreen from '../screens/asset/PortfolioDetailScreen';
 
 
 const Tab = createBottomTabNavigator();
