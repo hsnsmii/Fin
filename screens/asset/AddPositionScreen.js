@@ -13,7 +13,7 @@ import {
 import axios from 'axios';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { getSelectedStocks } from '../services/fmpApi';
+import { getSelectedStocks } from '../../services/fmpApi';
 
 const AddPositionScreen = () => {
   const route = useRoute();

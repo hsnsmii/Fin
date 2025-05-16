@@ -1,11 +1,11 @@
 // MarketScreen.js (Güncellenmiş renderItem için)
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, TextInput, Image } from 'react-native';
-import { getSelectedStocks } from '../services/fmpApi';
+import { getSelectedStocks } from '../../services/fmpApi';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import styles from '../styles/MarketScreenStyle';
-import mockData from '../assets/mockStockData.json';
+import styles from '../../styles/MarketScreenStyle';
+import mockData from '../../assets/mockStockData.json';
 
 const MarketScreen = () => {
   const [stocks, setStocks] = useState([]);

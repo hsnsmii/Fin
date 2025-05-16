@@ -2,11 +2,11 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, Modal, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getStockDetails, getStockHistory } from '../services/fmpApi';
+import { getStockDetails, getStockHistory } from '../../services/fmpApi';
 import { LineChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { styles } from "../styles/StockDetailStyle";
+import { styles } from "../../styles/StockDetailStyle";
 
 const screenWidth = Dimensions.get('window').width;
 

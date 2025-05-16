@@ -14,7 +14,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
-import PortfolioDetailScreen from '../screens/PortfolioDetailScreen';
+import PortfolioDetailScreen from './PortfolioDetailScreen';
 
 const AssetsScreen = () => {
   const [portfolios, setPortfolios] = useState([]);

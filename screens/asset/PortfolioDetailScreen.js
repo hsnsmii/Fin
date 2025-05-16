@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import axios from 'axios';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { getStockDetails } from '../services/fmpApi';
+import { getStockDetails } from '../../services/fmpApi';
 
 const PortfolioDetailScreen = () => {
   const route = useRoute();

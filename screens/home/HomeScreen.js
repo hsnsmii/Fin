@@ -15,7 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { Ionicons, FontAwesome5, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import styles from "../styles/hstyles";
+import styles from "../../styles/hstyles";
 import { useNavigation } from '@react-navigation/native';
 
 const HomeScreen = () => {
