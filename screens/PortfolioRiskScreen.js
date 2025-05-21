@@ -5,15 +5,41 @@ import { Ionicons } from '@expo/vector-icons';
 import { LineChart, PieChart } from 'react-native-chart-kit';
 import { getStockHistory } from '../services/fmpApi';
 
-// Örnek trend verisi (ileride gerçek veriye dönüştürülebilir)
-const sampleTrend = [
-  { date: '05-01', level: 2 },
-  { date: '05-02', level: 3 },
-  { date: '05-03', level: 2 },
-  { date: '05-04', level: 1 },
-  { date: '05-05', level: 2 },
-];
+// SPY verisine göre beta hesaplayan fonksiyon
+const calculateBeta = (stockHistory, marketHistory) => {
+  const stockCloses = stockHistory.map(h => h.close).reverse();
+  const marketCloses = marketHistory.map(h => h.close).reverse();
 
+  if (stockCloses.length < 21 || marketCloses.length < 21) return null;
+
+  const stockReturns = [];
+  const marketReturns = [];
+
+  for (let i = 1; i < 21; i++) {
+    const stockReturn = (stockCloses[i] - stockCloses[i - 1]) / stockCloses[i - 1];
+    const marketReturn = (marketCloses[i] - marketCloses[i - 1]) / marketCloses[i - 1];
+    stockReturns.push(stockReturn);
+    marketReturns.push(marketReturn);
+  }
+
+  const meanStock = stockReturns.reduce((a, b) => a + b, 0) / stockReturns.length;
+  const meanMarket = marketReturns.reduce((a, b) => a + b, 0) / marketReturns.length;
+
+  let covariance = 0;
+  let marketVariance = 0;
+
+  for (let i = 0; i < stockReturns.length; i++) {
+    covariance += (stockReturns[i] - meanStock) * (marketReturns[i] - meanMarket);
+    marketVariance += Math.pow(marketReturns[i] - meanMarket, 2);
+  }
+
+  covariance /= stockReturns.length;
+  marketVariance /= stockReturns.length;
+
+  return marketVariance === 0 ? 0 : covariance / marketVariance;
+};
+
+// Teknik göstergeler
 const calculateIndicators = (history) => {
   const closes = history.map(h => h.close).reverse();
   if (closes.length < 20) return null;
@@ -65,15 +91,25 @@ const PortfolioRiskScreen = () => {
       const symbols = [...new Set(stocks.map(s => s.symbol))];
       const riskData = [];
 
+      // SPY verisini bir kez al
+      const marketHistory = await getStockHistory('SPY');
+
       for (const symbol of symbols) {
         const history = await getStockHistory(symbol);
         const indicators = calculateIndicators(history);
-        if (!indicators) continue;
+        const beta = calculateBeta(history, marketHistory);
+
+        if (!indicators || beta === null) {
+          console.warn(`Yetersiz veri: ${symbol}`);
+          continue;
+        }
+
+        const payload = { ...indicators, beta, symbol };
 
         const res = await fetch("http://192.168.1.37:5050/predict-risk", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(indicators),
+          body: JSON.stringify(payload),
         });
 
         const json = await res.json();
@@ -150,6 +186,14 @@ const PortfolioRiskScreen = () => {
     }));
   };
 
+  const sampleTrend = [
+    { date: '05-01', level: 2 },
+    { date: '05-02', level: 3 },
+    { date: '05-03', level: 2 },
+    { date: '05-04', level: 1 },
+    { date: '05-05', level: 2 },
+  ];
+
   const getLineChartData = () => ({
     labels: sampleTrend.map(d => d.date),
     datasets: [{ data: sampleTrend.map(d => d.level), strokeWidth: 2 }]
@@ -169,7 +213,6 @@ const PortfolioRiskScreen = () => {
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.container}>
-          {/* Genel Risk Skoru Kutusu */}
           {getPortfolioRiskScore() && (
             <View style={styles.scoreBox}>
               <Text style={styles.scoreText}>Genel Risk Skoru: {getPortfolioRiskScore().total}</Text>
@@ -179,7 +222,6 @@ const PortfolioRiskScreen = () => {
             </View>
           )}
 
-          {/* Pie Chart */}
           {portfolio.length > 0 && (
             <>
               <Text style={styles.chartTitle}>Risk Dağılımı (Pie)</Text>
@@ -197,7 +239,6 @@ const PortfolioRiskScreen = () => {
             </>
           )}
 
-          {/* Line Chart */}
           {portfolio.length > 0 && (
             <>
               <Text style={styles.chartTitle}>Risk Trend Grafiği (örnek)</Text>
@@ -219,7 +260,6 @@ const PortfolioRiskScreen = () => {
             </>
           )}
 
-          {/* Risk Kartları */}
           {portfolio.map((item) => (
             <View key={item.symbol} style={[styles.card, { borderColor: getColor(item.risk) }]}>
               <Text style={styles.symbol}>{item.symbol}</Text>
@@ -229,12 +269,10 @@ const PortfolioRiskScreen = () => {
         </ScrollView>
       )}
 
-      {/* Liste Seç Butonu */}
       <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.floatingButton}>
         <Ionicons name="add" size={30} color="white" />
       </TouchableOpacity>
 
-      {/* Modal */}
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>

@@ -33,12 +33,19 @@ def calculate_beta(stock_df, market_df):
     merged.dropna(inplace=True)
 
     if len(merged) < 20:
+        print(f"[Uyarı] Yetersiz veri ile beta hesaplanamaz. {len(merged)} gün")
         return None
 
     covariance = np.cov(merged['stock_return'], merged['market_return'])[0][1]
-    variance = np.var(merged['market_return'])
-    beta = covariance / variance if variance != 0 else None
+    variance = np.var(merged['market_return'], ddof=1)
+
+    if variance == 0 or np.isnan(variance):
+        print(f"[Uyarı] Market varyansı sıfır veya geçersiz.")
+        return None
+
+    beta = covariance / variance
     return beta
+
 
 # Hisse verisini çek
 def get_historical_data(symbol):

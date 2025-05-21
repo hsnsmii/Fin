@@ -1,16 +1,49 @@
 // StockDetailScreen.js
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, Modal, Alert } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, Modal, Alert, Dimensions } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getStockDetails, getStockHistory } from '../../services/fmpApi';
 import { LineChart } from 'react-native-chart-kit';
-import { Dimensions } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { styles } from "../../styles/StockDetailStyle";
 
 const screenWidth = Dimensions.get('window').width;
 
-// Teknik göstergeleri hesaplayan fonksiyon
+// 📈 Beta hesaplama fonksiyonu
+const calculateBeta = (stockHistory, marketHistory) => {
+  const stockCloses = stockHistory.map(h => h.close).reverse();
+  const marketCloses = marketHistory.map(h => h.close).reverse();
+
+  if (stockCloses.length < 21 || marketCloses.length < 21) return null;
+
+  const stockReturns = [];
+  const marketReturns = [];
+
+  for (let i = 1; i < 21; i++) {
+    const stockReturn = (stockCloses[i] - stockCloses[i - 1]) / stockCloses[i - 1];
+    const marketReturn = (marketCloses[i] - marketCloses[i - 1]) / marketCloses[i - 1];
+    stockReturns.push(stockReturn);
+    marketReturns.push(marketReturn);
+  }
+
+  const meanStock = stockReturns.reduce((a, b) => a + b, 0) / stockReturns.length;
+  const meanMarket = marketReturns.reduce((a, b) => a + b, 0) / marketReturns.length;
+
+  let covariance = 0;
+  let marketVariance = 0;
+
+  for (let i = 0; i < stockReturns.length; i++) {
+    covariance += (stockReturns[i] - meanStock) * (marketReturns[i] - meanMarket);
+    marketVariance += Math.pow(marketReturns[i] - meanMarket, 2);
+  }
+
+  covariance /= stockReturns.length;
+  marketVariance /= stockReturns.length;
+
+  return marketVariance === 0 ? 0 : covariance / marketVariance;
+};
+
+// 📊 Teknik göstergeleri hesaplayan fonksiyon
 const calculateIndicators = (history) => {
   const closes = history.map(h => h.close).reverse();
   if (closes.length < 20) return null;
@@ -36,13 +69,13 @@ const calculateIndicators = (history) => {
 };
 
 const StockDetailScreen = ({ route, navigation }) => {
-  const [riskLevel, setRiskLevel] = useState(null);
   const { symbol } = route.params;
   const [stock, setStock] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [watchlists, setWatchlists] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
+  const [riskLevel, setRiskLevel] = useState(null);
   const [timeRange, setTimeRange] = useState('month');
 
   useEffect(() => {
@@ -50,21 +83,26 @@ const StockDetailScreen = ({ route, navigation }) => {
       try {
         const detail = await getStockDetails(symbol);
         const historical = await getStockHistory(symbol, timeRange);
+        const marketHistorical = await getStockHistory('SPY', timeRange); // SPY verisi
+
         setStock(detail);
         setHistory(historical);
 
         const indicators = calculateIndicators(historical);
-        console.log("Gelen teknik veriler:", indicators);
+        const beta = calculateBeta(historical, marketHistorical);
 
-        if (!indicators) {
+        if (!indicators || beta === null) {
           setRiskLevel("Yetersiz veri");
           return;
         }
 
+        const payload = { ...indicators, beta, symbol };
+        console.log("Gönderilen veriler:", payload);
+
         const response = await fetch("http://192.168.1.37:5050/predict-risk", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(indicators),
+          body: JSON.stringify(payload),
         });
 
         const data = await response.json();
