@@ -1,66 +1,45 @@
+// PortfolioRiskScreen.js
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, StyleSheet, TouchableOpacity, Modal, Dimensions, ScrollView } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity, Modal, Dimensions, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { LineChart, PieChart } from 'react-native-chart-kit';
 import { getStockHistory } from '../services/fmpApi';
 
-// SPY verisine göre beta hesaplayan fonksiyon
 const calculateBeta = (stockHistory, marketHistory) => {
   const stockCloses = stockHistory.map(h => h.close).reverse();
   const marketCloses = marketHistory.map(h => h.close).reverse();
-
   if (stockCloses.length < 21 || marketCloses.length < 21) return null;
-
-  const stockReturns = [];
-  const marketReturns = [];
-
+  const stockReturns = [], marketReturns = [];
   for (let i = 1; i < 21; i++) {
-    const stockReturn = (stockCloses[i] - stockCloses[i - 1]) / stockCloses[i - 1];
-    const marketReturn = (marketCloses[i] - marketCloses[i - 1]) / marketCloses[i - 1];
-    stockReturns.push(stockReturn);
-    marketReturns.push(marketReturn);
+    stockReturns.push((stockCloses[i] - stockCloses[i - 1]) / stockCloses[i - 1]);
+    marketReturns.push((marketCloses[i] - marketCloses[i - 1]) / marketCloses[i - 1]);
   }
-
   const meanStock = stockReturns.reduce((a, b) => a + b, 0) / stockReturns.length;
   const meanMarket = marketReturns.reduce((a, b) => a + b, 0) / marketReturns.length;
-
-  let covariance = 0;
-  let marketVariance = 0;
-
+  let covariance = 0, marketVariance = 0;
   for (let i = 0; i < stockReturns.length; i++) {
     covariance += (stockReturns[i] - meanStock) * (marketReturns[i] - meanMarket);
     marketVariance += Math.pow(marketReturns[i] - meanMarket, 2);
   }
-
-  covariance /= stockReturns.length;
-  marketVariance /= stockReturns.length;
-
   return marketVariance === 0 ? 0 : covariance / marketVariance;
 };
 
-// Teknik göstergeler
 const calculateIndicators = (history) => {
   const closes = history.map(h => h.close).reverse();
   if (closes.length < 20) return null;
-
   let gains = 0, losses = 0;
   for (let i = 1; i < 15; i++) {
     const change = closes[i] - closes[i - 1];
-    if (change > 0) gains += change;
-    else losses -= change;
+    change > 0 ? gains += change : losses -= change;
   }
-
-  const avgGain = gains / 14;
-  const avgLoss = losses / 14;
+  const avgGain = gains / 14, avgLoss = losses / 14;
   const rs = avgGain / avgLoss;
   const rsi = 100 - (100 / (1 + rs));
-
   const sma_20 = closes.slice(0, 20).reduce((sum, val) => sum + val, 0) / 20;
   const mean = sma_20;
   const variance = closes.slice(0, 20).reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / 20;
   const volatility = Math.sqrt(variance);
-
   return { rsi, sma_20, volatility };
 };
 
@@ -70,19 +49,32 @@ const PortfolioRiskScreen = () => {
   const [portfolio, setPortfolio] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [recommendations, setRecommendations] = useState([]);
 
   useEffect(() => {
     const fetchWatchlists = async () => {
       try {
         const userId = await AsyncStorage.getItem('userId');
-        const res = await fetch(`http://192.168.1.37:3000/api/watchlists/${userId}`);
+        const res = await fetch(`http://172.20.10.2:3000/api/watchlists/${userId}`);
         const data = await res.json();
         setWatchlists(data);
       } catch (err) {
-        console.error("Watchlist alma hatası:", err);
+        console.error("Watchlist alma hatasi:", err);
       }
     };
+
+    const fetchRecommendations = async () => {
+      try {
+        const res = await fetch("http://172.20.10.2:5050/recommend-low-risk");
+        const data = await res.json();
+        setRecommendations(data);
+      } catch (err) {
+        console.error("Öneri alma hatası:", err);
+      }
+    };
+
     fetchWatchlists();
+    fetchRecommendations();
   }, []);
 
   const fetchPortfolioRisk = async (stocks) => {
@@ -90,35 +82,25 @@ const PortfolioRiskScreen = () => {
     try {
       const symbols = [...new Set(stocks.map(s => s.symbol))];
       const riskData = [];
-
-      // SPY verisini bir kez al
       const marketHistory = await getStockHistory('SPY');
 
       for (const symbol of symbols) {
         const history = await getStockHistory(symbol);
         const indicators = calculateIndicators(history);
         const beta = calculateBeta(history, marketHistory);
-
-        if (!indicators || beta === null) {
-          console.warn(`Yetersiz veri: ${symbol}`);
-          continue;
-        }
-
+        if (!indicators || beta === null) continue;
         const payload = { ...indicators, beta, symbol };
-
-        const res = await fetch("http://192.168.1.37:5050/predict-risk", {
+        const res = await fetch("http://172.20.10.2:5050/predict-risk", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-
         const json = await res.json();
-        riskData.push({ symbol, risk: json.risk_level });
+        riskData.push({ symbol, risk: json.risk_percentage, breakdown: json.breakdown });
       }
-
       setPortfolio(riskData);
     } catch (err) {
-      console.error("Portföy risk analizi hatası:", err);
+      console.error("Portföy risk analizi hatasi:", err);
     } finally {
       setLoading(false);
     }
@@ -131,73 +113,34 @@ const PortfolioRiskScreen = () => {
   };
 
   const getColor = (risk) => {
-    if (risk === 'Low') return '#2ecc71';
-    if (risk === 'Medium') return '#f1c40f';
-    if (risk === 'High') return '#e74c3c';
-    return '#95a5a6';
+    if (risk < 40) return '#2ecc71';
+    if (risk < 70) return '#f1c40f';
+    return '#e74c3c';
   };
 
   const getPortfolioRiskScore = () => {
     if (portfolio.length === 0) return null;
-
-    const scoreMap = { Low: 1, Medium: 2, High: 3 };
-    const scores = portfolio.map(p => scoreMap[p.risk]);
-    const total = scores.reduce((a, b) => a + b, 0);
-    const avg = total / scores.length;
-
-    let avgLevel = 'Low';
-    if (avg >= 2.5) avgLevel = 'High';
-    else if (avg >= 1.5) avgLevel = 'Medium';
-
-    return { total, avg: avg.toFixed(2), level: avgLevel };
+    const avg = portfolio.reduce((acc, p) => acc + (p.risk || 0), 0) / portfolio.length;
+    return { avg: avg.toFixed(1) };
   };
 
   const getPieChartData = () => {
-    const counts = { Low: 0, Medium: 0, High: 0 };
-    portfolio.forEach(p => counts[p.risk] = (counts[p.risk] || 0) + 1);
     const total = portfolio.length;
+    const low = portfolio.filter(p => p.risk < 40).length;
+    const med = portfolio.filter(p => p.risk >= 40 && p.risk < 70).length;
+    const high = portfolio.filter(p => p.risk >= 70).length;
 
     return [
-      {
-        name: 'Low',
-        population: counts.Low,
-        color: '#2ecc71',
-        legendFontColor: '#333',
-        legendFontSize: 14,
-      },
-      {
-        name: 'Medium',
-        population: counts.Medium,
-        color: '#f1c40f',
-        legendFontColor: '#333',
-        legendFontSize: 14,
-      },
-      {
-        name: 'High',
-        population: counts.High,
-        color: '#e74c3c',
-        legendFontColor: '#333',
-        legendFontSize: 14,
-      },
+      { name: 'Düşük Risk', population: low, color: '#2ecc71' },
+      { name: 'Orta Risk', population: med, color: '#f1c40f' },
+      { name: 'Yüksek Risk', population: high, color: '#e74c3c' },
     ].map(item => ({
       ...item,
-      name: `${item.population} ${item.name}`,
-      percentage: total > 0 ? ((item.population / total) * 100).toFixed(0) + '%' : '0%',
+      name: `${item.name} (${((item.population / total) * 100).toFixed(1)}%)`,
+      legendFontColor: '#333',
+      legendFontSize: 14,
     }));
   };
-
-  const sampleTrend = [
-    { date: '05-01', level: 2 },
-    { date: '05-02', level: 3 },
-    { date: '05-03', level: 2 },
-    { date: '05-04', level: 1 },
-    { date: '05-05', level: 2 },
-  ];
-
-  const getLineChartData = () => ({
-    labels: sampleTrend.map(d => d.date),
-    datasets: [{ data: sampleTrend.map(d => d.level), strokeWidth: 2 }]
-  });
 
   return (
     <View style={{ flex: 1 }}>
@@ -215,16 +158,15 @@ const PortfolioRiskScreen = () => {
         <ScrollView contentContainerStyle={styles.container}>
           {getPortfolioRiskScore() && (
             <View style={styles.scoreBox}>
-              <Text style={styles.scoreText}>Genel Risk Skoru: {getPortfolioRiskScore().total}</Text>
               <Text style={styles.scoreText}>
-                Ortalama Risk: {getPortfolioRiskScore().level} ({getPortfolioRiskScore().avg})
+                Ortalama Risk Yüzdesi: %{getPortfolioRiskScore().avg}
               </Text>
             </View>
           )}
 
           {portfolio.length > 0 && (
             <>
-              <Text style={styles.chartTitle}>Risk Dağılımı (Pie)</Text>
+              <Text style={styles.chartTitle}>Risk Dağılımı</Text>
               <PieChart
                 data={getPieChartData()}
                 width={Dimensions.get('window').width - 32}
@@ -239,33 +181,36 @@ const PortfolioRiskScreen = () => {
             </>
           )}
 
-          {portfolio.length > 0 && (
-            <>
-              <Text style={styles.chartTitle}>Risk Trend Grafiği (örnek)</Text>
-              <LineChart
-                data={getLineChartData()}
-                width={Dimensions.get('window').width - 32}
-                height={200}
-                yLabelsOffset={20}
-                chartConfig={{
-                  backgroundColor: '#fff',
-                  backgroundGradientFrom: '#fff',
-                  backgroundGradientTo: '#fff',
-                  decimalPlaces: 0,
-                  color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
-                  labelColor: () => '#000',
-                }}
-                style={styles.chart}
-              />
-            </>
-          )}
-
           {portfolio.map((item) => (
             <View key={item.symbol} style={[styles.card, { borderColor: getColor(item.risk) }]}>
               <Text style={styles.symbol}>{item.symbol}</Text>
-              <Text style={[styles.risk, { color: getColor(item.risk) }]}>Risk: {item.risk}</Text>
+              <Text style={[styles.risk, { color: getColor(item.risk) }]}>Risk Skoru: %{item.risk}</Text>
+              <View style={{ height: 8, backgroundColor: '#eee', borderRadius: 6, overflow: 'hidden', marginTop: 6 }}>
+                <View
+                  style={{ height: '100%', width: `${item.risk}%`, backgroundColor: getColor(item.risk) }}
+                />
+              </View>
+              {item.breakdown && (
+                <View style={{ marginTop: 8 }}>
+                  <Text style={styles.breakdownText}>RSI: {item.breakdown.rsi.toFixed(2)}</Text>
+                  <Text style={styles.breakdownText}>SMA20: {item.breakdown.sma_20.toFixed(2)}</Text>
+                  <Text style={styles.breakdownText}>Volatilite: {item.breakdown.volatility.toFixed(2)}</Text>
+                  <Text style={styles.breakdownText}>Beta: {item.breakdown.beta.toFixed(2)}</Text>
+                </View>
+              )}
             </View>
           ))}
+
+          {recommendations.length > 0 && (
+            <View style={styles.card}>
+              <Text style={styles.chartTitle}>📉 Düşük Riskli Hisse Önerileri</Text>
+              {recommendations.map(item => (
+                <Text key={item.symbol} style={{ fontSize: 14 }}>
+                  • {item.symbol} (%{item.risk})
+                </Text>
+              ))}
+            </View>
+          )}
         </ScrollView>
       )}
 
@@ -310,6 +255,7 @@ const styles = StyleSheet.create({
   },
   symbol: { fontSize: 18, fontWeight: 'bold' },
   risk: { marginTop: 8, fontSize: 16 },
+  breakdownText: { fontSize: 13, color: '#333', marginTop: 2 },
   floatingButton: {
     position: 'absolute',
     bottom: 30,
@@ -328,17 +274,8 @@ const styles = StyleSheet.create({
   },
   selectedInfo: { position: 'absolute', top: 40, left: 16, zIndex: 10 },
   selectedInfoText: { fontSize: 16, fontWeight: 'bold', color: '#007AFF' },
-  scoreBox: {
-    backgroundColor: '#eef6ff',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  scoreText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#007AFF',
-  },
+  scoreBox: { backgroundColor: '#eef6ff', padding: 12, borderRadius: 8, marginBottom: 16 },
+  scoreText: { fontSize: 16, fontWeight: 'bold', color: '#007AFF' },
   modalContainer: { flex: 1, justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.3)' },
   modalContent: { margin: 20, padding: 20, backgroundColor: '#fff', borderRadius: 10 },
   modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },

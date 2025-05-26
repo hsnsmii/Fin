@@ -67,7 +67,7 @@ export default function RegisterScreen({ navigation, route }) {
     Keyboard.dismiss();
     
     try {
-      const response = await fetch('http://192.168.1.37:3000/register', {
+      const response = await fetch('http://172.20.10.2:3000/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password }),

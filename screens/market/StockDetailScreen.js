@@ -9,41 +9,29 @@ import { styles } from "../../styles/StockDetailStyle";
 
 const screenWidth = Dimensions.get('window').width;
 
-// 📈 Beta hesaplama fonksiyonu
 const calculateBeta = (stockHistory, marketHistory) => {
   const stockCloses = stockHistory.map(h => h.close).reverse();
   const marketCloses = marketHistory.map(h => h.close).reverse();
-
   if (stockCloses.length < 21 || marketCloses.length < 21) return null;
 
-  const stockReturns = [];
-  const marketReturns = [];
-
+  const stockReturns = [], marketReturns = [];
   for (let i = 1; i < 21; i++) {
-    const stockReturn = (stockCloses[i] - stockCloses[i - 1]) / stockCloses[i - 1];
-    const marketReturn = (marketCloses[i] - marketCloses[i - 1]) / marketCloses[i - 1];
-    stockReturns.push(stockReturn);
-    marketReturns.push(marketReturn);
+    stockReturns.push((stockCloses[i] - stockCloses[i - 1]) / stockCloses[i - 1]);
+    marketReturns.push((marketCloses[i] - marketCloses[i - 1]) / marketCloses[i - 1]);
   }
 
   const meanStock = stockReturns.reduce((a, b) => a + b, 0) / stockReturns.length;
   const meanMarket = marketReturns.reduce((a, b) => a + b, 0) / marketReturns.length;
 
-  let covariance = 0;
-  let marketVariance = 0;
-
+  let covariance = 0, marketVariance = 0;
   for (let i = 0; i < stockReturns.length; i++) {
     covariance += (stockReturns[i] - meanStock) * (marketReturns[i] - meanMarket);
     marketVariance += Math.pow(marketReturns[i] - meanMarket, 2);
   }
 
-  covariance /= stockReturns.length;
-  marketVariance /= stockReturns.length;
-
   return marketVariance === 0 ? 0 : covariance / marketVariance;
 };
 
-// 📊 Teknik göstergeleri hesaplayan fonksiyon
 const calculateIndicators = (history) => {
   const closes = history.map(h => h.close).reverse();
   if (closes.length < 20) return null;
@@ -51,12 +39,10 @@ const calculateIndicators = (history) => {
   let gains = 0, losses = 0;
   for (let i = 1; i < 15; i++) {
     const change = closes[i] - closes[i - 1];
-    if (change > 0) gains += change;
-    else losses -= change;
+    change > 0 ? gains += change : losses -= change;
   }
 
-  const avgGain = gains / 14;
-  const avgLoss = losses / 14;
+  const avgGain = gains / 14, avgLoss = losses / 14;
   const rs = avgGain / avgLoss;
   const rsi = 100 - (100 / (1 + rs));
 
@@ -75,7 +61,7 @@ const StockDetailScreen = ({ route, navigation }) => {
   const [loading, setLoading] = useState(true);
   const [watchlists, setWatchlists] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
-  const [riskLevel, setRiskLevel] = useState(null);
+  const [riskPercentage, setRiskPercentage] = useState(null);
   const [timeRange, setTimeRange] = useState('month');
 
   useEffect(() => {
@@ -83,7 +69,7 @@ const StockDetailScreen = ({ route, navigation }) => {
       try {
         const detail = await getStockDetails(symbol);
         const historical = await getStockHistory(symbol, timeRange);
-        const marketHistorical = await getStockHistory('SPY', timeRange); // SPY verisi
+        const marketHistorical = await getStockHistory('SPY', timeRange);
 
         setStock(detail);
         setHistory(historical);
@@ -92,14 +78,14 @@ const StockDetailScreen = ({ route, navigation }) => {
         const beta = calculateBeta(historical, marketHistorical);
 
         if (!indicators || beta === null) {
-          setRiskLevel("Yetersiz veri");
+          setRiskPercentage(null);
           return;
         }
 
         const payload = { ...indicators, beta, symbol };
         console.log("Gönderilen veriler:", payload);
 
-        const response = await fetch("http://192.168.1.37:5050/predict-risk", {
+        const response = await fetch("http://172.20.10.2:5050/predict-risk", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -107,10 +93,11 @@ const StockDetailScreen = ({ route, navigation }) => {
 
         const data = await response.json();
         console.log("Tahmin sonucu:", data);
-        setRiskLevel(data.risk_level || "Bilinmiyor");
+        setRiskPercentage(data.risk_percentage ?? null);
+
       } catch (err) {
         console.error("Veri çekme hatası:", err);
-        setRiskLevel("Hesaplanamadı");
+        setRiskPercentage(null);
       } finally {
         setLoading(false);
       }
@@ -118,8 +105,7 @@ const StockDetailScreen = ({ route, navigation }) => {
       try {
         const userId = await AsyncStorage.getItem('userId');
         if (!userId) return;
-
-        const response = await fetch(`http://192.168.1.37:3000/api/watchlists/${userId}`);
+        const response = await fetch(`http://172.20.10.2:3000/api/watchlists/${userId}`);
         const data = await response.json();
         setWatchlists(data);
       } catch (err) {
@@ -140,7 +126,7 @@ const StockDetailScreen = ({ route, navigation }) => {
 
   const handleAddToWatchlist = async (listId) => {
     try {
-      const response = await fetch(`http://192.168.1.37:3000/api/watchlists/${listId}/stocks`, {
+      const response = await fetch(`http://172.20.10.2:3000/api/watchlists/${listId}/stocks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ symbol }),
@@ -160,7 +146,7 @@ const StockDetailScreen = ({ route, navigation }) => {
   const handleAddWithFallback = async () => {
     const userId = await AsyncStorage.getItem('userId');
     if (watchlists.length === 0) {
-      const response = await fetch(`http://192.168.1.37:3000/api/watchlists`, {
+      const response = await fetch(`http://172.20.10.2:3000/api/watchlists`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: 'Favoriler', user_id: userId }),
@@ -210,8 +196,8 @@ const StockDetailScreen = ({ route, navigation }) => {
           <Text style={styles.symbol}>{symbol}</Text>
         </View>
         <TouchableOpacity style={styles.addButton} onPress={handleAddWithFallback}>
-          <Feather name="plus" size={20} color="#fff" />
-          <Text style={styles.addText}>İzleme Listesine Ekle</Text>
+          <Feather name="plus" size={22} color="#fff" />
+          <Text style={styles.addText}>Takip Listesine ekle</Text>
         </TouchableOpacity>
       </View>
 
@@ -223,8 +209,22 @@ const StockDetailScreen = ({ route, navigation }) => {
       <View style={styles.infoCard}>
         <Text style={styles.sectionTitle}>Yapay Zeka Risk Değerlendirmesi</Text>
         <Text style={{ fontSize: 16, fontWeight: '600', color: '#e67e22', marginBottom: 10 }}>
-          Risk Skoru: {riskLevel || 'Hesaplanıyor...'}
+          Risk Skoru: {riskPercentage !== null ? `%${riskPercentage}` : 'Hesaplanıyor...'}
         </Text>
+        <View style={{ height: 12, backgroundColor: '#eee', borderRadius: 6, overflow: 'hidden', marginBottom: 12 }}>
+          <View
+            style={{
+              height: '100%',
+              width: `${riskPercentage ?? 0}%`,
+              backgroundColor:
+                riskPercentage < 40
+                  ? '#2ecc71'
+                  : riskPercentage < 70
+                  ? '#f1c40f'
+                  : '#e74c3c',
+            }}
+          />
+        </View>
       </View>
 
       <View style={styles.chartCard}>

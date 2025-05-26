@@ -13,7 +13,7 @@ const WatchlistScreen = () => {
     const fetchLists = async () => {
       try {
         const userId = await AsyncStorage.getItem('userId');
-        const response = await axios.get(`http://192.168.1.37:3000/api/watchlists/${userId}`);
+        const response = await axios.get(`http://172.20.10.2:3000/api/watchlists/${userId}`);
         setLists(response.data);
       } catch (err) {
         console.error('Liste çekilemedi:', err);

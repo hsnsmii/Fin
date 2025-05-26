@@ -26,7 +26,7 @@ const AssetsScreen = () => {
   const fetchPortfolios = async () => {
     try {
       const userId = await AsyncStorage.getItem('userId');
-      const res = await axios.get(`http://192.168.1.37:3000/api/watchlists/${userId}?type=portfolio`);
+      const res = await axios.get(`http://172.20.10.2:3000/api/watchlists/${userId}?type=portfolio`);
       setPortfolios(res.data);
     } catch (err) {
       console.error('Portföyler çekilemedi:', err);
@@ -39,7 +39,7 @@ const AssetsScreen = () => {
     try {
       if (!newPortfolioName.trim()) return;
       const userId = await AsyncStorage.getItem('userId');
-      await axios.post('http://192.168.1.37:3000/api/watchlists', {
+      await axios.post('http://172.20.10.2:3000/api/watchlists', {
         name: newPortfolioName,
         user_id: userId,
         type: 'portfolio'
