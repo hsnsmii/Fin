@@ -55,7 +55,7 @@ const PortfolioRiskScreen = () => {
     const fetchWatchlists = async () => {
       try {
         const userId = await AsyncStorage.getItem('userId');
-        const res = await fetch(`http://172.20.10.2:3000/api/watchlists/${userId}`);
+        const res = await fetch(`http://192.168.1.27:3000/api/watchlists/${userId}`);
         const data = await res.json();
         setWatchlists(data);
       } catch (err) {
@@ -65,7 +65,7 @@ const PortfolioRiskScreen = () => {
 
     const fetchRecommendations = async () => {
       try {
-        const res = await fetch("http://172.20.10.2:5050/recommend-low-risk");
+        const res = await fetch("http://192.168.1.27:5050/recommend-low-risk");
         const data = await res.json();
         setRecommendations(data);
       } catch (err) {
@@ -90,7 +90,7 @@ const PortfolioRiskScreen = () => {
         const beta = calculateBeta(history, marketHistory);
         if (!indicators || beta === null) continue;
         const payload = { ...indicators, beta, symbol };
-        const res = await fetch("http://172.20.10.2:5050/predict-risk", {
+        const res = await fetch("http://192.168.1.27:5050/predict-risk", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),

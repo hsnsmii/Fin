@@ -43,7 +43,7 @@ const AddPositionScreen = () => {
     const fetchExisting = async () => {
       if (isEdit && listId && editSymbol) {
         try {
-          const res = await axios.get(`http://172.20.10.2:3000/api/watchlists/${listId}/stocks`);
+          const res = await axios.get(`http://192.168.1.27:3000/api/watchlists/${listId}/stocks`);
           const match = res.data.find((s) => s.symbol === editSymbol);
           if (match) {
             setSymbol(match.symbol);
@@ -76,7 +76,7 @@ const AddPositionScreen = () => {
     }
 
     try {
-      await axios.post(`http://172.20.10.2:3000/api/watchlists/${listId}/stocks`, {
+      await axios.post(`http://192.168.1.27:3000/api/watchlists/${listId}/stocks`, {
         symbol: symbol.toUpperCase(),
         quantity: parseFloat(quantity),
         price: parseFloat(price),

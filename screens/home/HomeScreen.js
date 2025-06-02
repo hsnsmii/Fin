@@ -33,7 +33,7 @@ const HomeScreen = () => {
         console.warn('User ID bulunamadı. Kullanıcı giriş yapmamış olabilir.');
         return;
       }
-      const res = await axios.get(`http://172.20.10.2:3000/api/watchlists/${userId}`);
+      const res = await axios.get(`http://192.168.1.27:3000/api/watchlists/${userId}`);
       setWatchlists(res.data);
     } catch (err) {
       console.error('Liste çekme hatası', err);
@@ -45,7 +45,7 @@ const HomeScreen = () => {
   const createWatchlist = async () => {
     try {
       const userId = await AsyncStorage.getItem('userId');
-      const res = await axios.post('http://172.20.10.2:3000/api/watchlists', {
+      const res = await axios.post('http://192.168.1.27:3000/api/watchlists', {
         name: newListName,
         user_id: userId,
       });
