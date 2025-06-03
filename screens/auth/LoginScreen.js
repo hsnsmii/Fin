@@ -318,12 +318,10 @@ const styles = StyleSheet.create({
     marginTop: '15%',
     marginBottom: '8%',
   },
-
   formContainer: {
     width: '100%',
     marginBottom: 20,
   },
-
   inputWrapper: {
     backgroundColor: '#ffffff',
     borderRadius: 8,
@@ -337,7 +335,28 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 1,
   },
-
+  input: {
+    flex: 1,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: '#2d3748',
+    height: '100%',
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    height: 48,
+    alignItems: 'center',
+    marginBottom: 5,
+    shadowColor: '#718096',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
+  },
   passwordInput: {
     flex: 1,
     paddingHorizontal: 16,
@@ -345,36 +364,36 @@ const styles = StyleSheet.create({
     color: '#2d3748',
     height: '100%',
   },
-
   eyeButton: {
     paddingHorizontal: 12,
     height: '100%',
     justifyContent: 'center',
   },
-
+  
   eyeButtonText: {
     color: '#4299e1',
     fontSize: 14,
   },
-
+  
+  // Hata mesajı stili
   errorMessage: {
     color: '#e53e3e',
     fontSize: 14,
     marginTop: 6,
     marginBottom: 6,
   },
-
+  
   forgotPassword: {
     alignSelf: 'flex-end',
     marginTop: 8,
     marginBottom: 24,
   },
-
+  
   forgotPasswordText: {
     color: '#4299e1',
     fontSize: 14,
   },
-
+  
   loginButton: {
     backgroundColor: '#3182ce',
     borderRadius: 8,
@@ -387,25 +406,25 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
   },
-
+  
   loginButtonText: {
     color: '#ffffff',
     fontSize: 16,
     fontWeight: '600',
   },
-
+  
   registerContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 20,
   },
-
+  
   registerText: {
     color: '#718096',
     fontSize: 14,
   },
-
+  
   registerLink: {
     color: '#3182ce',
     fontSize: 14,
