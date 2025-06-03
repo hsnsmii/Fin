@@ -24,6 +24,10 @@ const HomeScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [newListName, setNewListName] = useState('');
   const [loading, setLoading] = useState(true);
+  const [marketData, setMarketData] = useState([]); 
+  const [popularStocks, setPopularStocks] = useState([]); 
+  const [news, setNews] = useState([]); 
+
   const handleSettingsPress1 = () => navigation.navigate('Market');
 
   const fetchWatchlists = async () => {
@@ -58,20 +62,50 @@ const HomeScreen = () => {
     }
   };
 
+  const fetchMarketData = async () => {
+    try {
+      const res = await axios.get('https://financialmodelingprep.com/api/v3/quote/BIST100,NASDAQ100?apikey=obHajA78aHmRpFpviomn8XALGDAoonj3');
+      if (res.data && Array.isArray(res.data)) {
+        setMarketData(res.data);
+      } else {
+        console.error("Unexpected market data format", res.data);
+      }
+    } catch (err) {
+      console.error("Market data fetch error", err);
+    }
+  };
+
+  const fetchPopularStocks = async () => {
+    try {
+      const res = await axios.get('https://financialmodelingprep.com/api/v3/stock_market/gainers_losers?apikey=obHajA78aHmRpFpviomn8XALGDAoonj3');
+      setPopularStocks(res.data.gainers); // Yükselen hisseler
+    } catch (err) {
+      console.error("Popular stocks fetch error", err);
+    }
+  };
+
+  const fetchNews = async () => {
+    try {
+      const res = await axios.get('https://financialmodelingprep.com/api/v3/stock_news?limit=5&apikey=obHajA78aHmRpFpviomn8XALGDAoonj3');
+      setNews(res.data);
+    } catch (err) {
+      console.error("News fetch error", err);
+    }
+  };
+
   useEffect(() => {
     fetchWatchlists();
+    fetchMarketData();
+    fetchPopularStocks();
+    fetchNews();
   }, []);
-
-  const handleSettingsPress = () => navigation.navigate('FAQ');
-  //const handleSettingsPress1 = () => navigation.navigate('Market');
-  const handleSettingsPress2 = () => navigation.navigate('Profile');
 
   const openWatchlist = (listId) => {
     navigation.navigate('WatchlistDetail', { listId });
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
       <StatusBar barStyle="light-content" />
       <ScrollView showsVerticalScrollIndicator={false}>
         <LinearGradient colors={["#2c3e50", "#3498db"]} style={styles.header}>
@@ -85,69 +119,51 @@ const HomeScreen = () => {
             </TouchableOpacity>
           </View>
 
+          {/* Market Overview */}
           <View style={styles.marketOverview}>
-            <View style={styles.marketCard}>
-              <View style={styles.marketCardHeader}>
-                <Text style={styles.marketCardTitle}>BIST100</Text>
-                <MaterialCommunityIcons name="chart-line" size={18} color="#4CAF50" />
-              </View>
-              <Text style={styles.marketCardValue}>9,300</Text>
-              <View style={styles.marketCardTrend}>
-                <Ionicons name="arrow-up" size={14} color="#4CAF50" />
-                <Text style={styles.trendUp}>2.4%</Text>
-              </View>
-            </View>
-
-            <View style={styles.marketCard}>
-              <View style={styles.marketCardHeader}>
-                <Text style={styles.marketCardTitle}>NASDAQ 100</Text>
-                <MaterialCommunityIcons name="chart-line" size={18} color="#E53935" />
-              </View>
-              <Text style={styles.marketCardValue}>504</Text>
-              <View style={styles.marketCardTrend}>
-                <Ionicons name="arrow-down" size={14} color="#E53935" />
-                <Text style={styles.trendDown}>0.8%</Text>
-              </View>
-            </View>
+            {marketData && marketData.length > 0 ? (
+              marketData.map((item, index) => (
+                <View key={index} style={styles.marketCard}>
+                  <View style={styles.marketCardHeader}>
+                    <Text style={styles.marketCardTitle}>{item.symbol}</Text>
+                    <MaterialCommunityIcons name="chart-line" size={18} color={item.change > 0 ? "#4CAF50" : "#E53935"} />
+                  </View>
+                  <Text style={styles.marketCardValue}>{item.price}</Text>
+                  <View style={styles.marketCardTrend}>
+                    <Ionicons name={item.change > 0 ? "arrow-up" : "arrow-down"} size={14} color={item.change > 0 ? "#4CAF50" : "#E53935"} />
+                    <Text style={item.change > 0 ? styles.trendUp : styles.trendDown}>{item.change.toFixed(2)}%</Text>
+                  </View>
+                </View>
+              ))
+            ) : (
+              <ActivityIndicator size="small" />
+            )}
           </View>
         </LinearGradient>
 
+        {/* Yükselen ve Düşen Hisseler */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>En Çok Tercih Edilen</Text>
+            <Text style={styles.sectionTitle}>Yükselen Hisseler</Text>
             <TouchableOpacity><Text style={styles.seeAllText}>Tümünü Gör</Text></TouchableOpacity>
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.preferredStocksScroll}>
-            {["THYAO", "GARAN", "ASELS", "TUPRS"].map((stock, index) => (
-              <TouchableOpacity key={index} style={styles.stockCard}>
-                <View style={styles.stockCardTop}>
-                  <Text style={styles.stockSymbol}>{stock}</Text>
-                  <Ionicons name="star" size={16} color="#FFD700" />
-                </View>
-                <Text style={styles.stockName}>
-                  {stock === "THYAO" ? "Türk Hava Yolları" :
-                   stock === "GARAN" ? "Garanti Bankası" :
-                   stock === "ASELS" ? "Aselsan" : "Tüpraş"}
-                </Text>
-                <View style={styles.stockPriceContainer}>
-                  <Text style={styles.stockPrice}>{(Math.random() * 1000).toFixed(2)} ₺</Text>
-                  <View style={[styles.percentChange, index % 2 === 0 ? styles.percentUp : styles.percentDown]}>
-                    <Ionicons name={index % 2 === 0 ? "arrow-up" : "arrow-down"} size={12} color="white" />
-                    <Text style={styles.percentText}>{(Math.random() * 5).toFixed(2)}%</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))}
+            {popularStocks && popularStocks.length > 0 ? (
+              popularStocks.map((stock, index) => (
+                <TouchableOpacity key={index} style={styles.stockCard}>
+                  <Text style={styles.stockSymbol}>{stock.symbol}</Text>
+                  <Text style={styles.stockName}>{stock.name}</Text>
+                  <Text style={styles.stockPrice}>{stock.price} ₺</Text>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <ActivityIndicator size="small" />
+            )}
           </ScrollView>
-
-          <TouchableOpacity style={styles.refreshButton}>
-            <Ionicons name="refresh" size={14} color="white" style={styles.refreshIcon} />
-            <Text style={styles.refreshText}>Yenile</Text>
-          </TouchableOpacity>
         </View>
 
-        {/* Watchlists */}
+        {/* Takip Listeleri */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Takip Listeleri</Text>
@@ -158,46 +174,58 @@ const HomeScreen = () => {
           </View>
 
           <View style={styles.watchlistGrid}>
-            {loading ? <ActivityIndicator size="small" /> : watchlists.map((list, index) => (
-              <TouchableOpacity key={index} style={styles.watchlistCard} onPress={() => openWatchlist(list.id)}>
-                <View style={styles.watchlistIconContainer}>
+            {loading ? <ActivityIndicator size="small" /> : (
+              watchlists && watchlists.length > 0 ? watchlists.map((list, index) => (
+                <TouchableOpacity key={index} style={styles.watchlistCard} onPress={() => openWatchlist(list.id)}>
                   <FontAwesome5 name="list" size={20} color="#3498db" />
-                </View>
-                <View style={styles.watchlistInfo}>
                   <Text style={styles.watchlistName}>{list.name}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color="#95a5a6" />
-              </TouchableOpacity>
-            ))}
+                </TouchableOpacity>
+              )) : <Text>No watchlists available</Text>
+            )}
           </View>
+        </View>
+
+        {/* Haberler */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Pazar Haberleri</Text>
+          </View>
+          {news && news.length > 0 ? (
+            news.map((newsItem, index) => (
+              <View key={index} style={styles.newsCard}>
+                <Text style={styles.newsTitle}>{newsItem.title}</Text>
+                <Text style={styles.newsSource}>{newsItem.source}</Text>
+                <Text style={styles.newsDescription}>{newsItem.description}</Text>
+              </View>
+            ))
+          ) : (
+            <ActivityIndicator size="small" />
+          )}
         </View>
       </ScrollView>
 
       {/* Modal */}
       <Modal transparent visible={modalVisible} animationType="slide">
-  <View style={styles.modalContainer}>
-    <View style={styles.modalContent}>
-      <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 10 }}>Yeni Liste Oluştur</Text>
-      <TextInput
-        value={newListName}
-        onChangeText={setNewListName}
-        placeholder="Liste adı girin"
-        style={styles.modalInput}
-      />
-      <View style={styles.modalActions}>
-        <TouchableOpacity onPress={() => setModalVisible(false)}>
-          <Text style={{ color: '#e74c3c' }}>İptal</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={createWatchlist}>
-          <Text style={{ color: '#3498db', fontWeight: 'bold' }}>Oluştur</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  </View>
-</Modal>
-
-
-      
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 10 }}>Yeni Liste Oluştur</Text>
+            <TextInput
+              value={newListName}
+              onChangeText={setNewListName}
+              placeholder="Liste adı girin"
+              style={styles.modalInput}
+            />
+            <View style={styles.modalActions}>
+              <TouchableOpacity onPress={() => setModalVisible(false)}>
+                <Text style={{ color: '#e74c3c' }}>İptal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={createWatchlist}>
+                <Text style={{ color: '#3498db', fontWeight: 'bold' }}>Oluştur</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
