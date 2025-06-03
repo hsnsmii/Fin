@@ -20,7 +20,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function LoginScreen({ navigation, route }) {
-  const navigation = useNavigation();
+  //const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -122,7 +122,7 @@ return (
         ]}
       >
         <ImageBackground
-          source={require('../assets/homescreenbackground.png')}
+          source={require('../../assets/homescreenbackground.png')}
           style={styles.topBackground}
           imageStyle={styles.imageStyle}
         >
