@@ -11,17 +11,23 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   Animated,
-  Easing
+  Easing,
+  ImageBackground,
+  Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function LoginScreen({ navigation, route }) {
+  const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  
+  const [passwordVisible, setPasswordVisible] = useState(false);
+
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
@@ -104,46 +110,57 @@ export default function LoginScreen({ navigation, route }) {
     setIsPasswordVisible(!isPasswordVisible);
   };
 
-  return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" backgroundColor="#f5f7fa" />
-        
-        <Animated.View 
-          style={[
-            styles.headerContainer, 
-            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
-          ]}
+return (
+  <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#f5f7fa" />
+
+      <Animated.View 
+        style={[
+          styles.topSection,
+          { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
+        ]}
+      >
+        <ImageBackground
+          source={require('../assets/homescreenbackground.png')}
+          style={styles.topBackground}
+          imageStyle={styles.imageStyle}
         >
-          <Text style={styles.title}>Welcome Back</Text>
-          <Text style={styles.subtitle}>Sign in to continue</Text>
-        </Animated.View>
-        
-        <Animated.View 
-          style={[
-            styles.formContainer, 
-            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
-          ]}
-        >
-          <View style={styles.inputWrapper}>
-            <TextInput
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              style={styles.input}
-              autoCapitalize="none"
-              placeholderTextColor="#a0aec0"
-            />
-          </View>
-          
+          <Text style={styles.logoText}></Text>
+        </ImageBackground>
+      </Animated.View>
+
+      <Animated.View
+        style={[
+          styles.card,
+          { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
+        ]}
+      >
+        <Text style={styles.title}>Login</Text>
+        <Text style={styles.subtitle}>Welcome back! Please login.</Text>
+
+        <View style={styles.inputWrapper}>
+          <Text style={styles.label}>EMAIL</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Email Address"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            placeholderTextColor="#a0aec0"
+          />
+        </View>
+
+        <View style={styles.inputWrapper}>
+          <Text style={styles.label}>PASSWORD</Text>
           <View style={styles.passwordContainer}>
             <TextInput
+              style={styles.passwordInput}
               placeholder="Password"
+              secureTextEntry={!isPasswordVisible}
               value={password}
               onChangeText={setPassword}
-              secureTextEntry={!isPasswordVisible}
-              style={styles.passwordInput}
               placeholderTextColor="#a0aec0"
             />
             <TouchableOpacity onPress={togglePasswordVisibility} style={styles.eyeButton}>
@@ -152,45 +169,32 @@ export default function LoginScreen({ navigation, route }) {
               </Text>
             </TouchableOpacity>
           </View>
-          
-          {/* Hata mesajı gösterme alanı */}
-          {errorMessage ? (
-            <Text style={styles.errorMessage}>{errorMessage}</Text>
-          ) : null}
-          
-          <TouchableOpacity style={styles.forgotPassword}>
-            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-          </TouchableOpacity>
-        </Animated.View>
-        
-        <Animated.View 
-          style={[
-            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
-          ]}
+        </View>
+
+        {errorMessage ? (
+          <Text style={styles.errorMessage}>{errorMessage}</Text>
+        ) : null}
+
+        <TouchableOpacity style={styles.forgotPassword}>
+          <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.loginButton}
+          onPress={handleLogin}
+          disabled={isLoading}
         >
-          <TouchableOpacity 
-            style={styles.loginButton} 
-            onPress={handleLogin}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text style={styles.loginButtonText}>Login</Text>
-            )}
-          </TouchableOpacity>
-        </Animated.View>
-        
-        <Animated.View 
-          style={[
-            styles.registerContainer, 
-            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
-          ]}
-        >
-          <Text style={styles.registerText}>Don't have an account? </Text>
-          <TouchableOpacity 
+          {isLoading ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={styles.loginButtonText}>Login</Text>
+          )}
+        </TouchableOpacity>
+
+        <View style={styles.registerContainer}>
+          <Text style={styles.footerText}>Don't have an account? </Text>
+          <TouchableOpacity
             onPress={() => {
-              // Animate out before navigating
               Animated.parallel([
                 Animated.timing(fadeAnim, {
                   toValue: 0,
@@ -207,43 +211,119 @@ export default function LoginScreen({ navigation, route }) {
               });
             }}
           >
-            <Text style={styles.registerLink}>Register</Text>
+            <Text style={styles.registerLink}>Signup!</Text>
           </TouchableOpacity>
-        </Animated.View>
-      </SafeAreaView>
-    </TouchableWithoutFeedback>
-  );
+        </View>
+      </Animated.View>
+    </SafeAreaView>
+  </TouchableWithoutFeedback>
+);
+
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f7fa',
-    paddingHorizontal: 20,
+    backgroundColor: '#fff',
   },
-  
+  topSection: {
+    height: '35%',
+    overflow: 'hidden',
+   // borderBottomRightRadius: 80,
+   // borderBottomLeftRadius: 80,
+  },
+  topBackground: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+   card: {
+    flex: 1,
+    backgroundColor: '#fff',
+    marginTop: -50, 
+    borderTopRightRadius: 80,
+    borderTopLeftRadius: 80,
+    padding: 30,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: -2 },
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  imageStyle: {
+    resizeMode: 'cover',
+    paddingTop: 0,
+    width: '120%',
+    height: '100%',
+    
+  },
+  logoText: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#0B0B45',
+    letterSpacing: 2,
+
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#0B0B45',
+    marginBottom: 5,
+    textAlign: 'center',
+  },
+  subtitle: {
+    color: 'gray',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  label: {
+    fontSize: 12,
+    color: 'gray',
+    marginTop: 10,
+    marginBottom: 5,
+  },
+  input: {
+    height: 45,
+    backgroundColor: '#F0F0F0',
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    fontSize: 16,
+  },
+  passwordContainer: {
+    position: 'relative',
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 10,
+    top: 12,
+  },
+  button: {
+    backgroundColor: '#0B0B45',
+    borderRadius: 10,
+    paddingVertical: 12,
+    marginTop: 25,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  footerText: {
+    textAlign: 'center',
+    color: '#0B0B45',
+    marginTop: 20,
+  },
   headerContainer: {
     marginTop: '15%',
     marginBottom: '8%',
   },
-  
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#2d3748',
-    marginBottom: 8,
-  },
-  
-  subtitle: {
-    fontSize: 16,
-    color: '#718096',
-  },
-  
+
   formContainer: {
     width: '100%',
     marginBottom: 20,
   },
-  
+
   inputWrapper: {
     backgroundColor: '#ffffff',
     borderRadius: 8,
@@ -257,31 +337,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 1,
   },
-  
-  input: {
-    flex: 1,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: '#2d3748',
-    height: '100%',
-  },
-  
-  passwordContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    height: 48,
-    alignItems: 'center',
-    marginBottom: 5,
-    shadowColor: '#718096',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
-  },
-  
+
   passwordInput: {
     flex: 1,
     paddingHorizontal: 16,
@@ -289,37 +345,36 @@ const styles = StyleSheet.create({
     color: '#2d3748',
     height: '100%',
   },
-  
+
   eyeButton: {
     paddingHorizontal: 12,
     height: '100%',
     justifyContent: 'center',
   },
-  
+
   eyeButtonText: {
     color: '#4299e1',
     fontSize: 14,
   },
-  
-  // Hata mesajı stili
+
   errorMessage: {
     color: '#e53e3e',
     fontSize: 14,
     marginTop: 6,
     marginBottom: 6,
   },
-  
+
   forgotPassword: {
     alignSelf: 'flex-end',
     marginTop: 8,
     marginBottom: 24,
   },
-  
+
   forgotPasswordText: {
     color: '#4299e1',
     fontSize: 14,
   },
-  
+
   loginButton: {
     backgroundColor: '#3182ce',
     borderRadius: 8,
@@ -332,25 +387,25 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
   },
-  
+
   loginButtonText: {
     color: '#ffffff',
     fontSize: 16,
     fontWeight: '600',
   },
-  
+
   registerContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 20,
   },
-  
+
   registerText: {
     color: '#718096',
     fontSize: 14,
   },
-  
+
   registerLink: {
     color: '#3182ce',
     fontSize: 14,
