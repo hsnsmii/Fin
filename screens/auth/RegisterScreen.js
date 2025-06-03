@@ -1,11 +1,11 @@
-import React, { useState, useRef } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  StyleSheet, 
-  Alert, 
-  TouchableOpacity, 
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  Alert,
+  TouchableOpacity,
   SafeAreaView,
   StatusBar,
   ActivityIndicator,
@@ -13,27 +13,24 @@ import {
   TouchableWithoutFeedback,
   Animated,
   Easing,
-  Image,
-  ImageBackground,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import AnimatedLogoBanner from './AnimatedLogoBanner';
 
-export default function RegisterScreen({ navigation, route }) {
+const LOGO = require('../../assets/Ekran Resmi 2025.png');
+
+export default function RegisterScreen({ navigation }) {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const navigation = useNavigation();
-  const [passwordVisible, setPasswordVisible] = useState(false);
-  
+
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
-  
-  // Start animations when component mounts
-  React.useEffect(() => {
+
+  useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -50,40 +47,36 @@ export default function RegisterScreen({ navigation, route }) {
   }, []);
 
   const handleRegister = async () => {
-    // Form validation
     if (!username || !email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
-    
-    // Basic email validation
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       Alert.alert('Error', 'Please enter a valid email address');
       return;
     }
-    
-    // Password strength check
+
     if (password.length < 6) {
       Alert.alert('Error', 'Password should be at least 6 characters');
       return;
     }
-    
+
     setIsLoading(true);
     Keyboard.dismiss();
-    
+
     try {
       const response = await fetch('http://192.168.1.27:3000/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password }),
       });
-      
+
       const data = await response.json();
-      
+
       if (response.ok) {
         Alert.alert('Success', 'Registration successful!');
-        
         // Animate out before navigating
         Animated.parallel([
           Animated.timing(fadeAnim, {
@@ -103,7 +96,6 @@ export default function RegisterScreen({ navigation, route }) {
         Alert.alert('Error', data.error || 'Registration failed');
       }
     } catch (error) {
-      console.error(error);
       Alert.alert('Error', 'Something went wrong');
     } finally {
       setIsLoading(false);
@@ -117,134 +109,115 @@ export default function RegisterScreen({ navigation, route }) {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" backgroundColor="#f5f7fa" />
+        <StatusBar barStyle="dark-content" backgroundColor="#f6fbfd" />
 
-        <View style={styles.topSection}>
-          <ImageBackground
-            source={require('../../assets/homescreenbackground.png')}
-            style={styles.topBackground}
-            imageStyle={styles.imageStyle}
-          >
-            <Text style={styles.logoText}></Text>
-          </ImageBackground>
-        </View>
+        {/* Animated Logo Banner */}
+        <AnimatedLogoBanner logoSource={LOGO} />
 
+        {/* Back Button */}
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => navigation.navigate('LoginScreen')}
+          onPress={() => navigation.navigate('Login')}
         >
-          <Ionicons name="arrow-back" size={24} />
+          <Ionicons name="arrow-back" size={24} color="#0B0B45" />
         </TouchableOpacity>
 
+        {/* Registration Card */}
         <Animated.View
           style={[
-            styles.headerContainer,
-            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+            styles.card,
+            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
           ]}
         >
           <Text style={styles.title}>Create Account</Text>
           <Text style={styles.subtitle}>Sign up to get started</Text>
-        </Animated.View>
 
-        <Animated.View
-          style={[
-            styles.formContainer,
-            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-          ]}
-        >
-          <View style={styles.inputWrapper}>
-            <Text style={styles.label}>NAME</Text>
-            <TextInput
-              placeholder="Full Name"
-              value={username}
-              onChangeText={setUsername}
-              style={styles.input}
-              autoCapitalize="words"
-              placeholderTextColor="#a0aec0"
-            />
-          </View>
-
-          <View style={styles.inputWrapper}>
-            <Text style={styles.label}>EMAIL</Text>
-            <TextInput
-              placeholder="Email Address"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              style={styles.input}
-              autoCapitalize="none"
-              placeholderTextColor="#a0aec0"
-            />
-          </View>
-
-          <View style={styles.passwordContainer}>
-            <Text style={styles.label}>PASSWORD</Text>
-            <TextInput
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!isPasswordVisible}
-              style={styles.passwordInput}
-              placeholderTextColor="#a0aec0"
-            />
-            <TouchableOpacity
-              onPress={togglePasswordVisibility}
-              style={styles.eyeButton}
-            >
-              <Ionicons
-                name={isPasswordVisible ? 'eye' : 'eye-off'}
-                size={22}
-                color="gray"
+          <View style={styles.formContainer}>
+            <View style={styles.inputWrapper}>
+              <Text style={styles.label}>NAME</Text>
+              <TextInput
+                placeholder="Full Name"
+                value={username}
+                onChangeText={setUsername}
+                style={styles.input}
+                autoCapitalize="words"
+                placeholderTextColor="#a0aec0"
               />
+            </View>
+
+            <View style={styles.inputWrapper}>
+              <Text style={styles.label}>EMAIL</Text>
+              <TextInput
+                placeholder="Email Address"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                style={styles.input}
+                autoCapitalize="none"
+                placeholderTextColor="#a0aec0"
+              />
+            </View>
+
+            <View style={styles.inputWrapper}>
+              <Text style={styles.label}>PASSWORD</Text>
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  placeholder="Password"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!isPasswordVisible}
+                  style={styles.passwordInput}
+                  placeholderTextColor="#a0aec0"
+                />
+                <TouchableOpacity
+                  onPress={togglePasswordVisibility}
+                  style={styles.eyeButton}
+                >
+                  <Ionicons
+                    name={isPasswordVisible ? 'eye' : 'eye-off'}
+                    size={22}
+                    color="#3182ce"
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={styles.registerButton}
+              onPress={handleRegister}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={styles.registerButtonText}>Register</Text>
+              )}
             </TouchableOpacity>
+
+            <View style={styles.loginContainer}>
+              <Text style={styles.loginText}>Already have an account? </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  Animated.parallel([
+                    Animated.timing(fadeAnim, {
+                      toValue: 0,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }),
+                    Animated.timing(slideAnim, {
+                      toValue: -30,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }),
+                  ]).start(() => {
+                    navigation.navigate('Login');
+                  });
+                }}
+              >
+                <Text style={styles.loginLink}>Login</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </Animated.View>
-
-        <Animated.View
-          style={[
-            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-          ]}
-        >
-          <TouchableOpacity
-            style={styles.registerButton}
-            onPress={handleRegister}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text style={styles.registerButtonText}>Register</Text>
-            )}
-          </TouchableOpacity>
-        </Animated.View>
-
-        <Animated.View
-          style={[
-            styles.loginContainer,
-            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-          ]}
-        >
-          <Text style={styles.loginText}>Already have an account? </Text>
-          <TouchableOpacity
-            onPress={() => {
-              Animated.parallel([
-                Animated.timing(fadeAnim, {
-                  toValue: 0,
-                  duration: 300,
-                  useNativeDriver: true,
-                }),
-                Animated.timing(slideAnim, {
-                  toValue: -30,
-                  duration: 300,
-                  useNativeDriver: true,
-                }),
-              ]).start(() => {
-                navigation.navigate('LoginScreen');
-              });
-            }}
-          >
-            <Text style={styles.loginLink}>Login</Text>
-          </TouchableOpacity>
         </Animated.View>
       </SafeAreaView>
     </TouchableWithoutFeedback>
@@ -252,144 +225,93 @@ export default function RegisterScreen({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-   container: {
+  container: {
+    flex: 1,
+    backgroundColor: '#f6fbfd',
+  },
+  card: {
     flex: 1,
     backgroundColor: '#fff',
-  },
-  topSection: {
-    height: '30%',
-    overflow: 'hidden',
-   // borderBottomRightRadius: 80,
-   // borderBottomLeftRadius: 80,
-  },
-  topBackground: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-   card: {
-    flex: 1,
-    backgroundColor: '#fff',
-    marginTop: -60, 
-    borderTopRightRadius: 80,
-    borderTopLeftRadius: 80,
-    padding: 30,
+    marginTop: -16, // Banner ile kart arası
+    borderTopRightRadius: 56,
+    borderTopLeftRadius: 56,
+    paddingHorizontal: 30,
+    paddingTop: 40,
+    paddingBottom: 20,
     shadowColor: '#000',
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: -2 },
-    shadowRadius: 10,
+    shadowRadius: 8,
     elevation: 10,
   },
-  imageStyle: {
-    resizeMode: 'cover',
-    paddingTop: 0,
-    width: '120%',
-    height: '100%',
-    
-  },
-  logoText: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#0B0B45',
-    letterSpacing: 2,
-
-  },
   backButton: {
-  position: 'absolute',
-  top: 55, 
-  left: 20,
-  zIndex: 1,
-  color: '#0B0B45',
-  fontWeight: 'bold',
+    position: 'absolute',
+    top: 55,
+    left: 20,
+    zIndex: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#0B0B45',
-    marginBottom: 5,
+    marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
-    color: 'gray',
-    marginBottom: 20,
+    color: '#718096',
+    fontSize: 16,
+    marginBottom: 28,
     textAlign: 'center',
+  },
+  formContainer: {
+    flex: 1,
+    width: '100%',
+  },
+  inputWrapper: {
+    marginBottom: 20,
   },
   label: {
     fontSize: 12,
-    color: 'gray',
-    marginTop: 10,
-    marginBottom: 5,
+    fontWeight: '600',
+    color: '#4a5568',
+    marginBottom: 8,
+    letterSpacing: 0.5,
   },
   input: {
-    height: 45,
-    backgroundColor: '#F0F0F0',
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    fontSize: 16,
-  },
-  eyeIcon: {
-    position: 'absolute',
-    right: 10,
-    top: 12,
-  },
-  button: {
-    backgroundColor: '#0B0B45',
-    borderRadius: 10,
-    paddingVertical: 12,
-    marginTop: 25,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  footerText: {
-    textAlign: 'center',
-    color: '#0B0B45',
-    marginTop: 20,
-  },
-  
-  headerContainer: {
-    marginTop: '15%',
-    marginBottom: '8%',
-  },
-  
-  formContainer: {
-    width: '100%',
-    marginBottom: 20,
-  },
-  
-  inputWrapper: {
-    backgroundColor: '#ffffff',
+    height: 48,
+    backgroundColor: '#f7fafc',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#e2e8f0',
-    height: 48,
-    marginBottom: 16,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: '#2d3748',
     shadowColor: '#718096',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 1,
     elevation: 1,
   },
-    
   passwordContainer: {
     flexDirection: 'row',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f7fafc',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#e2e8f0',
     height: 48,
     alignItems: 'center',
-    marginBottom: 5,
-    shadowColor: '#718096',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
   },
-  
   passwordInput: {
     flex: 1,
     paddingHorizontal: 16,
@@ -397,18 +319,11 @@ const styles = StyleSheet.create({
     color: '#2d3748',
     height: '100%',
   },
-  
   eyeButton: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     height: '100%',
     justifyContent: 'center',
   },
-  
-  eyeButtonText: {
-    color: '#4299e1',
-    fontSize: 14,
-  },
-  
   registerButton: {
     backgroundColor: '#3182ce',
     borderRadius: 8,
@@ -417,34 +332,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     shadowColor: '#2b6cb0',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
+    shadowOpacity: 0.13,
+    shadowRadius: 2,
     elevation: 2,
     marginTop: 10,
+    marginBottom: 20,
   },
-  
   registerButtonText: {
     color: '#ffffff',
     fontSize: 16,
     fontWeight: '600',
   },
-  
   loginContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 'auto',
+    paddingBottom: 18,
   },
-  
   loginText: {
     color: '#718096',
     fontSize: 14,
   },
-  
   loginLink: {
     color: '#3182ce',
     fontSize: 14,
     fontWeight: '600',
+    marginLeft: 3,
   },
-
 });
+

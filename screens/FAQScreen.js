@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   SafeAreaView,
   TextInput,
@@ -7,7 +7,6 @@ import {
   View,
   ScrollView,
   StatusBar,
-  Animated,
   ActivityIndicator,
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
@@ -16,120 +15,231 @@ import styles from "../styles/faqscreenstyle";
 const FAQScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBox, setSelectedBox] = useState(null);
-  // showAllQuestions state'i kaldırıldı
   const [activeCategory, setActiveCategory] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
 
   const questions = [
+    // Hesap
     {
       id: '1',
       category: 'account',
-      question: 'Hesap nasıl oluşturulur?',
+      question: 'Finover’a nasıl kayıt olabilirim?',
       answer:
-        'Başlamak için Tradebase uygulamasını açın ve adımları izleyin. Tradebase herhangi bir ücret talep etmez...',
+        'Finover uygulamasını indirip “Kayıt Ol” adımlarını takip ederek kolayca hesap oluşturabilirsiniz. Kayıt için e-posta adresi ve güçlü bir şifre yeterlidir.',
     },
     {
       id: '2',
       category: 'account',
-      question: 'Şifremi nasıl sıfırlarım?',
+      question: 'Hesabımı nasıl silebilirim?',
       answer:
-        'Şifrenizi sıfırlamak için, giriş ekranındaki "Şifremi Unuttum" bağlantısına tıklayın ve e-posta adresinizi girin. Size bir sıfırlama bağlantısı göndereceğiz.',
+        'Profil bölümündeki “Hesabı Sil” seçeneği üzerinden hesabınızı kapatma talebi gönderebilir veya destek ekibimizle iletişime geçebilirsiniz.',
     },
+
+    // Takip Listesi
     {
       id: '3',
-      category: 'payment',
-      question: 'Para yatırma nasıl yapılır?',
+      category: 'watchlist',
+      question: 'Takip listesi (Watchlist) nasıl oluşturulur?',
       answer:
-        'Para yatırmak için, uygulama içindeki "Para Yatır" bölümüne gidin ve talimatları izleyin. Banka havalesi, kredi kartı ve diğer yöntemlerle para yatırabilirsiniz.',
+        'Ana ekrandaki “Yeni Liste Oluştur” butonuna tıklayarak farklı portföyleriniz için takip listeleri oluşturabilirsiniz.',
     },
     {
       id: '4',
-      category: 'payment',
-      question: 'Para çekme nasıl yapılır?',
-      answer: 'Para çekmek için, uygulama içindeki "Para Çek" bölümüne gidin. Çekmek istediğiniz miktarı girin ve para çekme yöntemini seçin.',
+      category: 'watchlist',
+      question: 'Bir hisseyi takip listeme nasıl eklerim?',
+      answer:
+        'Hisse detay sayfasında “Takip Listeme Ekle” butonuna tıklayarak dilediğiniz listeye ekleme yapabilirsiniz.',
     },
+
+    // Risk Analizi
     {
       id: '5',
-      category: 'crypto',
-      question: 'Hangi kripto para birimlerini destekliyorsunuz?',
-      answer: 'Şu anda Bitcoin, Ethereum, Ripple ve Litecoin gibi başlıca kripto para birimlerini destekliyoruz. Daha fazlası yakında eklenecek.',
+      category: 'risk',
+      question: 'Portföy risk analizi nasıl çalışıyor?',
+      answer:
+        'Finover, seçtiğiniz hisselerin geçmiş verilerini, teknik indikatörleri ve AI destekli modelleri kullanarak portföyünüzün risk seviyesini (Düşük/Orta/Yüksek) otomatik olarak analiz eder.',
     },
     {
       id: '6',
-      category: 'fees',
-      question: 'İşlem ücretleri ne kadar?',
-      answer: 'İşlem ücretleri, işlem türüne ve miktarına göre değişir. Ücretler hakkında detaylı bilgiyi uygulama içindeki "Ücretler" bölümünde bulabilirsiniz.',
+      category: 'risk',
+      question: 'Risk analizi hangi kriterlere göre yapılıyor?',
+      answer:
+        'Risk skoru; fiyat volatilitesi, beta değeri, teknik göstergeler (RSI, SMA vb.) ve portföy çeşitliliği gibi faktörlere göre hesaplanır.',
     },
+
+    // Yapay Zeka
     {
       id: '7',
-      category: 'support',
-      question: 'Müşteri hizmetlerine nasıl ulaşabilirim?',
-      answer: 'Müşteri hizmetlerine uygulama içindeki "Destek" bölümünden veya web sitemizdeki iletişim formunu kullanarak ulaşabilirsiniz.',
+      category: 'ai',
+      question: 'AI destekli öneriler nedir ve nasıl çalışır?',
+      answer:
+        'AI destekli öneriler, portföyünüzün risk-getiri dengesine göre uygun hisse dağılımı ve alternatif yatırım stratejileri sunar. Bu öneriler, gerçek zamanlı veriler ve makine öğrenmesi modelleri ile oluşturulur.',
     },
+
+    // Borsa Verisi
     {
       id: '8',
-      category: 'account',
-      question: 'Hesabımı nasıl kapatabilirim?',
-      answer: 'Hesabınızı kapatmak için, müşteri hizmetleri ile iletişime geçmeniz gerekmektedir. Size gerekli adımları sağlayacaklardır.',
+      category: 'stockdata',
+      question: 'Finover’da gerçek zamanlı borsa verileri var mı?',
+      answer:
+        'Evet, BIST (Borsa İstanbul) ve seçili hisse senetlerine ait fiyatlar ve haberler gerçek zamanlı olarak güncellenmektedir.',
     },
     {
       id: '9',
-      category: 'general',
-      question: 'Uygulamayı hangi cihazlarda kullanabilirim?',
-      answer: 'Uygulamayı iOS ve Android işletim sistemine sahip mobil cihazlarda kullanabilirsiniz.',
+      category: 'stockdata',
+      question: 'Geçmiş hisse verilerine nasıl erişebilirim?',
+      answer:
+        'Hisse detay sayfasında, grafik ve geçmiş fiyat verilerini gün/gün veya belirli zaman aralıklarında görüntüleyebilirsiniz.',
     },
+
+    // Grafik ve Rapor
     {
       id: '10',
+      category: 'graph',
+      question: 'Portföyümdeki risk ve dağılımı nasıl görebilirim?',
+      answer:
+        'Portföyünüzdeki risk trendini ve hisse dağılımını grafikler (ör. pasta grafiği ve çizgi grafik) ile takip edebilirsiniz.',
+    },
+    {
+      id: '11',
+      category: 'pdf',
+      question: 'Portföy raporunu PDF olarak indirebilir miyim?',
+      answer:
+        'Evet, portföy analizi veya risk değerlendirme ekranında “PDF’ye Aktar” seçeneği ile raporunuzu indirebilirsiniz.',
+    },
+
+    // Bildirim
+    {
+      id: '12',
+      category: 'notification',
+      question: 'Fiyat uyarısı ve bildirim özelliği var mı?',
+      answer:
+        'Yakında eklenecek! Belirlediğiniz fiyat seviyelerine ulaşıldığında anlık bildirim alabileceksiniz.',
+    },
+
+    // Ücretler
+    {
+      id: '13',
+      category: 'fees',
+      question: 'Finover’ı kullanmak ücretli mi?',
+      answer:
+        'Finover’ın temel fonksiyonları tamamen ücretsizdir. İleride ek Pro özellikler için abonelik seçenekleri sunulabilir.',
+    },
+
+    // Güvenlik
+    {
+      id: '14',
       category: 'security',
-      question: 'Güvenlik önlemleriniz nelerdir?',
-      answer: 'Kullanıcılarımızın güvenliği bizim için çok önemlidir. İki faktörlü kimlik doğrulama, şifreleme ve soğuk cüzdan gibi çeşitli güvenlik önlemleri alıyoruz.',
-    }
+      question: 'Veri güvenliği için hangi önlemler alınıyor?',
+      answer:
+        'Kullanıcı verileri şifreli olarak saklanır. Tüm finansal işlemler ve kişisel bilgiler yüksek güvenlik protokolleri ile korunmaktadır.',
+    },
+
+    // Destek
+    {
+      id: '15',
+      category: 'support',
+      question: 'Destek ekibine nasıl ulaşabilirim?',
+      answer:
+        'Ayarlar veya Yardım bölümünden bize mesaj gönderebilir, ayrıca support@finover.com adresinden destek talebi oluşturabilirsiniz.',
+    },
+
+    // Teknik Sorular
+    {
+      id: '16',
+      category: 'technical',
+      question: 'Finover hangi cihazlarda çalışır?',
+      answer:
+        'Finover, hem iOS hem de Android işletim sistemine sahip akıllı telefonlarda çalışır.',
+    },
+    {
+      id: '17',
+      category: 'technical',
+      question: 'API üzerinden veri çekiyor musunuz?',
+      answer:
+        'Evet, borsa verileri ve haberler lisanslı üçüncü parti API servisleri ile güvenli şekilde çekilir ve gösterilir.',
+    },
+
+    // Hukuki Sorular
+    {
+      id: '18',
+      category: 'legal',
+      question: 'Yatırım tavsiyesi veriyor musunuz?',
+      answer:
+        'Finover, yatırım danışmanlığı veya bireysel tavsiye sunmaz. Sunulan analizler ve öneriler yalnızca bilgilendirme amaçlıdır.',
+    },
+    {
+      id: '19',
+      category: 'legal',
+      question: 'Hukuki olarak sorumluluk kimde?',
+      answer:
+        'Finover’daki analizler öneri niteliğindedir ve yatırım kararlarınızdan kullanıcı olarak siz sorumlusunuz. Uygulamayı kullanmadan önce Kullanıcı Sözleşmesi’ni dikkatlice okuyunuz.',
+    },
+
+    // Yatırım & Tavsiye
+    {
+      id: '20',
+      category: 'advice',
+      question: 'Finover’da yatırım yapabilir miyim?',
+      answer:
+        'Hayır, Finover yalnızca analiz ve portföy yönetim aracı olarak hizmet verir. Uygulama üzerinden doğrudan alım-satım yapılamaz.',
+    },
+    {
+      id: '21',
+      category: 'advice',
+      question: 'Portföyüme yeni bir hisse eklersem riskim nasıl değişir?',
+      answer:
+        'Portföy analizi ekranındaki “Simülasyon” özelliği ile eklemek istediğiniz hisseyi seçip olası risk ve dağılım değişimini önceden görebilirsiniz.',
+    },
+    {
+      id: '22',
+      category: 'advice',
+      question: 'Yatırım yaparken nelere dikkat etmeliyim?',
+      answer:
+        'Finover’ın sunduğu risk skorları ve çeşitlilik analizi sadece yol göstericidir. Kendi finansal hedefleriniz ve risk toleransınızı da göz önünde bulundurmalısınız.',
+    },
   ];
 
   const categories = [
     { id: 'all', title: 'Tümü' },
     { id: 'account', title: 'Hesap' },
-    { id: 'payment', title: 'Ödemeler' },
-    { id: 'crypto', title: 'Kripto' },
+    { id: 'watchlist', title: 'Takip Listesi' },
+    { id: 'risk', title: 'Risk Analizi' },
+    { id: 'ai', title: 'Yapay Zeka' },
+    { id: 'stockdata', title: 'Borsa Verisi' },
+    { id: 'graph', title: 'Grafik' },
+    { id: 'pdf', title: 'Rapor' },
+    { id: 'notification', title: 'Bildirim' },
+    { id: 'fees', title: 'Ücretler' },
     { id: 'security', title: 'Güvenlik' },
+    { id: 'technical', title: 'Teknik' },
+    { id: 'legal', title: 'Hukuki' },
+    { id: 'advice', title: 'Yatırım-Tavsiye' },
+    { id: 'support', title: 'Destek' },
   ];
 
-  const handleSearch = (query) => {
-    setSearchQuery(query);
-  };
+  const handleSearch = (query) => setSearchQuery(query);
 
-  const handleBoxClick = (id) => {
-    setSelectedBox(prevState => prevState === id ? null : id);
-  };
+  const handleBoxClick = (id) => setSelectedBox(prev => prev === id ? null : id);
 
   const getFilteredQuestions = () => {
     let filtered = questions;
-    
-    // Filter by search query
     if (searchQuery.trim() !== '') {
-      filtered = filtered.filter(q => 
+      filtered = filtered.filter(q =>
         q.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
         q.answer.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-    
-    // Filter by category
     if (activeCategory !== 'all') {
       filtered = filtered.filter(q => q.category === activeCategory);
     }
-    
-    // Artık showAllQuestions filtresi yok, tüm sorular gösteriliyor
     return filtered;
   };
 
   const handleCategoryChange = (categoryId) => {
     setIsLoading(true);
     setActiveCategory(categoryId);
-    
-    // Simulate loading
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 300);
+    setTimeout(() => setIsLoading(false), 300);
   };
 
   const filteredQuestions = getFilteredQuestions();
@@ -137,12 +247,10 @@ const FAQScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#f8f9fa" />
-      
       <View style={styles.titleContainer}>
         <Text style={styles.title}>Sık Sorulan Sorular</Text>
         <Text style={styles.subtitle}>Yardım merkezimizde sık sorulan sorular</Text>
       </View>
-      
       <View style={styles.searchContainer}>
         <FontAwesome name="search" size={22} style={styles.searchIcon} />
         <TextInput
@@ -153,7 +261,6 @@ const FAQScreen = () => {
           onChangeText={handleSearch}
         />
       </View>
-
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -180,13 +287,12 @@ const FAQScreen = () => {
           </TouchableOpacity>
         ))}
       </ScrollView>
-
       {isLoading ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator size="large" color="#3498db" />
         </View>
       ) : filteredQuestions.length > 0 ? (
-        <ScrollView 
+        <ScrollView
           style={styles.questionsContainer}
           showsVerticalScrollIndicator={false}
         >
@@ -206,7 +312,6 @@ const FAQScreen = () => {
                   />
                 </View>
               </TouchableOpacity>
-              
               {selectedBox === item.id && (
                 <View style={styles.answerContainer}>
                   <Text style={styles.answerText}>{item.answer}</Text>
@@ -214,8 +319,6 @@ const FAQScreen = () => {
               )}
             </View>
           ))}
-          
-        {/* "Tüm Soruları Göster" butonu kaldırıldı */}
         </ScrollView>
       ) : (
         <View style={styles.noResultsContainer}>
