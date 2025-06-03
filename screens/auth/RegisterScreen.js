@@ -12,8 +12,12 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   Animated,
-  Easing
+  Easing,
+  Image,
+  ImageBackground,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function RegisterScreen({ navigation, route }) {
   const [username, setUsername] = useState('');
@@ -21,6 +25,8 @@ export default function RegisterScreen({ navigation, route }) {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const navigation = useNavigation();
+  const [passwordVisible, setPasswordVisible] = useState(false);
   
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -112,37 +118,56 @@ export default function RegisterScreen({ navigation, route }) {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="dark-content" backgroundColor="#f5f7fa" />
-        
-        <Animated.View 
+
+        <View style={styles.topSection}>
+          <ImageBackground
+            source={require('../../assets/homescreenbackground.png')}
+            style={styles.topBackground}
+            imageStyle={styles.imageStyle}
+          >
+            <Text style={styles.logoText}></Text>
+          </ImageBackground>
+        </View>
+
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.navigate('LoginScreen')}
+        >
+          <Ionicons name="arrow-back" size={24} />
+        </TouchableOpacity>
+
+        <Animated.View
           style={[
-            styles.headerContainer, 
-            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
+            styles.headerContainer,
+            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
           ]}
         >
           <Text style={styles.title}>Create Account</Text>
           <Text style={styles.subtitle}>Sign up to get started</Text>
         </Animated.View>
-        
-        <Animated.View 
+
+        <Animated.View
           style={[
-            styles.formContainer, 
-            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
+            styles.formContainer,
+            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
           ]}
         >
           <View style={styles.inputWrapper}>
+            <Text style={styles.label}>NAME</Text>
             <TextInput
-              placeholder="Username"
+              placeholder="Full Name"
               value={username}
               onChangeText={setUsername}
               style={styles.input}
-              autoCapitalize="none"
+              autoCapitalize="words"
               placeholderTextColor="#a0aec0"
             />
           </View>
-          
+
           <View style={styles.inputWrapper}>
+            <Text style={styles.label}>EMAIL</Text>
             <TextInput
-              placeholder="Email"
+              placeholder="Email Address"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -151,8 +176,9 @@ export default function RegisterScreen({ navigation, route }) {
               placeholderTextColor="#a0aec0"
             />
           </View>
-          
+
           <View style={styles.passwordContainer}>
+            <Text style={styles.label}>PASSWORD</Text>
             <TextInput
               placeholder="Password"
               value={password}
@@ -161,21 +187,26 @@ export default function RegisterScreen({ navigation, route }) {
               style={styles.passwordInput}
               placeholderTextColor="#a0aec0"
             />
-            <TouchableOpacity onPress={togglePasswordVisibility} style={styles.eyeButton}>
-              <Text style={styles.eyeButtonText}>
-                {isPasswordVisible ? 'Hide' : 'Show'}
-              </Text>
+            <TouchableOpacity
+              onPress={togglePasswordVisibility}
+              style={styles.eyeButton}
+            >
+              <Ionicons
+                name={isPasswordVisible ? 'eye' : 'eye-off'}
+                size={22}
+                color="gray"
+              />
             </TouchableOpacity>
           </View>
         </Animated.View>
-        
-        <Animated.View 
+
+        <Animated.View
           style={[
-            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
+            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
           ]}
         >
-          <TouchableOpacity 
-            style={styles.registerButton} 
+          <TouchableOpacity
+            style={styles.registerButton}
             onPress={handleRegister}
             disabled={isLoading}
           >
@@ -186,17 +217,16 @@ export default function RegisterScreen({ navigation, route }) {
             )}
           </TouchableOpacity>
         </Animated.View>
-        
-        <Animated.View 
+
+        <Animated.View
           style={[
-            styles.loginContainer, 
-            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
+            styles.loginContainer,
+            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
           ]}
         >
           <Text style={styles.loginText}>Already have an account? </Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => {
-              // Animate out before navigating
               Animated.parallel([
                 Animated.timing(fadeAnim, {
                   toValue: 0,
@@ -207,9 +237,9 @@ export default function RegisterScreen({ navigation, route }) {
                   toValue: -30,
                   duration: 300,
                   useNativeDriver: true,
-                })
+                }),
               ]).start(() => {
-                navigation.navigate('Login');
+                navigation.navigate('LoginScreen');
               });
             }}
           >
@@ -222,27 +252,107 @@ export default function RegisterScreen({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
+   container: {
     flex: 1,
-    backgroundColor: '#f5f7fa',
-    paddingHorizontal: 20,
+    backgroundColor: '#fff',
   },
+  topSection: {
+    height: '30%',
+    overflow: 'hidden',
+   // borderBottomRightRadius: 80,
+   // borderBottomLeftRadius: 80,
+  },
+  topBackground: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+   card: {
+    flex: 1,
+    backgroundColor: '#fff',
+    marginTop: -60, 
+    borderTopRightRadius: 80,
+    borderTopLeftRadius: 80,
+    padding: 30,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: -2 },
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  imageStyle: {
+    resizeMode: 'cover',
+    paddingTop: 0,
+    width: '120%',
+    height: '100%',
+    
+  },
+  logoText: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#0B0B45',
+    letterSpacing: 2,
+
+  },
+  backButton: {
+  position: 'absolute',
+  top: 55, 
+  left: 20,
+  zIndex: 1,
+  color: '#0B0B45',
+  fontWeight: 'bold',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#0B0B45',
+    marginBottom: 5,
+    textAlign: 'center',
+  },
+  subtitle: {
+    color: 'gray',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  label: {
+    fontSize: 12,
+    color: 'gray',
+    marginTop: 10,
+    marginBottom: 5,
+  },
+  input: {
+    height: 45,
+    backgroundColor: '#F0F0F0',
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    fontSize: 16,
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 10,
+    top: 12,
+  },
+  button: {
+    backgroundColor: '#0B0B45',
+    borderRadius: 10,
+    paddingVertical: 12,
+    marginTop: 25,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  footerText: {
+    textAlign: 'center',
+    color: '#0B0B45',
+    marginTop: 20,
+  },
   
   headerContainer: {
     marginTop: '15%',
     marginBottom: '8%',
-  },
-  
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#2d3748',
-    marginBottom: 8,
-  },
-  
-  subtitle: {
-    fontSize: 16,
-    color: '#718096',
   },
   
   formContainer: {
@@ -263,15 +373,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 1,
   },
-  
-  input: {
-    flex: 1,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: '#2d3748',
-    height: '100%',
-  },
-  
+    
   passwordContainer: {
     flexDirection: 'row',
     backgroundColor: '#ffffff',
@@ -344,4 +446,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+
 });
