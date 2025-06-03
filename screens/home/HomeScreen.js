@@ -10,13 +10,15 @@ import {
   Modal,
   Alert,
   ActivityIndicator,
+  Dimensions,
 } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { Ionicons, FontAwesome5, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import styles from "../../styles/hstyles";
 import { useNavigation } from '@react-navigation/native';
+
+const { width } = Dimensions.get('window');
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -64,23 +66,23 @@ const HomeScreen = () => {
 
   const fetchMarketData = async () => {
     try {
-      const res = await axios.get('https://financialmodelingprep.com/api/v3/quote/BIST100,NASDAQ100?apikey=obHajA78aHmRpFpviomn8XALGDAoonj3');
-      if (res.data && Array.isArray(res.data)) {
-        setMarketData(res.data);
-      } else {
-        console.error("Unexpected market data format", res.data);
-      }
+      const res = await axios.get('https://financialmodelingprep.com/api/v3/quote/XU100.IS,^NDX?apikey=obHajA78aHmRpFpviomn8XALGDAoonj3');
+      console.log("Market Data Response:", res.data);
+      setMarketData(res.data || []);
     } catch (err) {
       console.error("Market data fetch error", err);
+      setMarketData([]);
     }
   };
 
   const fetchPopularStocks = async () => {
     try {
-      const res = await axios.get('https://financialmodelingprep.com/api/v3/stock_market/gainers_losers?apikey=obHajA78aHmRpFpviomn8XALGDAoonj3');
-      setPopularStocks(res.data.gainers); // Yükselen hisseler
+      const res = await axios.get('https://financialmodelingprep.com/api/v3/quotes/ist?apikey=obHajA78aHmRpFpviomn8XALGDAoonj3');
+      const sorted = res.data.sort((a, b) => b.changesPercentage - a.changesPercentage).slice(0, 10);
+      setPopularStocks(sorted);
     } catch (err) {
       console.error("Popular stocks fetch error", err);
+      setPopularStocks([]);
     }
   };
 
@@ -104,18 +106,397 @@ const HomeScreen = () => {
     navigation.navigate('WatchlistDetail', { listId });
   };
 
+  const styles = {
+    container: {
+      flex: 1,
+      backgroundColor: '#fefefe',
+    },
+    
+    // Header Styles
+    header: {
+      paddingTop: 20,
+      paddingBottom: 30,
+      paddingHorizontal: 20,
+      borderBottomLeftRadius: 30,
+      borderBottomRightRadius: 30,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+      elevation: 8,
+    },
+    headerTop: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 25,
+    },
+    headerTitle: {
+      fontSize: 28,
+      fontWeight: '900',
+      color: 'white',
+      letterSpacing: 3,
+      textShadowColor: 'rgba(0,0,0,0.3)',
+      textShadowOffset: { width: 2, height: 2 },
+      textShadowRadius: 4,
+    },
+    menuButton: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: 'rgba(255,255,255,0.2)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    profileCircle: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: 'white',
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    },
+
+    // Market Overview Styles
+    marketOverview: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    marketCard: {
+      flex: 1,
+      backgroundColor: 'rgba(255,255,255,0.15)',
+      borderRadius: 16,
+      padding: 16,
+      marginHorizontal: 4,
+      backdropFilter: 'blur(10px)',
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.2)',
+    },
+    marketCardHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    marketCardTitle: {
+      color: 'white',
+      fontSize: 14,
+      fontWeight: '600',
+      opacity: 0.9,
+    },
+    marketCardValue: {
+      color: 'white',
+      fontSize: 20,
+      fontWeight: '700',
+      marginBottom: 4,
+    },
+    marketCardTrend: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    trendUp: {
+      color: '#4CAF50',
+      fontSize: 12,
+      fontWeight: '600',
+      marginLeft: 4,
+    },
+    trendDown: {
+      color: '#E53935',
+      fontSize: 12,
+      fontWeight: '600',
+      marginLeft: 4,
+    },
+
+    // Section Styles
+    section: {
+      paddingHorizontal: 20,
+      marginTop: 30,
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 20,
+      paddingBottom: 8,
+      borderBottomWidth: 2,
+      borderBottomColor: '#f1f5f9',
+    },
+    sectionTitle: {
+      fontSize: 22,
+      fontWeight: '800',
+      color: '#1a202c',
+      letterSpacing: 0.5,
+    },
+    sectionTitleIcon: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    sectionTitleText: {
+      marginLeft: 8,
+    },
+    seeAllText: {
+      color: '#1e3a8a',
+      fontSize: 14,
+      fontWeight: '600',
+    },
+
+    // Stock Card Styles
+    preferredStocksScroll: {
+      marginBottom: 10,
+    },
+    stockCard: {
+      backgroundColor: 'white',
+      borderRadius: 24,
+      padding: 20,
+      marginRight: 16,
+      width: 180,
+      shadowColor: '#1e3a8a',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.12,
+      shadowRadius: 16,
+      elevation: 8,
+      borderWidth: 1,
+      borderColor: '#e2e8f0',
+      position: 'relative',
+      overflow: 'hidden',
+    },
+    stockCardGradient: {
+      position: 'absolute',
+      top: 0,
+      right: 0,
+      width: 60,
+      height: 60,
+      borderTopRightRadius: 24,
+      opacity: 0.1,
+    },
+    stockSymbol: {
+      fontSize: 20,
+      fontWeight: '900',
+      color: '#1e3a8a',
+      marginBottom: 6,
+      letterSpacing: 0.5,
+    },
+    stockName: {
+      fontSize: 13,
+      color: '#64748b',
+      marginBottom: 16,
+      numberOfLines: 2,
+      lineHeight: 18,
+    },
+    stockPriceContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-end',
+    },
+    stockPrice: {
+      fontSize: 18,
+      fontWeight: '800',
+      color: '#059669',
+    },
+    stockChange: {
+      fontSize: 12,
+      fontWeight: '700',
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 12,
+      overflow: 'hidden',
+    },
+    stockChangePositive: {
+      color: 'white',
+      backgroundColor: '#059669',
+    },
+    stockChangeNegative: {
+      color: 'white',
+      backgroundColor: '#dc2626',
+    },
+    trendingBadge: {
+      position: 'absolute',
+      top: 12,
+      right: 12,
+      backgroundColor: '#fbbf24',
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 8,
+    },
+    trendingText: {
+      fontSize: 8,
+      fontWeight: '700',
+      color: 'white',
+    },
+
+    // Watchlist Styles
+    addButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#1e3a8a',
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 20,
+      shadowColor: '#1e3a8a',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 4,
+      elevation: 4,
+    },
+    addText: {
+      color: 'white',
+      fontSize: 12,
+      fontWeight: '600',
+      marginLeft: 6,
+    },
+    watchlistGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
+    },
+    watchlistCard: {
+      backgroundColor: 'white',
+      borderRadius: 16,
+      padding: 20,
+      width: (width - 52) / 2,
+      marginBottom: 12,
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+      elevation: 4,
+      borderWidth: 1,
+      borderColor: '#f1f5f9',
+    },
+    watchlistName: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: '#1a202c',
+      marginTop: 12,
+      textAlign: 'center',
+    },
+
+    // News Styles
+    newsCard: {
+      backgroundColor: 'white',
+      borderRadius: 16,
+      padding: 16,
+      marginBottom: 12,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+      elevation: 4,
+      borderWidth: 1,
+      borderColor: '#f1f5f9',
+    },
+    newsTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#1a202c',
+      marginBottom: 8,
+      lineHeight: 22,
+    },
+    newsSource: {
+      fontSize: 12,
+      color: '#1e3a8a',
+      fontWeight: '600',
+      marginBottom: 8,
+    },
+    newsDescription: {
+      fontSize: 14,
+      color: '#64748b',
+      lineHeight: 20,
+    },
+
+    // Modal Styles
+    modalContainer: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+    },
+    modalContent: {
+      backgroundColor: 'white',
+      borderRadius: 20,
+      padding: 24,
+      width: '100%',
+      maxWidth: 400,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.3,
+      shadowRadius: 20,
+      elevation: 10,
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: '#1a202c',
+      marginBottom: 16,
+      textAlign: 'center',
+    },
+    modalInput: {
+      borderWidth: 1,
+      borderColor: '#e2e8f0',
+      borderRadius: 12,
+      padding: 16,
+      fontSize: 16,
+      marginBottom: 20,
+      backgroundColor: '#f8fafc',
+    },
+    modalActions: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    modalButton: {
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+      borderRadius: 12,
+      minWidth: 80,
+      alignItems: 'center',
+    },
+    cancelButton: {
+      backgroundColor: '#f1f5f9',
+    },
+    createButton: {
+      backgroundColor: '#1e3a8a',
+    },
+    cancelButtonText: {
+      color: '#64748b',
+      fontWeight: '600',
+    },
+    createButtonText: {
+      color: 'white',
+      fontWeight: '600',
+    },
+
+    // Loading Styles
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingVertical: 40,
+    },
+    emptyState: {
+      textAlign: 'center',
+      color: '#64748b',
+      fontSize: 16,
+      paddingVertical: 40,
+    },
+  };
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
-      <StatusBar barStyle="light-content" />
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#1e3a8a" />
       <ScrollView showsVerticalScrollIndicator={false}>
-        <LinearGradient colors={["#2c3e50", "#3498db"]} style={styles.header}>
+        <LinearGradient colors={["#1e3a8a", "#1e40af", "#3730a3"]} style={styles.header}>
           <View style={styles.headerTop}>
-            <TouchableOpacity style={styles.menuButton}>
-              <Ionicons name="menu" size={24} color="white" />
-            </TouchableOpacity>
+            <View style={{ width: 44 }} />
             <Text style={styles.headerTitle}>FINOVER</Text>
             <TouchableOpacity style={styles.profileCircle}>
-              <Ionicons name="person" size={20} color="#2c3e50" />
+              <Ionicons name="person" size={20} color="#1e3a8a" />
             </TouchableOpacity>
           </View>
 
@@ -126,39 +507,75 @@ const HomeScreen = () => {
                 <View key={index} style={styles.marketCard}>
                   <View style={styles.marketCardHeader}>
                     <Text style={styles.marketCardTitle}>{item.symbol}</Text>
-                    <MaterialCommunityIcons name="chart-line" size={18} color={item.change > 0 ? "#4CAF50" : "#E53935"} />
+                    <MaterialCommunityIcons 
+                      name="chart-line" 
+                      size={18} 
+                      color={item.change > 0 ? "#4CAF50" : "#E53935"} 
+                    />
                   </View>
                   <Text style={styles.marketCardValue}>{item.price}</Text>
                   <View style={styles.marketCardTrend}>
-                    <Ionicons name={item.change > 0 ? "arrow-up" : "arrow-down"} size={14} color={item.change > 0 ? "#4CAF50" : "#E53935"} />
-                    <Text style={item.change > 0 ? styles.trendUp : styles.trendDown}>{item.change.toFixed(2)}%</Text>
+                    <Ionicons 
+                      name={item.change > 0 ? "arrow-up" : "arrow-down"} 
+                      size={14} 
+                      color={item.change > 0 ? "#4CAF50" : "#E53935"} 
+                    />
+                    <Text style={item.change > 0 ? styles.trendUp : styles.trendDown}>
+                      {item.change.toFixed(2)}%
+                    </Text>
                   </View>
                 </View>
               ))
             ) : (
-              <ActivityIndicator size="small" />
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color="white" />
+              </View>
             )}
           </View>
         </LinearGradient>
 
-        {/* Yükselen ve Düşen Hisseler */}
+        {/* Yükselen Hisseler */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Yükselen Hisseler</Text>
-            <TouchableOpacity><Text style={styles.seeAllText}>Tümünü Gör</Text></TouchableOpacity>
+            <View style={styles.sectionTitleIcon}>
+              <MaterialCommunityIcons name="trending-up" size={24} color="#1e3a8a" />
+              <Text style={[styles.sectionTitle, styles.sectionTitleText]}>Yükselen Hisseler</Text>
+            </View>
+            <TouchableOpacity>
+              <Text style={styles.seeAllText}>Tümünü Gör</Text>
+            </TouchableOpacity>
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.preferredStocksScroll}>
             {popularStocks && popularStocks.length > 0 ? (
               popularStocks.map((stock, index) => (
                 <TouchableOpacity key={index} style={styles.stockCard}>
+                  <LinearGradient
+                    colors={['#1e3a8a', '#3730a3']}
+                    style={styles.stockCardGradient}
+                  />
+                  {index < 3 && (
+                    <View style={styles.trendingBadge}>
+                      <Text style={styles.trendingText}>HOT</Text>
+                    </View>
+                  )}
                   <Text style={styles.stockSymbol}>{stock.symbol}</Text>
-                  <Text style={styles.stockName}>{stock.name}</Text>
-                  <Text style={styles.stockPrice}>{stock.price} ₺</Text>
+                  <Text style={styles.stockName} numberOfLines={2}>{stock.name}</Text>
+                  <View style={styles.stockPriceContainer}>
+                    <Text style={styles.stockPrice}>{stock.price} ₺</Text>
+                    <Text style={[
+                      styles.stockChange,
+                      stock.changesPercentage > 0 ? styles.stockChangePositive : styles.stockChangeNegative
+                    ]}>
+                      {stock.changesPercentage > 0 ? '+' : ''}{stock.changesPercentage?.toFixed(1)}%
+                    </Text>
+                  </View>
                 </TouchableOpacity>
               ))
             ) : (
-              <ActivityIndicator size="small" />
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color="#1e3a8a" />
+              </View>
             )}
           </ScrollView>
         </View>
@@ -166,7 +583,10 @@ const HomeScreen = () => {
         {/* Takip Listeleri */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Takip Listeleri</Text>
+            <View style={styles.sectionTitleIcon}>
+              <FontAwesome5 name="bookmark" size={20} color="#1e3a8a" />
+              <Text style={[styles.sectionTitle, styles.sectionTitleText]}>Takip Listelerim</Text>
+            </View>
             <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
               <Ionicons name="add" size={18} color="white" />
               <Text style={styles.addText}>Yeni Liste</Text>
@@ -174,13 +594,19 @@ const HomeScreen = () => {
           </View>
 
           <View style={styles.watchlistGrid}>
-            {loading ? <ActivityIndicator size="small" /> : (
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color="#1e3a8a" />
+              </View>
+            ) : (
               watchlists && watchlists.length > 0 ? watchlists.map((list, index) => (
                 <TouchableOpacity key={index} style={styles.watchlistCard} onPress={() => openWatchlist(list.id)}>
-                  <FontAwesome5 name="list" size={20} color="#3498db" />
+                  <FontAwesome5 name="list" size={24} color="#1e3a8a" />
                   <Text style={styles.watchlistName}>{list.name}</Text>
                 </TouchableOpacity>
-              )) : <Text>No watchlists available</Text>
+              )) : (
+                <Text style={styles.emptyState}>Henüz takip listesi yok</Text>
+              )
             )}
           </View>
         </View>
@@ -188,39 +614,55 @@ const HomeScreen = () => {
         {/* Haberler */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Pazar Haberleri</Text>
+            <View style={styles.sectionTitleIcon}>
+              <MaterialCommunityIcons name="newspaper-variant-outline" size={22} color="#1e3a8a" />
+              <Text style={[styles.sectionTitle, styles.sectionTitleText]}>Pazar Haberleri</Text>
+            </View>
           </View>
           {news && news.length > 0 ? (
             news.map((newsItem, index) => (
-              <View key={index} style={styles.newsCard}>
+              <TouchableOpacity key={index} style={styles.newsCard}>
                 <Text style={styles.newsTitle}>{newsItem.title}</Text>
                 <Text style={styles.newsSource}>{newsItem.source}</Text>
-                <Text style={styles.newsDescription}>{newsItem.description}</Text>
-              </View>
+                <Text style={styles.newsDescription} numberOfLines={3}>
+                  {newsItem.description}
+                </Text>
+              </TouchableOpacity>
             ))
           ) : (
-            <ActivityIndicator size="small" />
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color="#1e3a8a" />
+            </View>
           )}
         </View>
+
+        <View style={{ height: 30 }} />
       </ScrollView>
 
       {/* Modal */}
       <Modal transparent visible={modalVisible} animationType="slide">
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 10 }}>Yeni Liste Oluştur</Text>
+            <Text style={styles.modalTitle}>Yeni Liste Oluştur</Text>
             <TextInput
               value={newListName}
               onChangeText={setNewListName}
               placeholder="Liste adı girin"
               style={styles.modalInput}
+              placeholderTextColor="#9ca3af"
             />
             <View style={styles.modalActions}>
-              <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <Text style={{ color: '#e74c3c' }}>İptal</Text>
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.cancelButton]} 
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.cancelButtonText}>İptal</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={createWatchlist}>
-                <Text style={{ color: '#3498db', fontWeight: 'bold' }}>Oluştur</Text>
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.createButton]} 
+                onPress={createWatchlist}
+              >
+                <Text style={styles.createButtonText}>Oluştur</Text>
               </TouchableOpacity>
             </View>
           </View>

@@ -26,7 +26,7 @@ const AnimatedLogoBanner = ({ logoSource }) => {
     Animated.loop(
       Animated.timing(translateX3, {
         toValue: -TOTAL_WIDTH,
-        duration: 28000,
+        duration: 29000,
         useNativeDriver: true,
         easing: Easing.linear,
       })
@@ -36,7 +36,7 @@ const AnimatedLogoBanner = ({ logoSource }) => {
     Animated.loop(
       Animated.timing(translateX2, {
         toValue: 0,
-        duration: 20000,
+        duration: 27500,
         useNativeDriver: true,
         easing: Easing.linear,
       })

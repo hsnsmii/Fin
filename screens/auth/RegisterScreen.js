@@ -174,10 +174,11 @@ export default function RegisterScreen({ navigation }) {
                   style={styles.eyeButton}
                 >
                   <Ionicons
-                    name={isPasswordVisible ? 'eye' : 'eye-off'}
-                    size={22}
-                    color="#3182ce"
-                  />
+  name={isPasswordVisible ? 'eye' : 'eye-off'}
+  size={22}
+  color="#0B0B45" // <-- burada
+/>
+
                 </TouchableOpacity>
               </View>
             </View>
@@ -223,7 +224,6 @@ export default function RegisterScreen({ navigation }) {
     </TouchableWithoutFeedback>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     backgroundColor: '#fff',
-    marginTop: -16, // Banner ile kart arası
+    marginTop: -16,
     borderTopRightRadius: 56,
     borderTopLeftRadius: 56,
     paddingHorizontal: 30,
@@ -325,12 +325,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   registerButton: {
-    backgroundColor: '#3182ce',
+    backgroundColor: '#0B0B45',
     borderRadius: 8,
     height: 48,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#2b6cb0',
+    shadowColor: '#0B0B45',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.13,
     shadowRadius: 2,
@@ -355,10 +355,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   loginLink: {
-    color: '#3182ce',
+    color: '#0B0B45',
     fontSize: 14,
     fontWeight: '600',
     marginLeft: 3,
   },
 });
-

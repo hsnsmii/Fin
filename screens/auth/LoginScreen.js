@@ -87,11 +87,11 @@ export default function LoginScreen({ navigation, route }) {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" backgroundColor="#f6fbfd" />
-        
-        {/* En üstte 3 satır animasyonlu logo */}
+        <StatusBar barStyle="dark-content" backgroundColor="#f5f7fa" />
+
+        {/* En üstte animasyonlu logo banner */}
         <AnimatedLogoBanner logoSource={LOGO} />
-        
+
         <Animated.View
           style={[
             styles.card,
@@ -102,6 +102,7 @@ export default function LoginScreen({ navigation, route }) {
           <Text style={styles.subtitle}>Welcome back! Please login.</Text>
 
           <View style={styles.formContainer}>
+            {/* E-Mail */}
             <View style={styles.inputWrapper}>
               <Text style={styles.label}>EMAIL</Text>
               <TextInput
@@ -115,6 +116,7 @@ export default function LoginScreen({ navigation, route }) {
               />
             </View>
 
+            {/* Password */}
             <View style={styles.inputWrapper}>
               <Text style={styles.label}>PASSWORD</Text>
               <View style={styles.passwordContainer}>
@@ -130,20 +132,23 @@ export default function LoginScreen({ navigation, route }) {
                   <Ionicons
                     name={isPasswordVisible ? 'eye-off' : 'eye'}
                     size={20}
-                    color="#3182ce"
+                    color="#0B0B45"
                   />
                 </TouchableOpacity>
               </View>
             </View>
 
+            {/* Error message */}
             {errorMessage ? (
               <Text style={styles.errorMessage}>{errorMessage}</Text>
             ) : null}
 
+            {/* Forgot Password */}
             <TouchableOpacity style={styles.forgotPassword}>
               <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
             </TouchableOpacity>
 
+            {/* Login Button */}
             <TouchableOpacity
               style={styles.loginButton}
               onPress={handleLogin}
@@ -156,6 +161,7 @@ export default function LoginScreen({ navigation, route }) {
               )}
             </TouchableOpacity>
 
+            {/* Register link */}
             <View style={styles.registerContainer}>
               <Text style={styles.footerText}>Don't have an account? </Text>
               <TouchableOpacity onPress={() => navigation.navigate('Register')}>
@@ -172,12 +178,12 @@ export default function LoginScreen({ navigation, route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f6fbfd', // Arka planını PNG ile aynı yap
+    backgroundColor: '#f5f7fa', // Arka planı çok açık mavi/turkuaz
   },
   card: {
     flex: 1,
     backgroundColor: '#fff',
-    marginTop: -16, // banner ile kart arasında minimum boşluk bırakır, ayarlayabilirsin
+    marginTop: -16,
     borderTopRightRadius: 56,
     borderTopLeftRadius: 56,
     paddingHorizontal: 30,
@@ -227,8 +233,8 @@ const styles = StyleSheet.create({
     color: '#2d3748',
     shadowColor: '#718096',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 1,
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
     elevation: 1,
   },
   passwordContainer: {
@@ -239,6 +245,11 @@ const styles = StyleSheet.create({
     borderColor: '#e2e8f0',
     height: 48,
     alignItems: 'center',
+    shadowColor: '#718096',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   passwordInput: {
     flex: 1,
@@ -261,15 +272,15 @@ const styles = StyleSheet.create({
   },
   forgotPassword: {
     alignSelf: 'flex-end',
-    marginBottom: 26,
+    marginBottom: 24,
   },
   forgotPasswordText: {
-    color: '#3182ce',
+    color: '#0B0B45',
     fontSize: 14,
     fontWeight: '500',
   },
   loginButton: {
-    backgroundColor: '#3182ce',
+    backgroundColor: '#0B0B45',
     borderRadius: 8,
     height: 48,
     justifyContent: 'center',
@@ -277,8 +288,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     shadowColor: '#2b6cb0',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.13,
-    shadowRadius: 2,
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
     elevation: 2,
   },
   loginButtonText: {
@@ -298,7 +309,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   registerLink: {
-    color: '#3182ce',
+    color: '#0B0B45',
     fontSize: 14,
     fontWeight: '600',
     marginLeft: 3,
