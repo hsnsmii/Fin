@@ -10,11 +10,31 @@ import {
   Modal,
   TextInput,
   Alert,
+  SafeAreaView,
+  StatusBar,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
-import PortfolioDetailScreen from './PortfolioDetailScreen';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+
+const API_BASE_URL = 'http://192.168.1.27:3000/api'; 
+
+const COLORS = {
+  primary: '#1A73E8',
+  primaryLight: '#E8F0FE',
+  secondary: '#FF6F00',
+  white: '#FFFFFF',
+  black: '#000000',
+  textPrimary: '#202124',
+  textSecondary: '#5F6368',
+  background: '#F7F9FC',
+  surface: '#FFFFFF',
+  border: '#DADCE0',
+  success: '#34A853',
+  error: '#EA4335',
+  lightGray: '#f0f0f0',
+};
 
 const AssetsScreen = () => {
   const [portfolios, setPortfolios] = useState([]);
@@ -23,136 +43,355 @@ const AssetsScreen = () => {
   const [newPortfolioName, setNewPortfolioName] = useState('');
   const navigation = useNavigation();
 
+  const getRandomPortfolioData = () => {
+    const totalValue = (Math.random() * 50000 + 1000).toFixed(2);
+    const change = (Math.random() * 10 - 5).toFixed(2);
+    return { totalValue, change };
+  };
+
   const fetchPortfolios = async () => {
+    setLoading(true); 
     try {
       const userId = await AsyncStorage.getItem('userId');
-      const res = await axios.get(`http://192.168.1.27:3000/api/watchlists/${userId}?type=portfolio`);
-      setPortfolios(res.data);
+      if (!userId) {
+        Alert.alert('Hata', 'Kullanıcı ID bulunamadı. Lütfen tekrar giriş yapın.');
+        setLoading(false);
+        return;
+      }
+      const res = await axios.get(`${API_BASE_URL}/watchlists/${userId}?type=portfolio`);
+
+      const portfoliosWithUIData = res.data.map(portfolio => ({
+        ...portfolio,
+        ...getRandomPortfolioData(), 
+      }));
+      setPortfolios(portfoliosWithUIData);
     } catch (err) {
-      console.error('Portföyler çekilemedi:', err);
+      console.error('Portföyler çekilemedi:', err.response ? err.response.data : err.message);
+      Alert.alert('Hata', 'Portföyler yüklenirken bir sorun oluştu.');
     } finally {
       setLoading(false);
     }
   };
 
   const createPortfolio = async () => {
+    if (!newPortfolioName.trim()) {
+      Alert.alert('Uyarı', 'Portföy adı boş bırakılamaz.');
+      return;
+    }
     try {
-      if (!newPortfolioName.trim()) return;
       const userId = await AsyncStorage.getItem('userId');
-      await axios.post('http://192.168.1.27:3000/api/watchlists', {
-        name: newPortfolioName,
-        user_id: userId,
-        type: 'portfolio'
+      if (!userId) {
+        Alert.alert('Hata', 'Kullanıcı ID bulunamadı. Lütfen tekrar giriş yapın.');
+        return;
+      }
+      await axios.post(`${API_BASE_URL}/watchlists`, {
+        name: newPortfolioName.trim(),
+        user_id: userId, 
+        type: 'portfolio',
       });
       setNewPortfolioName('');
       setModalVisible(false);
-      fetchPortfolios();
+      fetchPortfolios(); 
     } catch (err) {
-      console.error('Yeni portföy oluşturulamadı:', err);
+      console.error('Yeni portföy oluşturulamadı:', err.response ? err.response.data : err.message);
+      Alert.alert('Hata', 'Portföy oluşturulurken bir sorun oluştu.');
     }
   };
 
   useEffect(() => {
-    fetchPortfolios();
-  }, []);
+
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchPortfolios();
+    });
+
+    return unsubscribe;
+  }, [navigation]);
 
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={styles.portfolioItem}
-      onPress={() => navigation.navigate('PortfolioDetail', { listId: item.id, listName: item.name })}
+      onPress={() =>
+        navigation.navigate('PortfolioDetail', { listId: item.id, listName: item.name })
+      }
     >
-      <Text style={styles.portfolioName}>{item.name}</Text>
+      <View style={styles.portfolioInfo}>
+        <Text style={styles.portfolioName}>{item.name}</Text>
+        {}
+        {item.totalValue && <Text style={styles.portfolioValue}>₺{item.totalValue}</Text>}
+      </View>
+      {}
+      {item.change && (
+        <View style={styles.portfolioChangeContainer}>
+          <Text
+            style={[
+              styles.portfolioChange,
+              parseFloat(item.change) >= 0 ? styles.positiveChange : styles.negativeChange,
+            ]}
+          >
+            {parseFloat(item.change) >= 0 ? '+' : ''}{item.change}%
+          </Text>
+          <Icon name="chevron-right" size={24} color={COLORS.textSecondary} />
+        </View>
+      )}
+       {!item.change && ( 
+        <Icon name="chevron-right" size={24} color={COLORS.textSecondary} />
+      )}
     </TouchableOpacity>
   );
 
-  if (loading) return <ActivityIndicator style={{ flex: 1 }} size="large" color="#000" />;
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.centered}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </SafeAreaView>
+    );
+  }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Varlıklarım</Text>
-      <FlatList
-        data={portfolios}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
-        ListFooterComponent={
-          <TouchableOpacity style={styles.createButton} onPress={() => setModalVisible(true)}>
-            <Text style={styles.createButtonText}>+ Yeni Portföy Oluştur</Text>
-          </TouchableOpacity>
-        }
-      />
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <View style={styles.container}>
+        <Text style={styles.headerTitle}>Varlıklarım</Text>
 
-      {/* Yeni Liste Modalı */}
-      <Modal visible={modalVisible} transparent animationType="slide">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Yeni Liste Oluştur</Text>
-            <TextInput
-              placeholder="Yeni Listem"
-              style={styles.input}
-              value={newPortfolioName}
-              onChangeText={setNewPortfolioName}
-            />
-            <TouchableOpacity style={styles.addButton} onPress={createPortfolio}>
-              <Text style={styles.addButtonText}>Oluştur</Text>
+        <FlatList
+          data={portfolios}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.listContentContainer}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Icon name="folder-outline" size={60} color={COLORS.textSecondary} />
+              <Text style={styles.emptyText}>Henüz bir portföyünüz yok.</Text>
+              <Text style={styles.emptySubText}>Aşağıdaki butondan yeni bir portföy oluşturabilirsiniz.</Text>
+            </View>
+          }
+          ListFooterComponent={ 
+            <TouchableOpacity
+              style={styles.addPortfolioButton}
+              onPress={() => setModalVisible(true)}
+            >
+              <Icon name="plus-circle-outline" size={22} color={COLORS.white} />
+              <Text style={styles.addPortfolioButtonText}>Yeni Portföy Oluştur</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setModalVisible(false)}>
-              <Text style={styles.cancelText}>İptal</Text>
-            </TouchableOpacity>
+          }
+
+          ListFooterComponentStyle={{ marginTop: 20, marginBottom: 20 }} 
+        />
+
+        <Modal
+          visible={modalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Yeni Portföy Oluştur</Text>
+              <TextInput
+                placeholder="Portföy Adı (örn: Hisse Senetlerim)"
+                placeholderTextColor={COLORS.textSecondary}
+                style={styles.input}
+                value={newPortfolioName}
+                onChangeText={setNewPortfolioName}
+              />
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.cancelButton]}
+                  onPress={() => setModalVisible(false)}
+                >
+                  <Text style={[styles.modalButtonText, styles.cancelButtonText]}>İptal</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.createButton]}
+                  onPress={createPortfolio}
+                >
+                  <Text style={[styles.modalButtonText, styles.createButtonText]}>Oluştur</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
-        </View>
-      </Modal>
-    </View>
+        </Modal>
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 16 },
-  portfolioItem: {
-    padding: 16,
-    backgroundColor: '#f2f2f2',
-    borderRadius: 8,
-    marginBottom: 10,
+  safeArea: {
+    flex: 1,
+    backgroundColor: COLORS.background,
   },
-  portfolioName: { fontSize: 18 },
-  createButton: {
-    backgroundColor: '#ddd',
-    padding: 16,
-    alignItems: 'center',
-    borderRadius: 6,
-    marginTop: 16,
-  },
-  createButtonText: { fontSize: 16 },
-  modalContainer: {
+  centered: {
     flex: 1,
     justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.3)'
+    alignItems: 'center',
+    backgroundColor: COLORS.background,
   },
-  modalContent: {
-    margin: 32,
-    padding: 20,
-    backgroundColor: 'white',
-    borderRadius: 10,
+  container: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 10,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: COLORS.textPrimary,
+    marginBottom: 20,
+    paddingHorizontal: 5,
+  },
+  listContentContainer: {
+    paddingBottom: 20, 
+  },
+  portfolioItem: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 12,
+    padding: 18,
+    marginBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  portfolioInfo: {
+    flex: 1, 
+  },
+  portfolioName: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+    marginBottom: 4,
+  },
+  portfolioValue: {
+    fontSize: 15,
+    color: COLORS.textSecondary,
+  },
+  portfolioChangeContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  modalTitle: { fontSize: 20, marginBottom: 12 },
+  portfolioChange: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    marginRight: 8,
+  },
+  positiveChange: {
+    color: COLORS.success,
+  },
+  negativeChange: {
+    color: COLORS.error,
+  },
+  addPortfolioButton: {
+    backgroundColor: COLORS.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 15,
+    borderRadius: 10,
+    elevation: 2,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    marginHorizontal: 5, 
+  },
+  addPortfolioButtonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  modalContent: {
+    width: '90%',
+    backgroundColor: COLORS.surface,
+    borderRadius: 15,
+    padding: 25,
+    alignItems: 'stretch',
+    elevation: 5,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: COLORS.textPrimary,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
   input: {
     width: '100%',
-    padding: 10,
-    borderColor: '#ccc',
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    backgroundColor: COLORS.lightGray,
+    borderColor: COLORS.border,
     borderWidth: 1,
-    borderRadius: 6,
-    marginBottom: 12,
+    borderRadius: 8,
+    fontSize: 16,
+    color: COLORS.textPrimary,
+    marginBottom: 25,
   },
-  addButton: {
-    backgroundColor: '#ffa500',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 6,
-    marginBottom: 8,
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
-  addButtonText: { color: 'white', fontWeight: 'bold' },
-  cancelText: { color: 'red' },
+  modalButton: {
+    paddingVertical: 12,
+    borderRadius: 8,
+    flex: 1,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: COLORS.lightGray,
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  createButton: {
+    backgroundColor: COLORS.primary,
+  },
+  modalButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  cancelButtonText: {
+    color: COLORS.textSecondary,
+  },
+  createButtonText: {
+    color: COLORS.white,
+  },
+
+  emptyContainer: {
+    flex: 1, 
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  emptySubText: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginTop: 8,
+    textAlign: 'center',
+  },
 });
 
 export default AssetsScreen;
