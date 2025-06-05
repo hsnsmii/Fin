@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { getCurrentPrice } from '../../services/fmpApi';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -43,10 +44,36 @@ const AssetsScreen = () => {
   const [newPortfolioName, setNewPortfolioName] = useState('');
   const navigation = useNavigation();
 
-  const getRandomPortfolioData = () => {
-    const totalValue = (Math.random() * 50000 + 1000).toFixed(2);
-    const change = (Math.random() * 10 - 5).toFixed(2);
-    return { totalValue, change };
+  const fetchPortfolioSummary = async (id) => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/watchlists/${id}/stocks`);
+      let cost = 0;
+      let marketValue = 0;
+      for (const pos of res.data) {
+        const qty = Number(pos.quantity);
+        const buyPrice = Number(pos.price);
+        cost += qty * buyPrice;
+        try {
+          const current = await getCurrentPrice(pos.symbol);
+          if (current !== null) {
+            marketValue += qty * current;
+          } else {
+            marketValue += qty * buyPrice;
+          }
+        } catch (e) {
+          console.error('Fiyat alınamadı:', e);
+          marketValue += qty * buyPrice;
+        }
+      }
+      const change = cost !== 0 ? ((marketValue - cost) / cost) * 100 : 0;
+      return {
+        totalValue: marketValue.toFixed(2),
+        change: change.toFixed(2),
+      };
+    } catch (e) {
+      console.error('Portföy özeti alınamadı:', e);
+      return { totalValue: '0.00', change: '0.00' };
+    }
   };
 
   const fetchPortfolios = async () => {
@@ -60,11 +87,13 @@ const AssetsScreen = () => {
       }
       const res = await axios.get(`${API_BASE_URL}/watchlists/${userId}?type=portfolio`);
 
-      const portfoliosWithUIData = res.data.map(portfolio => ({
-        ...portfolio,
-        ...getRandomPortfolioData(), 
-      }));
-      setPortfolios(portfoliosWithUIData);
+      const portfoliosWithData = await Promise.all(
+        res.data.map(async (portfolio) => ({
+          ...portfolio,
+          ...(await fetchPortfolioSummary(portfolio.id)),
+        }))
+      );
+      setPortfolios(portfoliosWithData);
     } catch (err) {
       console.error('Portföyler çekilemedi:', err.response ? err.response.data : err.message);
       Alert.alert('Hata', 'Portföyler yüklenirken bir sorun oluştu.');
