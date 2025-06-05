@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, Image, TouchableOpacity, Alert } from 'react-native';
 import axios from 'axios';
 import { Swipeable } from 'react-native-gesture-handler';
+import { API_BASE_URL } from '../../services/config';
 
 const WatchlistDetailScreen = ({ route }) => {
   const { listId } = route.params;
@@ -11,7 +12,7 @@ const WatchlistDetailScreen = ({ route }) => {
   // Fetch stocks for the given listId
   const fetchStocks = async () => {
     try {
-      const res = await axios.get(`http://192.168.1.27:3000/api/watchlists/${listId}/stocks`);
+      const res = await axios.get(`${API_BASE_URL}/api/watchlists/${listId}/stocks`);
       setStocks(res.data);
     } catch (err) {
       console.error('Liste içeriği çekilemedi', err);
@@ -35,7 +36,7 @@ const WatchlistDetailScreen = ({ route }) => {
   // Handle stock deletion
   const handleDelete = async (symbol) => {
     try {
-      await axios.delete(`http://192.168.1.27:3000/api/watchlists/${listId}/stocks/${symbol}`);
+      await axios.delete(`${API_BASE_URL}/api/watchlists/${listId}/stocks/${symbol}`);
       setStocks(stocks.filter(stock => stock.symbol !== symbol));  // Remove stock from local state
     } catch (err) {
       console.error("Hisse silinemedi", err);

@@ -18,6 +18,7 @@ import { Ionicons, FontAwesome5, MaterialCommunityIcons } from "@expo/vector-ico
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from '@react-navigation/native';
 import { useLocalization } from '../../services/LocalizationContext';
+import { API_BASE_URL } from '../../services/config';
 
 const { width } = Dimensions.get('window');
 const indexInfo = {
@@ -46,7 +47,7 @@ const HomeScreen = () => {
         console.warn('User ID bulunamadı. Kullanıcı giriş yapmamış olabilir.');
         return;
       }
-      const res = await axios.get(`http://192.168.1.27:3000/api/watchlists/${userId}`);
+      const res = await axios.get(`${API_BASE_URL}/api/watchlists/${userId}`);
       setWatchlists(res.data);
     } catch (err) {
       console.error('Liste çekme hatası', err);
@@ -58,7 +59,7 @@ const HomeScreen = () => {
   const createWatchlist = async () => {
     try {
       const userId = await AsyncStorage.getItem('userId');
-      const res = await axios.post('http://192.168.1.27:3000/api/watchlists', {
+      const res = await axios.post(`${API_BASE_URL}/api/watchlists`, {
         name: newListName,
         user_id: userId,
       });

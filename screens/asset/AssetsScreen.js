@@ -19,8 +19,9 @@ import { getCurrentPrice } from '../../services/fmpApi';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useLocalization } from '../../services/LocalizationContext';
+import { API_BASE_URL } from '../../services/config';
 
-const API_BASE_URL = 'http://192.168.1.27:3000/api'; 
+const API_URL = `${API_BASE_URL}/api`;
 
 const COLORS = {
   primary: '#1A73E8',
@@ -48,7 +49,7 @@ const AssetsScreen = () => {
 
   const fetchPortfolioSummary = async (id) => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/watchlists/${id}/stocks`);
+      const res = await axios.get(`${API_URL}/watchlists/${id}/stocks`);
       let cost = 0;
       let marketValue = 0;
       for (const pos of res.data) {
@@ -87,7 +88,7 @@ const AssetsScreen = () => {
         setLoading(false);
         return;
       }
-      const res = await axios.get(`${API_BASE_URL}/watchlists/${userId}?type=portfolio`);
+      const res = await axios.get(`${API_URL}/watchlists/${userId}?type=portfolio`);
 
       const portfoliosWithData = await Promise.all(
         res.data.map(async (portfolio) => ({
@@ -115,7 +116,7 @@ const AssetsScreen = () => {
         Alert.alert('Hata', 'Kullanıcı ID bulunamadı. Lütfen tekrar giriş yapın.');
         return;
       }
-      await axios.post(`${API_BASE_URL}/watchlists`, {
+      await axios.post(`${API_URL}/watchlists`, {
         name: newPortfolioName.trim(),
         user_id: userId, 
         type: 'portfolio',

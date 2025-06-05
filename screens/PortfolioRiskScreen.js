@@ -7,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { PieChart } from 'react-native-chart-kit';
 import { getStockHistory } from '../services/fmpApi';
+import { API_BASE_URL, ML_BASE_URL } from '../services/config';
 
 const AppColors = {
   background: '#F4F6F8',
@@ -123,12 +124,12 @@ const PortfolioRiskScreen = () => {
           return;
         }
         // Watchlists
-        const res = await fetch(`http://192.168.1.27:3000/api/watchlists/${userId}`);
+        const res = await fetch(`${API_BASE_URL}/api/watchlists/${userId}`);
         const watchlistData = await res.json();
         setWatchlists(watchlistData);
 
         // Öneriler
-        const recRes = await fetch("http://192.168.1.27:5050/recommend-low-risk");
+        const recRes = await fetch(`${ML_BASE_URL}/recommend-low-risk`);
         const recData = await recRes.json();
         setRecommendations(recData);
 
@@ -165,7 +166,7 @@ const PortfolioRiskScreen = () => {
         if (!indicators || beta === null) continue;
         const payload = { ...indicators, beta, symbol };
         riskDataPromises.push(
-          fetch("http://192.168.1.27:5050/predict-risk", {
+          fetch(`${ML_BASE_URL}/predict-risk`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),

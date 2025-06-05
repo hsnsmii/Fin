@@ -17,6 +17,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import AnimatedLogoBanner from './AnimatedLogoBanner';
 import { useLocalization } from '../../services/LocalizationContext';
+import { API_BASE_URL } from '../../services/config';
 
 const LOGO = require('../../assets/Ekran Resmi 2025.png');
 
@@ -69,7 +70,7 @@ export default function RegisterScreen({ navigation }) {
     Keyboard.dismiss();
 
     try {
-      const response = await fetch('http://192.168.1.27:3000/register', {
+      const response = await fetch(`${API_BASE_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password }),

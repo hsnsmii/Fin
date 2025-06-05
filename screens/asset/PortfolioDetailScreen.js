@@ -16,8 +16,9 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import { getStockDetails, getPriceOnDate, getCurrentPrice } from '../../services/fmpApi';
 import { Ionicons } from '@expo/vector-icons';
 import { PieChart } from 'react-native-chart-kit';
+import { API_BASE_URL } from '../../services/config';
 
-const API_URL = "http://192.168.1.27:3000";
+const API_URL = API_BASE_URL;
 
 const AppColors = {
   background: '#F4F6F8',
