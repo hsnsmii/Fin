@@ -1,14 +1,35 @@
 import React, { useState } from 'react';
-import { SafeAreaView, Text, TextInput, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, Text, TextInput, StyleSheet, TouchableOpacity, View, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 const ChangePasswordScreen = () => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
 
-  const handleChange = () => {
-    // Placeholder action
-    setCurrentPassword('');
-    setNewPassword('');
+  const handleChange = async () => {
+    if (!currentPassword || !newPassword) {
+      Alert.alert('Hata', 'Lütfen tüm alanları doldurun.');
+      return;
+    }
+
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const res = await axios.post(
+        'http://192.168.1.27:3000/change-password',
+        { currentPassword, newPassword },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (res.status === 200) {
+        Alert.alert('Başarılı', 'Şifreniz güncellendi.');
+        setCurrentPassword('');
+        setNewPassword('');
+      }
+    } catch (err) {
+      const msg = err?.response?.data?.error || 'Şifre güncellenemedi.';
+      Alert.alert('Hata', msg);
+    }
   };
 
   return (
