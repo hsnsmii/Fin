@@ -63,7 +63,9 @@ const PortfolioDetailScreen = () => {
 
     try {
       console.log('⏳ Portföy ID:', listId);
-      const res = await axios.get(`${API_URL}/api/positions/${listId}`);
+      const res = await axios.get(
+        `http://192.168.1.27:3000/api/watchlists/${listId}/stocks`
+      );
       console.log('📥 Gelen pozisyonlar:', res.data);
 
       if (!res.data || !Array.isArray(res.data)) {
@@ -201,7 +203,9 @@ const PortfolioDetailScreen = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await axios.delete(`${API_URL}/api/positions/${listId}/${symbol}`);
+              await axios.delete(
+                `http://192.168.1.27:3000/api/watchlists/${listId}/stocks/${symbol}`
+              );
               Alert.alert('Başarılı', `${symbol} portföyden silindi.`);
               fetchPositions(true); 
             } catch (err) {
