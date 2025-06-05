@@ -50,6 +50,28 @@ const PortfolioDetailScreen = () => {
   const navigation = useNavigation();
   const { listId, listName } = route.params;
 
+  // Customize header: hide default title and use a stylish back button
+  useEffect(() => {
+    navigation.setOptions({
+      headerTitle: '',
+      headerBackTitleVisible: false,
+      headerTintColor: AppColors.primaryText,
+      headerBackImage: () => (
+        <Ionicons
+          name="arrow-back"
+          size={24}
+          color={AppColors.primaryText}
+          style={{ marginLeft: 15 }}
+        />
+      ),
+      headerStyle: {
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        shadowOpacity: 0,
+      },
+    });
+  }, [navigation]);
+
   const [positions, setPositions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false); 
