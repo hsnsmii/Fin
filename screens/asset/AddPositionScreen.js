@@ -9,10 +9,14 @@ import {
   Alert,
   FlatList,
   Platform,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import axios from 'axios';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRoute, useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { getSelectedStocks, getPriceOnDate } from '../../services/fmpApi';
 
 const AddPositionScreen = () => {
@@ -31,6 +35,7 @@ const AddPositionScreen = () => {
   const [searchText, setSearchText] = useState('');
   const [showStocks, setShowStocks] = useState(false);
 
+  // Stock list
   useEffect(() => {
     const fetchStocks = async () => {
       const data = await getSelectedStocks();
@@ -40,14 +45,13 @@ const AddPositionScreen = () => {
     fetchStocks();
   }, []);
 
+  // Price fetch on symbol/date
   useEffect(() => {
     const fetchPrice = async () => {
       if (!symbol) return;
       try {
         const p = await getPriceOnDate(symbol, date);
-        if (p !== null) {
-          setPrice(String(p));
-        }
+        if (p !== null) setPrice(String(p));
       } catch (err) {
         console.error('Fiyat otomatik getirilemedi:', err);
       }
@@ -55,6 +59,7 @@ const AddPositionScreen = () => {
     fetchPrice();
   }, [symbol, date]);
 
+  // If editing: fill fields
   useEffect(() => {
     const fetchExisting = async () => {
       if (isEdit && listId && editSymbol) {
@@ -76,8 +81,10 @@ const AddPositionScreen = () => {
     fetchExisting();
   }, [isEdit, listId, editSymbol]);
 
+  // Arama fonksiyonu
   const handleSearch = (text) => {
     setSearchText(text);
+    setShowStocks(true);
     const filtered = stocks.filter((s) =>
       s.symbol.toLowerCase().includes(text.toLowerCase()) ||
       s.companyName.toLowerCase().includes(text.toLowerCase())
@@ -85,12 +92,12 @@ const AddPositionScreen = () => {
     setFilteredStocks(filtered);
   };
 
+  // Kayıt/güncelle
   const handleAdd = async () => {
     if (!symbol || !quantity || !price) {
       Alert.alert('Eksik bilgi', 'Lütfen sembol, miktar ve fiyat giriniz.');
       return;
     }
-
     try {
       await axios.post(`http://192.168.1.27:3000/api/watchlists/${listId}/stocks`, {
         symbol: symbol.toUpperCase(),
@@ -107,79 +114,117 @@ const AddPositionScreen = () => {
     }
   };
 
+  // Stok seç
+  const handleSelectStock = (item) => {
+    setSymbol(item.symbol);
+    setShowStocks(false);
+    setSearchText(item.symbol);
+  };
+
+  // Hisse arama kutusu altındaki liste
   const renderStockItem = ({ item }) => (
     <TouchableOpacity
       style={styles.stockItem}
-      onPress={() => setSymbol(item.symbol)}
+      onPress={() => handleSelectStock(item)}
     >
       <Text style={styles.symbol}>{item.symbol}</Text>
-      <Text>{item.companyName}</Text>
+      <Text numberOfLines={1} style={{ color: '#777', fontSize: 13 }}>{item.companyName}</Text>
     </TouchableOpacity>
   );
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: '#F8FAFB' }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.container}>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={24} color="#333" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>{isEdit ? 'Pozisyonu Düzenle' : 'Pozisyon Ekle'}</Text>
+          </View>
 
-      <TextInput
-        placeholder="Hisse ara"
-        style={styles.input}
-        value={searchText}
-        onChangeText={handleSearch}
-        onFocus={() => setShowStocks(true)}
-        onBlur={() => setShowStocks(false)}
-      />
-      {showStocks && (
-        <FlatList
-          data={filteredStocks}
-          keyExtractor={(item) => item.symbol}
-          renderItem={renderStockItem}
-          style={{ maxHeight: 200, marginBottom: 12 }}
-        />
-      )}
-
-      {symbol !== '' && (
-        <>
-          <Text style={styles.selected}>Seçilen: {symbol}</Text>
-          <TextInput
-            placeholder="Miktar"
-            style={styles.input}
-            keyboardType="numeric"
-            value={quantity}
-            onChangeText={setQuantity}
-          />
-          <TextInput
-            placeholder="Alış Fiyatı"
-            style={styles.input}
-            keyboardType="numeric"
-            value={price}
-            onChangeText={setPrice}
-          />
-          <TextInput
-            placeholder="Not (opsiyonel)"
-            style={styles.input}
-            value={note}
-            onChangeText={setNote}
-          />
-          <TouchableOpacity onPress={() => setShowPicker(true)}>
-            <Text style={styles.dateText}>Tarih: {date.toLocaleDateString()}</Text>
-          </TouchableOpacity>
-          {showPicker && (
-            <DateTimePicker
-              value={date}
-              mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              onChange={(event, selectedDate) => {
-                setShowPicker(false);
-                if (selectedDate) setDate(selectedDate);
-              }}
+          {/* Hisse arama */}
+          <View style={{ marginBottom: 16 }}>
+            <Text style={styles.label}>Hisse Seçimi</Text>
+            <TextInput
+              placeholder="Hisse ara (örn: AKBNK)"
+              style={styles.input}
+              value={searchText}
+              onChangeText={handleSearch}
+              onFocus={() => setShowStocks(true)}
+              autoCapitalize="characters"
             />
+            {showStocks && filteredStocks.length > 0 && (
+              <FlatList
+                data={filteredStocks.slice(0, 8)}
+                keyExtractor={(item) => item.symbol}
+                renderItem={renderStockItem}
+                style={styles.stockList}
+                keyboardShouldPersistTaps="handled"
+              />
+            )}
+          </View>
+
+          {/* Sembolden sonra açılan alanlar */}
+          {symbol !== '' && (
+            <View style={styles.animatedSection}>
+              <Text style={styles.selectedText}>Seçilen hisse: <Text style={{ color: "#3b82f6" }}>{symbol}</Text></Text>
+              <Text style={styles.label}>Tarih</Text>
+              <TouchableOpacity onPress={() => setShowPicker(true)} style={styles.datePickerBtn}>
+                <Text style={styles.dateText}>{date.toLocaleDateString()}</Text>
+                <Ionicons name="calendar" size={18} color="#007AFF" />
+              </TouchableOpacity>
+              {showPicker && (
+                <DateTimePicker
+                  value={date}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={(event, selectedDate) => {
+                    setShowPicker(false);
+                    if (selectedDate) setDate(selectedDate);
+                  }}
+                />
+              )}
+
+              <Text style={styles.label}>Adet</Text>
+              <TextInput
+                placeholder="Miktar girin"
+                style={styles.input}
+                keyboardType="numeric"
+                value={quantity}
+                onChangeText={setQuantity}
+              />
+
+              <Text style={styles.label}>Alış Fiyatı</Text>
+              <TextInput
+                placeholder="Alış fiyatı"
+                style={styles.input}
+                keyboardType="numeric"
+                value={price}
+                onChangeText={setPrice}
+              />
+
+              <Text style={styles.label}>Not (opsiyonel)</Text>
+              <TextInput
+                placeholder="Ek bilgi"
+                style={[styles.input, { marginBottom: 10 }]}
+                value={note}
+                onChangeText={setNote}
+                maxLength={64}
+              />
+
+              <TouchableOpacity style={styles.button} onPress={handleAdd}>
+                <Text style={styles.buttonText}>{isEdit ? 'Kaydet' : 'Pozisyonu Ekle'}</Text>
+              </TouchableOpacity>
+            </View>
           )}
-          <TouchableOpacity style={styles.button} onPress={handleAdd}>
-            <Text style={styles.buttonText}>{isEdit ? 'Kaydet' : 'Pozisyonu Ekle'}</Text>
-          </TouchableOpacity>
-        </>
-      )}
-    </View>
+        </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -187,35 +232,110 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: '#F8FAFB',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    gap: 4,
+  },
+  backButton: {
+    padding: 4,
+    borderRadius: 20,
+    backgroundColor: '#eee',
+    marginRight: 8,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#263238',
+    flex: 1,
+    letterSpacing: 0.5,
+  },
+  label: {
+    fontSize: 14,
+    color: '#61677C',
+    marginBottom: 4,
+    marginLeft: 2,
+    fontWeight: '600',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#dde3ed',
+    backgroundColor: '#fff',
     padding: 10,
     marginBottom: 12,
-    borderRadius: 6,
+    borderRadius: 8,
+    fontSize: 16,
+    color: '#21272A',
+  },
+  datePickerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E9F0FB',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    marginBottom: 12,
+    alignSelf: 'flex-start',
+    gap: 7,
   },
   dateText: {
-    fontSize: 16,
-    marginBottom: 12,
-    color: '#555',
+    fontSize: 15,
+    color: '#29599e',
+    marginRight: 2,
+    fontWeight: '600',
   },
   button: {
-    backgroundColor: '#007bff',
-    padding: 14,
-    borderRadius: 8,
+    backgroundColor: '#3b82f6',
+    padding: 16,
+    borderRadius: 10,
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 16,
+    shadowColor: '#3b82f6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.14,
+    shadowRadius: 12,
+    elevation: 3,
   },
-  buttonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+  buttonText: { color: 'white', fontSize: 16, fontWeight: 'bold', letterSpacing: 1 },
+  stockList: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    borderColor: '#e4e4e4',
+    borderWidth: 1,
+    maxHeight: 220,
+    marginBottom: 8,
+    shadowColor: '#aaa',
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 2,
+  },
   stockItem: {
-    padding: 10,
-    borderBottomColor: '#ddd',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderBottomColor: '#f2f2f2',
     borderBottomWidth: 1,
   },
-  symbol: { fontWeight: 'bold' },
-  selected: { fontSize: 16, fontWeight: 'bold', marginBottom: 8 },
+  symbol: { fontWeight: 'bold', fontSize: 15, color: '#3b82f6', marginBottom: 2 },
+  selectedText: {
+    fontSize: 15,
+    fontWeight: '600',
+    marginBottom: 6,
+    color: '#49516F',
+    letterSpacing: 0.2,
+  },
+  animatedSection: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 18,
+    marginBottom: 6,
+    shadowColor: '#ddd',
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 2,
+  },
 });
 
 export default AddPositionScreen;

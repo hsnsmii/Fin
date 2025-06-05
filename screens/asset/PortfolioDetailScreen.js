@@ -9,7 +9,7 @@ import {
   Alert,
   SafeAreaView,
   Dimensions,
-  RefreshControl, 
+  RefreshControl,
 } from 'react-native';
 import axios from 'axios';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -17,7 +17,7 @@ import { getStockDetails, getPriceOnDate, getCurrentPrice } from '../../services
 import { Ionicons } from '@expo/vector-icons';
 import { PieChart } from 'react-native-chart-kit';
 
-const API_URL = "http://192.168.1.27:3000"; // <<<<<<<< KENDİ BACKENDİNİ YAZ
+const API_URL = "http://192.168.1.27:3000";
 
 const AppColors = {
   background: '#F4F6F8',
@@ -50,7 +50,6 @@ const PortfolioDetailScreen = () => {
   const navigation = useNavigation();
   const { listId, listName } = route.params;
 
-  // Customize header: hide default title and use a stylish back button
   useEffect(() => {
     navigation.setOptions({
       headerTitle: '',
@@ -74,7 +73,7 @@ const PortfolioDetailScreen = () => {
 
   const [positions, setPositions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false); 
+  const [refreshing, setRefreshing] = useState(false);
   const [totalValue, setTotalValue] = useState(0);
   const [totalProfit, setTotalProfit] = useState(0);
   const [pieChartData, setPieChartData] = useState([]);
@@ -84,14 +83,8 @@ const PortfolioDetailScreen = () => {
     else setRefreshing(true);
 
     try {
-      console.log('⏳ Portföy ID:', listId);
-      const res = await axios.get(
-        `http://192.168.1.27:3000/api/watchlists/${listId}/stocks`
-      );
-      console.log('📥 Gelen pozisyonlar:', res.data);
-
+      const res = await axios.get(`${API_URL}/api/watchlists/${listId}/stocks`);
       if (!res.data || !Array.isArray(res.data)) {
-        console.warn('⚠ API yanıtı beklenmedik formatta veya boş.');
         setPositions([]);
         setTotalValue(0);
         setTotalProfit(0);
@@ -116,25 +109,22 @@ const PortfolioDetailScreen = () => {
 
       const enrichedPositionsPromises = res.data.map(async (item) => {
         if (!item.symbol || typeof item.quantity === 'undefined' || typeof item.price === 'undefined') {
-          console.warn('⚠ Eksik DB verisi atlandı:', item);
           return null;
         }
 
         try {
           const stockData = await getStockDetails(item.symbol);
           if (!stockData || typeof stockData.price !== 'number') {
-            console.warn('⚠ API verisi eksik veya fiyat geçersiz:', item.symbol, stockData);
-
             const cost = Number(item.quantity) * Number(item.price);
             return {
               ...item,
-              dbPrice: Number(item.price), 
+              dbPrice: Number(item.price),
               companyName: stockData?.companyName || item.symbol,
-              marketPrice: null, 
+              marketPrice: null,
               profitLoss: null,
               profitLossPercent: null,
               cost,
-              marketValue: null, 
+              marketValue: null,
             };
           }
 
@@ -171,7 +161,6 @@ const PortfolioDetailScreen = () => {
             goldAlternative: altGoldValue,
           };
         } catch (apiError) {
-          console.error(`❌ ${item.symbol} için FMP API hatası:`, apiError);
           const cost = Number(item.quantity) * Number(item.price);
           return {
             ...item,
@@ -199,7 +188,7 @@ const PortfolioDetailScreen = () => {
 
       if (enrichedPositionsResult.length > 0 && totalMarketValue > 0) {
         const chartData = enrichedPositionsResult
-          .filter(pos => pos.marketValue && pos.marketValue > 0) 
+          .filter(pos => pos.marketValue && pos.marketValue > 0)
           .map((pos, index) => ({
             name: pos.symbol,
             population: pos.marketValue,
@@ -207,14 +196,13 @@ const PortfolioDetailScreen = () => {
             legendFontColor: AppColors.secondaryText,
             legendFontSize: 13,
           }))
-          .sort((a, b) => b.population - a.population); 
+          .sort((a, b) => b.population - a.population);
         setPieChartData(chartData);
       } else {
         setPieChartData([]);
       }
 
     } catch (err) {
-      console.error('❌ Pozisyonlar çekilemedi:', err);
       Alert.alert('Hata', 'Pozisyonlar alınamadı. Lütfen internet bağlantınızı kontrol edin veya daha sonra tekrar deneyin.');
       setPositions([]);
       setPieChartData([]);
@@ -226,7 +214,6 @@ const PortfolioDetailScreen = () => {
 
   useEffect(() => {
     const unsubscribeFocus = navigation.addListener('focus', () => {
-      console.log('🟡 Portföy Detay Ekranı odakta, ID:', listId);
       fetchPositions();
     });
 
@@ -246,13 +233,10 @@ const PortfolioDetailScreen = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await axios.delete(
-                `http://192.168.1.27:3000/api/watchlists/${listId}/stocks/${symbol}`
-              );
+              await axios.delete(`${API_URL}/api/watchlists/${listId}/stocks/${symbol}`);
               Alert.alert('Başarılı', `${symbol} portföyden silindi.`);
-              fetchPositions(true); 
+              fetchPositions(true);
             } catch (err) {
-              console.error('Silme hatası:', err.response?.data || err.message);
               Alert.alert('Hata', `${symbol} silinirken bir sorun oluştu: ${err.response?.data?.message || 'Sunucu hatası'}`);
             }
           },
@@ -262,54 +246,54 @@ const PortfolioDetailScreen = () => {
   };
 
   const handleEdit = (position) => {
-    navigation.navigate('AddPosition', { 
-      listId, 
-      symbol: position.symbol, 
+    navigation.navigate('AddPosition', {
+      listId,
+      symbol: position.symbol,
       isEdit: true,
       currentQuantity: position.quantity,
-      currentPrice: position.dbPrice, 
+      currentPrice: position.dbPrice,
     });
   };
 
   const renderItem = ({ item }) => (
     <View style={styles.positionCard}>
       <View style={[
-          styles.positionSideBar, 
-          { backgroundColor: item.profitLoss === null ? AppColors.neutral : (item.profitLoss >= 0 ? AppColors.profit : AppColors.loss) }
+        styles.positionSideBar,
+        { backgroundColor: item.profitLoss === null ? AppColors.neutral : (item.profitLoss >= 0 ? AppColors.profit : AppColors.loss) }
       ]} />
       <View style={styles.positionInfo}>
         <View style={styles.positionHeader}>
-            <Text style={styles.symbol}>{item.symbol}</Text>
-            <Text style={styles.company} numberOfLines={1} ellipsizeMode="tail">{item.companyName || 'Şirket Adı Yüklenemedi'}</Text>
+          <Text style={styles.symbol}>{item.symbol}</Text>
+          <Text style={styles.company} numberOfLines={1} ellipsizeMode="tail">{item.companyName || 'Şirket Adı Yüklenemedi'}</Text>
         </View>
         <Text style={styles.positionDetailText}>
           Alım: {item.quantity} adet @ ₺{item.dbPrice.toFixed(2)}
         </Text>
         <Text style={styles.positionDetailText}>
-  Güncel Fiyat: {item.marketPrice !== null ? "₺" + item.marketPrice.toFixed(2) : 'Veri Yok'}
-</Text>
-<Text style={styles.positionDetailText}>
-  Piyasa Değeri: {item.marketValue !== null ? "₺" + item.marketValue.toFixed(2) : 'Hesaplanamadı'}
-</Text>
+          Güncel Fiyat: {item.marketPrice !== null ? "₺" + item.marketPrice.toFixed(2) : 'Veri Yok'}
+        </Text>
         <Text style={styles.positionDetailText}>
-  Maliyet: {"₺" + item.cost.toFixed(2)}
-</Text>
+          Piyasa Değeri: {item.marketValue !== null ? "₺" + item.marketValue.toFixed(2) : 'Hesaplanamadı'}
+        </Text>
         <Text style={styles.positionDetailText}>
-  Dolar Alsaydın: {item.usdAlternative !== null ? `₺${item.usdAlternative.toFixed(2)}` : 'Hesaplanamadı'}
-</Text>
+          Maliyet: {"₺" + item.cost.toFixed(2)}
+        </Text>
         <Text style={styles.positionDetailText}>
-  Altın Alsaydın: {item.goldAlternative !== null ? `₺${item.goldAlternative.toFixed(2)}` : 'Hesaplanamadı'}
-</Text>
+          Dolar Alsaydın: {item.usdAlternative !== null ? `₺${item.usdAlternative.toFixed(2)}` : 'Hesaplanamadı'}
+        </Text>
+        <Text style={styles.positionDetailText}>
+          Altın Alsaydın: {item.goldAlternative !== null ? `₺${item.goldAlternative.toFixed(2)}` : 'Hesaplanamadı'}
+        </Text>
 
         {item.profitLoss !== null && item.profitLossPercent !== null ? (
-            <Text style={[
-                styles.positionProfitLoss, 
-                { color: item.profitLoss >= 0 ? AppColors.profit : AppColors.loss }
-            ]}>
+          <Text style={[
+            styles.positionProfitLoss,
+            { color: item.profitLoss >= 0 ? AppColors.profit : AppColors.loss }
+          ]}>
             K/Z: ₺{item.profitLoss.toFixed(2)} ({item.profitLossPercent.toFixed(2)}%)
-            </Text>
+          </Text>
         ) : (
-            <Text style={[styles.positionProfitLoss, {color: AppColors.neutral}]}>K/Z: Hesaplanamadı</Text>
+          <Text style={[styles.positionProfitLoss, { color: AppColors.neutral }]}>K/Z: Hesaplanamadı</Text>
         )}
       </View>
       <View style={styles.actionContainer}>
@@ -325,11 +309,7 @@ const PortfolioDetailScreen = () => {
 
   const renderListHeader = () => (
     <>
-      <View style={styles.pageHeaderContainer}>
-        <Text style={styles.pageHeaderTitle}>{listName}</Text>
-        <Text style={styles.pageHeaderSubtitle}>Portföy Detayları</Text>
-      </View>
-
+      {/* PORTFÖY ÖZETİ ve GRAFİKLER */}
       <View style={[styles.summaryCard, { borderColor: totalProfit >= 0 ? AppColors.profit : AppColors.loss }]}>
         <Text style={styles.summaryCardTitle}>Portföy Özeti</Text>
         <View style={styles.summaryRow}>
@@ -351,21 +331,21 @@ const PortfolioDetailScreen = () => {
           <Text style={styles.sectionTitle}>Varlık Dağılımı (Piyasa Değerine Göre)</Text>
           <PieChart
             data={pieChartData}
-            width={Dimensions.get('window').width - 32} 
+            width={Dimensions.get('window').width - 32}
             height={230}
             chartConfig={{
               backgroundColor: AppColors.cardBackground,
               backgroundGradientFrom: AppColors.cardBackground,
               backgroundGradientTo: AppColors.cardBackground,
-              color: (opacity = 1) => AppColors.primaryText, 
+              color: (opacity = 1) => AppColors.primaryText,
               labelColor: (opacity = 1) => AppColors.primaryText,
               style: { borderRadius: 8 },
-              propsForLabels: { fontSize: 11 } 
+              propsForLabels: { fontSize: 11 }
             }}
             accessor={"population"}
             backgroundColor={"transparent"}
             paddingLeft={"10"}
-            center={[Dimensions.get('window').width * 0.1, 0]} 
+            center={[Dimensions.get('window').width * 0.1, 0]}
             absolute={false}
             hasLegend={true}
             style={styles.pieChartStyle}
@@ -389,11 +369,44 @@ const PortfolioDetailScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      {/* STICKY HEADER */}
+      <View style={styles.stickyHeader}>
+  <TouchableOpacity
+    onPress={() => navigation.goBack()}
+    style={styles.backButton}
+    hitSlop={{ top: 15, left: 15, bottom: 15, right: 15 }}
+  >
+    <Ionicons name="arrow-back" size={26} color={AppColors.primaryText} />
+  </TouchableOpacity>
+  <View style={styles.stickyHeaderTitleBlock}>
+    <Text style={styles.pageHeaderTitle}>{listName}</Text>
+    <Text style={styles.pageHeaderSubtitle}>Portföy Detayları</Text>
+  </View>
+  {/* Sağda boşluk olsun diye View */}
+  <View style={{ width: 36 }} />
+</View>
+
+
       {positions.length === 0 && !loading ? (
         <View style={styles.emptyStateParentContainer}>
-          {renderListHeader()} 
+          <View style={{ height: 16 }} />
+          <View style={styles.summaryCard}>
+            <Text style={styles.summaryCardTitle}>Portföy Özeti</Text>
+            <View style={styles.summaryRow}>
+              <Ionicons name="wallet-outline" size={22} color={AppColors.primaryText} style={styles.summaryIcon} />
+              <Text style={styles.summaryLabel}>Toplam Değer:</Text>
+              <Text style={styles.summaryValue}>₺{totalValue.toFixed(2)}</Text>
+            </View>
+            <View style={[styles.summaryRow, styles.summaryRowLast]}>
+              <Ionicons name={totalProfit >= 0 ? "trending-up-outline" : "trending-down-outline"} size={22} color={totalProfit >= 0 ? AppColors.profit : AppColors.loss} style={styles.summaryIcon} />
+              <Text style={styles.summaryLabel}>Toplam Kâr/Zarar:</Text>
+              <Text style={[styles.summaryValue, { color: totalProfit >= 0 ? AppColors.profit : AppColors.loss }]}>
+                ₺{totalProfit.toFixed(2)}
+              </Text>
+            </View>
+          </View>
           <View style={styles.emptyStateContainer}>
-            <Ionicons name="file-tray-stacked-outline" size={64} color={AppColors.tertiaryText} style={{marginTop: 30}}/>
+            <Ionicons name="file-tray-stacked-outline" size={64} color={AppColors.tertiaryText} style={{ marginTop: 30 }} />
             <Text style={styles.emptyStateTitle}>Portföy Boş</Text>
             <Text style={styles.emptyStateMessage}>
               Bu portföyde henüz pozisyon bulunmamaktadır. Eklemeye başlayın!
@@ -401,7 +414,7 @@ const PortfolioDetailScreen = () => {
             <TouchableOpacity
               style={styles.emptyStateButton}
               onPress={() => navigation.navigate('AddPosition', { listId })}>
-              <Ionicons name="add-circle-outline" size={22} color={AppColors.primaryActionText} style={{marginRight: 8}}/>
+              <Ionicons name="add-circle-outline" size={22} color={AppColors.primaryActionText} style={{ marginRight: 8 }} />
               <Text style={styles.emptyStateButtonText}>Pozisyon Ekle</Text>
             </TouchableOpacity>
           </View>
@@ -414,22 +427,22 @@ const PortfolioDetailScreen = () => {
           ListHeaderComponent={renderListHeader}
           contentContainerStyle={styles.listContentContainer}
           showsVerticalScrollIndicator={false}
-          refreshControl={ 
+          refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={() => fetchPositions(true)}
-              colors={[AppColors.primaryAction]} 
-              tintColor={AppColors.primaryAction} 
+              colors={[AppColors.primaryAction]}
+              tintColor={AppColors.primaryAction}
             />
           }
         />
       )}
-      {}
+
       {positions.length > 0 && !loading && (
-         <TouchableOpacity
-            style={styles.addButtonFab}
-            onPress={() => navigation.navigate('AddPosition', { listId })}>
-            <Ionicons name="add-outline" size={32} color={AppColors.primaryActionText} />
+        <TouchableOpacity
+          style={styles.addButtonFab}
+          onPress={() => navigation.navigate('AddPosition', { listId })}>
+          <Ionicons name="add-outline" size={32} color={AppColors.primaryActionText} />
         </TouchableOpacity>
       )}
     </SafeAreaView>
@@ -441,6 +454,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: AppColors.background,
   },
+  stickyHeader: {
+    backgroundColor: AppColors.background,
+    paddingTop: 18,
+    paddingBottom: 4,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    zIndex: 100,
+    borderBottomWidth: 0.5,
+    borderBottomColor: AppColors.separator,
+  },
   fullScreenLoader: {
     flex: 1,
     justifyContent: 'center',
@@ -450,11 +473,6 @@ const styles = StyleSheet.create({
     marginTop: 15,
     fontSize: 16,
     color: AppColors.secondaryText,
-  },
-  pageHeaderContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 10,
   },
   pageHeaderTitle: {
     fontSize: 28,
@@ -475,7 +493,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: 10,
     marginBottom: 20,
-    borderWidth: 1, 
+    borderWidth: 1,
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -492,7 +510,7 @@ const styles = StyleSheet.create({
   summaryRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10, 
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: AppColors.separator,
   },
@@ -504,7 +522,7 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 16,
-    color: AppColors.secondaryText, 
+    color: AppColors.secondaryText,
     flex: 1,
   },
   summaryValue: {
@@ -529,7 +547,7 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '600',
     color: AppColors.primaryText,
-    marginBottom: 5, 
+    marginBottom: 5,
     paddingBottom: 8,
     borderBottomWidth: 1,
     borderBottomColor: AppColors.separator,
@@ -538,10 +556,10 @@ const styles = StyleSheet.create({
   },
   pieChartStyle: {
     alignSelf: 'center',
-    marginTop: 5, 
+    marginTop: 5,
   },
   listContentContainer: {
-    paddingBottom: 80, 
+    paddingBottom: 80,
   },
   positionsHeaderTitle: {
     fontSize: 20,
@@ -565,7 +583,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   positionSideBar: {
-    width: 7, 
+    width: 7,
   },
   positionInfo: {
     flex: 1,
@@ -574,53 +592,53 @@ const styles = StyleSheet.create({
   },
   positionHeader: {
     flexDirection: 'row',
-    alignItems: 'center', 
-    justifyContent: 'space-between', 
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 6,
   },
   symbol: {
-    fontSize: 19, 
+    fontSize: 19,
     fontWeight: 'bold',
     color: AppColors.primaryText,
   },
   company: {
-    fontSize: 13, 
+    fontSize: 13,
     color: AppColors.secondaryText,
     marginLeft: 8,
-    flexShrink: 1, 
-    textAlign: 'left', 
+    flexShrink: 1,
+    textAlign: 'left',
   },
   positionDetailText: {
-    fontSize: 13.5, 
+    fontSize: 13.5,
     color: AppColors.secondaryText,
-    lineHeight: 19, 
+    lineHeight: 19,
   },
   positionProfitLoss: {
-    fontSize: 14.5, 
+    fontSize: 14.5,
     fontWeight: 'bold',
     marginTop: 6,
   },
   actionContainer: {
     flexDirection: 'column',
-    justifyContent: 'space-evenly', 
+    justifyContent: 'space-evenly',
     alignItems: 'center',
-    paddingHorizontal: 10, 
+    paddingHorizontal: 10,
     borderLeftWidth: 1,
     borderLeftColor: AppColors.separator,
-    backgroundColor: '#FAFAFA', 
+    backgroundColor: '#FAFAFA',
   },
   actionButton: {
-    padding: 10, 
+    padding: 10,
   },
   emptyStateParentContainer: {
-      flex: 1, 
+    flex: 1,
   },
   emptyStateContainer: {
-    flexGrow: 1, 
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 30,
-    paddingBottom: 30, 
+    paddingBottom: 30,
   },
   emptyStateTitle: {
     fontSize: 22,
@@ -640,10 +658,10 @@ const styles = StyleSheet.create({
   emptyStateButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: AppColors.primaryAction, 
+    backgroundColor: AppColors.primaryAction,
     paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 25, 
+    borderRadius: 25,
     elevation: 2,
   },
   emptyStateButtonText: {
@@ -667,6 +685,40 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
+  stickyHeader: {
+  backgroundColor: AppColors.background,
+  paddingVertical: 10,
+  paddingHorizontal: 0,
+  flexDirection: 'row',
+  alignItems: 'center',
+  borderBottomWidth: 0.5,
+  borderBottomColor: AppColors.separator,
+  zIndex: 100,
+},
+backButton: {
+  paddingLeft: 14,
+  paddingRight: 10,
+  paddingVertical: 4,
+},
+stickyHeaderTitleBlock: {
+  flex: 1,
+  justifyContent: 'center',
+  alignItems: 'center',
+  alignSelf: 'center',
+},
+pageHeaderTitle: {
+  fontSize: 22,
+  fontWeight: 'bold',
+  color: AppColors.primaryText,
+  textAlign: 'center',
+},
+pageHeaderSubtitle: {
+  fontSize: 14,
+  color: AppColors.secondaryText,
+  textAlign: 'center',
+  marginTop: 0,
+},
+
 });
 
 export default PortfolioDetailScreen;

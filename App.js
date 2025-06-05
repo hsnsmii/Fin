@@ -24,7 +24,7 @@ const App = () => {
         <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
         <Stack.Screen name="StockDetail" component={StockDetailScreen} options={{ title: 'Hisse Detayı' }} />
         <Stack.Screen name="WatchlistDetail" component={WatchlistDetailScreen} />
-        <Stack.Screen name="PortfolioDetail" component={PortfolioDetailScreen} />
+        <Stack.Screen name="PortfolioDetail" component={PortfolioDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="AddPosition" component={AddPositionScreen} options={{ headerShown: false }} />
         <Stack.Screen name="AccountInfo" component={AccountInfoScreen} options={{ title: 'Hesap Bilgileri' }} />
         <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'Şifre Değiştir' }} />
