@@ -1,2 +1,5 @@
 node_modules
+node_modules/**/executionHistory.lock
+node_modules/**/buildOutputCleanup.lock
+node_modules/**/file-system.probe
 

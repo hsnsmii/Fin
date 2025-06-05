@@ -1,13 +1,12 @@
-// PortfolioRiskScreen.js
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, ActivityIndicator, StyleSheet, TouchableOpacity,
-  Modal, Dimensions, ScrollView, SafeAreaView, Alert
+  View, Text, ActivityIndicator, StyleSheet, TouchableOpacity, Modal,
+  Dimensions, ScrollView, SafeAreaView, Alert
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { PieChart } from 'react-native-chart-kit';
-import { getStockHistory } from '../services/fmpApi'; 
+import { getStockHistory } from '../services/fmpApi';
 
 const AppColors = {
   background: '#F4F6F8',
@@ -23,14 +22,18 @@ const AppColors = {
   white: '#FFFFFF',
 };
 
+// ==========================
+// YARDIMCI FONKSİYONLAR
+// ==========================
 const calculateBeta = (stockHistory, marketHistory) => {
   if (!stockHistory || !marketHistory || stockHistory.length < 21 || marketHistory.length < 21) return null;
   const stockCloses = stockHistory.map(h => h.close).reverse();
   const marketCloses = marketHistory.map(h => h.close).reverse();
-  if (stockCloses.some(c => c === null || c === undefined) || marketCloses.some(c => c === null || c === undefined)) return null;
+  if (stockCloses.some(c => c == null) || marketCloses.some(c => c == null)) return null;
+
   const stockReturns = [], marketReturns = [];
   for (let i = 1; i < 21; i++) {
-    if (stockCloses[i-1] === 0 || marketCloses[i-1] === 0) return null; 
+    if (stockCloses[i - 1] === 0 || marketCloses[i - 1] === 0) return null;
     stockReturns.push((stockCloses[i] - stockCloses[i - 1]) / stockCloses[i - 1]);
     marketReturns.push((marketCloses[i] - marketCloses[i - 1]) / marketCloses[i - 1]);
   }
@@ -42,44 +45,42 @@ const calculateBeta = (stockHistory, marketHistory) => {
     covariance += (stockReturns[i] - meanStock) * (marketReturns[i] - meanMarket);
     marketVariance += Math.pow(marketReturns[i] - meanMarket, 2);
   }
-  return marketVariance === 0 ? 0 : covariance / marketVariance;
+  covariance /= stockReturns.length;
+  marketVariance /= marketReturns.length;
+  if (marketVariance === 0) return null;
+  return covariance / marketVariance;
 };
 
 const calculateIndicators = (history) => {
   if (!history || history.length < 20) return null;
   const closes = history.map(h => h.close).reverse();
-  if (closes.some(c => c === null || c === undefined)) return null;
+  if (closes.length < 20 || closes.some(c => c == null)) return null;
 
+  // RSI
   const rsiCloses = closes.length >= 15 ? closes.slice(closes.length - 15) : closes;
   let gains = 0, losses = 0;
-  if (rsiCloses.length < 2) return { rsi: 50, sma_20: 0, volatility: 0}; 
-
   for (let i = 1; i < rsiCloses.length; i++) {
     const change = rsiCloses[i] - rsiCloses[i - 1];
-    change > 0 ? gains += change : losses -= Math.abs(change); 
+    change > 0 ? gains += change : losses -= Math.abs(change);
   }
-
-  const period = rsiCloses.length -1;
-  if (period === 0) return { rsi: 50, sma_20: 0, volatility: 0};
-
+  const period = rsiCloses.length - 1;
   const avgGain = gains / period;
   const avgLoss = losses / period;
   let rsi = 50;
-  if (avgLoss === 0) { rsi = 100; }
-  else if (avgGain === 0) { rsi = 0; }
-  else { const rs = avgGain / avgLoss; rsi = 100 - (100 / (1 + rs)); }
+  if (avgLoss === 0) rsi = 100;
+  else if (avgGain === 0) rsi = 0;
+  else rsi = 100 - (100 / (1 + avgGain / avgLoss));
 
-  const sma_20_closes = closes.length >= 20 ? closes.slice(closes.length - 20) : closes;
+  // SMA 20
+  const sma_20_closes = closes.slice(-20);
   const sma_20 = sma_20_closes.reduce((sum, val) => sum + val, 0) / sma_20_closes.length;
 
-  const volatilityCloses = closes.length >= 20 ? closes.slice(closes.length - 20) : closes;
+  // Volatility
   const returns = [];
-  for (let i = 1; i < volatilityCloses.length; i++) {
-      if(volatilityCloses[i-1] === 0) return null; 
-      returns.push((volatilityCloses[i] - volatilityCloses[i-1]) / volatilityCloses[i-1]);
+  for (let i = 1; i < sma_20_closes.length; i++) {
+    if (sma_20_closes[i - 1] === 0) return null;
+    returns.push((sma_20_closes[i] - sma_20_closes[i - 1]) / sma_20_closes[i - 1]);
   }
-  if(returns.length < 1) return { rsi, sma_20, volatility: 0 };
-
   const meanReturn = returns.reduce((sum, val) => sum + val, 0) / returns.length;
   const variance = returns.reduce((sum, val) => sum + Math.pow(val - meanReturn, 2), 0) / returns.length;
   const volatility = Math.sqrt(variance);
@@ -87,14 +88,30 @@ const calculateIndicators = (history) => {
   return { rsi, sma_20, volatility };
 };
 
+const getColorByRisk = (risk) => {
+  if (risk < 33) return AppColors.riskLow;
+  if (risk < 66) return AppColors.riskMedium;
+  return AppColors.riskHigh;
+};
+
+const getRiskCategoryText = (risk) => {
+  if (risk < 33) return 'Düşük';
+  if (risk < 66) return 'Orta';
+  return 'Yüksek';
+};
+
+// ==========================
+// ANA COMPONENT
+// ==========================
 const PortfolioRiskScreen = () => {
   const [watchlists, setWatchlists] = useState([]);
   const [selectedList, setSelectedList] = useState(null);
-  const [portfolioRiskData, setPortfolioRiskData] = useState([]); 
-  const [loading, setLoading] = useState(true); 
+  const [portfolioRiskData, setPortfolioRiskData] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
-  const [recommendations, setRecommendations] = useState([]); 
+  const [recommendations, setRecommendations] = useState([]);
 
+  // watchlists ve önerileri çek
   useEffect(() => {
     const initialFetch = async () => {
       setLoading(true);
@@ -105,32 +122,30 @@ const PortfolioRiskScreen = () => {
           setLoading(false);
           return;
         }
-
-        const watchlistRes = await fetch(`http:
-        if (!watchlistRes.ok) throw new Error(`Watchlist alınamadı: ${watchlistRes.status}`);
-        const watchlistData = await watchlistRes.json();
+        // Watchlists
+        const res = await fetch(`http://192.168.1.27:3000/api/watchlists/${userId}`);
+        const watchlistData = await res.json();
         setWatchlists(watchlistData);
 
+        // Öneriler
         const recRes = await fetch("http://192.168.1.27:5050/recommend-low-risk");
-        if (!recRes.ok) throw new Error(`Öneriler alınamadı: ${recRes.status}`);
         const recData = await recRes.json();
         setRecommendations(recData);
 
         if (watchlistData.length > 0) {
-
-           await handleListSelect(watchlistData[0], true); 
+          await handleListSelect(watchlistData[0], true);
         } else {
-          setLoading(false); 
+          setLoading(false);
         }
       } catch (err) {
-        console.error("Başlangıç verileri alma hatası:", err);
         Alert.alert("Veri Yükleme Hatası", err.message || "Veriler yüklenirken bir sorun oluştu.");
         setLoading(false);
       }
     };
     initialFetch();
-  }, []); 
+  }, []);
 
+  // Portföy risk verisi
   const fetchPortfolioRisk = async (stocks) => {
     if (!stocks || stocks.length === 0) {
       setPortfolioRiskData([]);
@@ -141,56 +156,32 @@ const PortfolioRiskScreen = () => {
     try {
       const symbols = [...new Set(stocks.map(s => s.symbol))];
       const riskDataPromises = [];
-      const marketHistory = await getStockHistory('SPY'); 
-
+      const marketHistory = await getStockHistory('SPY');
       for (const symbol of symbols) {
         const history = await getStockHistory(symbol);
-        if (!history || history.length === 0) {
-            console.warn(`Geçmiş veri yok: ${symbol}`);
-            continue;
-        }
+        if (!history || history.length === 0) continue;
         const indicators = calculateIndicators(history);
         const beta = calculateBeta(history, marketHistory);
-
-        if (!indicators || beta === null) {
-          console.warn(`İndikatörler veya beta hesaplanamadı: ${symbol}`);
-          continue; 
-        }
-
-        const payload = { 
-          rsi: indicators.rsi, 
-          sma_20: indicators.sma_20, 
-          volatility: indicators.volatility, 
-          beta, 
-          symbol 
-        };
-
+        if (!indicators || beta === null) continue;
+        const payload = { ...indicators, beta, symbol };
         riskDataPromises.push(
-            fetch("http://192.168.1.27:5050/predict-risk", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            })
-            .then(res => {
-                if (!res.ok) throw new Error(`Risk tahmini hatası (${symbol}): ${res.status}`);
-                return res.json();
-            })
-            .then(json => ({ 
-                symbol, 
-                risk: parseFloat(json.risk_percentage) || 0, 
-                breakdown: json.breakdown || { rsi:0, sma_20:0, volatility:0, beta:0 } 
+          fetch("http://192.168.1.27:5050/predict-risk", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          })
+            .then(res => res.json())
+            .then(json => ({
+              symbol,
+              risk: parseFloat(json.risk_percentage) || 0,
+              breakdown: json.breakdown || { rsi: 0, sma_20: 0, volatility: 0, beta: 0 }
             }))
-            .catch(err => {
-                console.error(`Risk API çağrısı hatası (${symbol}):`, err);
-                return null; 
-            })
+            .catch(() => null)
         );
       }
-
       const results = (await Promise.all(riskDataPromises)).filter(r => r !== null);
       setPortfolioRiskData(results.sort((a, b) => b.risk - a.risk));
     } catch (err) {
-      console.error("Portföy risk analizi hatası:", err);
       Alert.alert("Analiz Hatası", "Portföy risk analizi sırasında bir sorun oluştu.");
       setPortfolioRiskData([]);
     } finally {
@@ -198,6 +189,7 @@ const PortfolioRiskScreen = () => {
     }
   };
 
+  // Watchlist seçimi
   const handleListSelect = async (list, isInitialLoad = false) => {
     setSelectedList(list);
     setModalVisible(false);
@@ -205,22 +197,11 @@ const PortfolioRiskScreen = () => {
       await fetchPortfolioRisk(list.stocks);
     } else {
       setPortfolioRiskData([]);
-      if (!isInitialLoad) setLoading(false); 
+      if (!isInitialLoad) setLoading(false);
     }
   };
 
-  const getColorByRisk = (risk) => {
-    if (risk < 33) return AppColors.riskLow;
-    if (risk < 66) return AppColors.riskMedium;
-    return AppColors.riskHigh;
-  };
-
-  const getRiskCategoryText = (risk) => {
-    if (risk < 33) return 'Düşük';
-    if (risk < 66) return 'Orta';
-    return 'Yüksek';
-  };
-
+  // Genel risk
   const overallPortfolioRisk = () => {
     if (portfolioRiskData.length === 0) return null;
     const totalRisk = portfolioRiskData.reduce((acc, p) => acc + (p.risk || 0), 0);
@@ -232,28 +213,21 @@ const PortfolioRiskScreen = () => {
     };
   };
 
+  // Pie chart datası
   const pieChartDistributionData = () => {
     const total = portfolioRiskData.length;
     if (total === 0) return [];
-
-    const lowRiskCount = portfolioRiskData.filter(p => getRiskCategoryText(p.risk) === 'Düşük').length;
-    const mediumRiskCount = portfolioRiskData.filter(p => getRiskCategoryText(p.risk) === 'Orta').length;
-    const highRiskCount = portfolioRiskData.filter(p => getRiskCategoryText(p.risk) === 'Yüksek').length;
-
-    const data = [
-      { name: 'Düşük', population: lowRiskCount, color: AppColors.riskLow, legendFontColor: AppColors.secondaryText, legendFontSize: 13 },
-      { name: 'Orta', population: mediumRiskCount, color: AppColors.riskMedium, legendFontColor: AppColors.secondaryText, legendFontSize: 13 },
-      { name: 'Yüksek', population: highRiskCount, color: AppColors.riskHigh, legendFontColor: AppColors.secondaryText, legendFontSize: 13 },
-    ];
-
-    return data
-        .filter(item => item.population > 0)
-        .map(item => ({
-            ...item,
-            name: `${item.name} (${((item.population / total) * 100).toFixed(0)}%)`,
-        }));
+    const low = portfolioRiskData.filter(p => getRiskCategoryText(p.risk) === 'Düşük').length;
+    const med = portfolioRiskData.filter(p => getRiskCategoryText(p.risk) === 'Orta').length;
+    const high = portfolioRiskData.filter(p => getRiskCategoryText(p.risk) === 'Yüksek').length;
+    return [
+      { name: `Düşük (${((low / total) * 100).toFixed(0)}%)`, population: low, color: AppColors.riskLow, legendFontColor: AppColors.secondaryText, legendFontSize: 13 },
+      { name: `Orta (${((med / total) * 100).toFixed(0)}%)`, population: med, color: AppColors.riskMedium, legendFontColor: AppColors.secondaryText, legendFontSize: 13 },
+      { name: `Yüksek (${((high / total) * 100).toFixed(0)}%)`, population: high, color: AppColors.riskHigh, legendFontColor: AppColors.secondaryText, legendFontSize: 13 },
+    ].filter(item => item.population > 0);
   };
 
+  // Loading veya boş durum
   const currentOverallRisk = overallPortfolioRisk();
   const currentPieData = pieChartDistributionData();
 
@@ -281,26 +255,26 @@ const PortfolioRiskScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {loading && selectedList ? ( 
-          <View style={styles.contentLoader}>
-            <ActivityIndicator size="large" color={AppColors.primaryAction} />
-            <Text style={styles.loadingText}>Analiz ediliyor: {selectedList.name}</Text>
-          </View>
-        ) : !selectedList || portfolioRiskData.length === 0 ? ( 
-          <View style={styles.emptyStateContainer}>
-            <Ionicons name="information-circle-outline" size={64} color={AppColors.tertiaryText} />
-            <Text style={styles.emptyStateTitle}>Veri Bulunamadı</Text>
-            <Text style={styles.emptyStateMessage}>
-              {watchlists.length === 0 ? "Henüz bir izleme listeniz bulunmuyor. " : ""}
-              Risk analizi için lütfen bir izleme listesi seçin veya seçili listede analiz edilecek hisse senedi bulunmuyor.
-            </Text>
-            {watchlists.length > 0 && (
-                <TouchableOpacity style={styles.emptyStateButton} onPress={() => setModalVisible(true)}>
-                    <Text style={styles.emptyStateButtonText}>İzleme Listesi Seç</Text>
-                </TouchableOpacity>
-            )}
-          </View>
-        ) : (
+      {loading && selectedList ? (
+        <View style={styles.contentLoader}>
+          <ActivityIndicator size="large" color={AppColors.primaryAction} />
+          <Text style={styles.loadingText}>Analiz ediliyor: {selectedList.name}</Text>
+        </View>
+      ) : !selectedList || portfolioRiskData.length === 0 ? (
+        <View style={styles.emptyStateContainer}>
+          <Ionicons name="information-circle-outline" size={64} color={AppColors.tertiaryText} />
+          <Text style={styles.emptyStateTitle}>Veri Bulunamadı</Text>
+          <Text style={styles.emptyStateMessage}>
+            {watchlists.length === 0 ? "Henüz bir izleme listeniz bulunmuyor. " : ""}
+            Risk analizi için lütfen bir izleme listesi seçin veya seçili listede analiz edilecek hisse senedi bulunmuyor.
+          </Text>
+          {watchlists.length > 0 && (
+            <TouchableOpacity style={styles.emptyStateButton} onPress={() => setModalVisible(true)}>
+              <Text style={styles.emptyStateButtonText}>İzleme Listesi Seç</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      ) : (
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           {currentOverallRisk && (
             <View style={[styles.summaryCard, { borderColor: currentOverallRisk.color }]}>
@@ -310,7 +284,7 @@ const PortfolioRiskScreen = () => {
                   {currentOverallRisk.score}%
                 </Text>
                 <View style={[styles.summaryRiskBadge, { backgroundColor: currentOverallRisk.color }]}>
-                    <Text style={styles.summaryRiskBadgeText}>{currentOverallRisk.category}</Text>
+                  <Text style={styles.summaryRiskBadgeText}>{currentOverallRisk.category}</Text>
                 </View>
               </View>
               <Text style={styles.summaryCardSubtitle}>
@@ -324,7 +298,7 @@ const PortfolioRiskScreen = () => {
               <Text style={styles.sectionTitle}>Risk Dağılımı</Text>
               <PieChart
                 data={currentPieData}
-                width={Dimensions.get('window').width - (16 * 2) - (16*2)} 
+                width={Dimensions.get('window').width - 32}
                 height={220}
                 chartConfig={{
                   backgroundColor: AppColors.cardBackground,
@@ -348,17 +322,17 @@ const PortfolioRiskScreen = () => {
             {portfolioRiskData.map((item, index) => (
               <TouchableOpacity
                 key={item.symbol}
-                style={[styles.stockItemCard, index === portfolioRiskData.length -1 && styles.stockItemCardLast]}
+                style={[styles.stockItemCard, index === portfolioRiskData.length - 1 && styles.stockItemCardLast]}
                 onPress={() => {
-                    const breakdown = item.breakdown || {}; 
-                    Alert.alert(
-                        `${item.symbol} Risk Detayları`,
-                        `Risk Puanı: ${item.risk}% (${getRiskCategoryText(item.risk)})\n\n` +
-                        `RSI (14): ${breakdown.rsi?.toFixed(1) || 'N/A'}\n` +
-                        `SMA (20): ${breakdown.sma_20?.toFixed(1) || 'N/A'}\n` +
-                        `Volatilite (20 Gün): ${breakdown.volatility ? (breakdown.volatility * 100).toFixed(2) + '%' : 'N/A'}\n` +
-                        `Beta: ${breakdown.beta?.toFixed(3) || 'N/A'}`
-                    )
+                  const breakdown = item.breakdown || {};
+                  Alert.alert(
+                    `${item.symbol} Risk Detayları`,
+                    `Risk Puanı: ${item.risk}% (${getRiskCategoryText(item.risk)})\n\n` +
+                    `RSI (14): ${breakdown.rsi?.toFixed(1) || 'N/A'}\n` +
+                    `SMA (20): ${breakdown.sma_20?.toFixed(1) || 'N/A'}\n` +
+                    `Volatilite (20 Gün): ${breakdown.volatility ? (breakdown.volatility * 100).toFixed(2) + '%' : 'N/A'}\n` +
+                    `Beta: ${breakdown.beta?.toFixed(3) || 'N/A'}`
+                  )
                 }}
               >
                 <View style={[styles.stockItemRiskBar, { backgroundColor: getColorByRisk(item.risk) }]} />
@@ -381,32 +355,32 @@ const PortfolioRiskScreen = () => {
             ))}
           </View>
 
-          {recommendations.length > 0 && ( 
-             <View style={styles.sectionCard}>
-                <Text style={styles.sectionTitle}>📉 Düşük Riskli Hisse Önerileri</Text>
-                {recommendations.map((rec, index) => (
-                  <View key={`${rec.symbol}-${index}`} style={[styles.recommendationItem, index === recommendations.length -1 && styles.recommendationItemLast]}>
-                    <Ionicons
-                        name={"bulb-outline"} 
-                        size={24}
-                        color={AppColors.riskLow} 
-                        style={styles.recommendationIcon}
-                    />
-                    <View style={styles.recommendationContent}>
-                        <Text style={styles.recommendationSymbol}>{rec.symbol} </Text>
-                        {}
-                        <Text style={styles.recommendationText}>
-                            Risk Puanı: {rec.risk_percentage ? `${rec.risk_percentage.toFixed(1)}%` : 'Belirtilmemiş'}
-                        </Text>
-                         {}
-                    </View>
+          {recommendations.length > 0 && (
+            <View style={styles.sectionCard}>
+              <Text style={styles.sectionTitle}>📉 Düşük Riskli Hisse Önerileri</Text>
+              {recommendations.map((rec, index) => (
+                <View key={`${rec.symbol}-${index}`} style={[styles.recommendationItem, index === recommendations.length - 1 && styles.recommendationItemLast]}>
+                  <Ionicons
+                    name={"bulb-outline"}
+                    size={24}
+                    color={AppColors.riskLow}
+                    style={styles.recommendationIcon}
+                  />
+                  <View style={styles.recommendationContent}>
+                    <Text style={styles.recommendationSymbol}>{rec.symbol} </Text>
+                    <Text style={styles.recommendationText}>
+                      Risk Puanı: {rec.risk_percentage ? `${rec.risk_percentage.toFixed(1)}%` : 'Belirtilmemiş'}
+                    </Text>
                   </View>
-                ))}
-             </View>
+                </View>
+              ))}
+            </View>
           )}
+
         </ScrollView>
       )}
 
+      {/* Liste seçme modalı */}
       <Modal
         visible={modalVisible}
         animationType="fade"
@@ -416,19 +390,19 @@ const PortfolioRiskScreen = () => {
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPressOut={() => setModalVisible(false)}>
           <View style={styles.modalContainer} onStartShouldSetResponder={() => true}>
             <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>İzleme Listesi Seç</Text>
-                <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.modalCloseIcon}>
-                    <Ionicons name="close-circle" size={30} color={AppColors.tertiaryText} />
-                </TouchableOpacity>
+              <Text style={styles.modalTitle}>İzleme Listesi Seç</Text>
+              <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.modalCloseIcon}>
+                <Ionicons name="close-circle" size={30} color={AppColors.tertiaryText} />
+              </TouchableOpacity>
             </View>
             <ScrollView contentContainerStyle={styles.modalScrollView}>
               {watchlists.map((list) => (
                 <TouchableOpacity
-                  key={list._id || list.id} 
+                  key={list._id || list.id}
                   onPress={() => handleListSelect(list)}
                   style={[
                     styles.modalListItem,
-                    selectedList?._id === list._id && styles.modalListItemSelected 
+                    selectedList?._id === list._id && styles.modalListItemSelected
                   ]}
                 >
                   <Ionicons
@@ -443,9 +417,9 @@ const PortfolioRiskScreen = () => {
                   ]}>{list.name} ({list.stocks.length} hisse)</Text>
                 </TouchableOpacity>
               ))}
-               {watchlists.length === 0 && (
+              {watchlists.length === 0 && (
                 <Text style={styles.noWatchlistInModalText}>Gösterilecek izleme listesi bulunmuyor.</Text>
-               )}
+              )}
             </ScrollView>
           </View>
         </TouchableOpacity>
@@ -454,7 +428,23 @@ const PortfolioRiskScreen = () => {
   );
 };
 
+
 const styles = StyleSheet.create({
+  container: { padding: 16, paddingBottom: 100 },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  chart: { marginVertical: 12, borderRadius: 8 },
+  chartTitle: { fontSize: 16, fontWeight: 'bold', marginTop: 10 },
+  card: {
+    borderWidth: 2,
+    borderRadius: 10,
+    padding: 16,
+    marginBottom: 12,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
   safeArea: {
     flex: 1,
     backgroundColor: AppColors.background,
@@ -465,10 +455,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: AppColors.background,
   },
+  symbol: { fontSize: 18, fontWeight: 'bold' },
+  risk: { marginTop: 8, fontSize: 16 },
+  breakdownText: { fontSize: 13, color: '#333', marginTop: 2 },
+  floatingButton: {
+    position: 'absolute',
+    bottom: 30,
+    right: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#007AFF',
+  },
   contentLoader: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    elevation: 5,
     padding: 20,
   },
   loadingText: {
@@ -525,10 +528,21 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     elevation: 3,
     shadowColor: '#000',
+    shadowOpacity: 0.2,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
     shadowRadius: 4,
   },
+  selectedInfo: { position: 'absolute', top: 40, left: 16, zIndex: 10 },
+  selectedInfoText: { fontSize: 16, fontWeight: 'bold', color: '#007AFF' },
+  scoreBox: { backgroundColor: '#eef6ff', padding: 12, borderRadius: 8, marginBottom: 16 },
+  scoreText: { fontSize: 16, fontWeight: 'bold', color: '#007AFF' },
+  modalContainer: { flex: 1, justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.3)' },
+  modalContent: { margin: 20, padding: 20, backgroundColor: '#fff', borderRadius: 10 },
+  modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
+  modalItem: { paddingVertical: 10 },
+  modalItemText: { fontSize: 16 },
+  closeButton: { marginTop: 20, alignSelf: 'flex-end' },
+  closeButtonText: { color: '#007AFF', fontWeight: 'bold' },
   summaryCardTitle: {
     fontSize: 18,
     fontWeight: '600',
