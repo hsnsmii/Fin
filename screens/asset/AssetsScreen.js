@@ -18,6 +18,7 @@ import axios from 'axios';
 import { getCurrentPrice } from '../../services/fmpApi';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useLocalization } from '../../services/LocalizationContext';
 
 const API_BASE_URL = 'http://192.168.1.27:3000/api'; 
 
@@ -43,6 +44,7 @@ const AssetsScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [newPortfolioName, setNewPortfolioName] = useState('');
   const navigation = useNavigation();
+  const { t } = useLocalization();
 
   const fetchPortfolioSummary = async (id) => {
     try {
@@ -180,7 +182,7 @@ const AssetsScreen = () => {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
       <View style={styles.container}>
-        <Text style={styles.headerTitle}>Varlıklarım</Text>
+        <Text style={styles.headerTitle}>{t('My Assets')}</Text>
 
         <FlatList
           data={portfolios}
@@ -190,8 +192,8 @@ const AssetsScreen = () => {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Icon name="folder-outline" size={60} color={COLORS.textSecondary} />
-              <Text style={styles.emptyText}>Henüz bir portföyünüz yok.</Text>
-              <Text style={styles.emptySubText}>Aşağıdaki butondan yeni bir portföy oluşturabilirsiniz.</Text>
+              <Text style={styles.emptyText}>{t("You don't have any portfolios yet.")}</Text>
+              <Text style={styles.emptySubText}>{t('You can create a new portfolio using the button below.')}</Text>
             </View>
           }
           ListFooterComponent={ 
@@ -200,7 +202,7 @@ const AssetsScreen = () => {
               onPress={() => setModalVisible(true)}
             >
               <Icon name="plus-circle-outline" size={22} color={COLORS.white} />
-              <Text style={styles.addPortfolioButtonText}>Yeni Portföy Oluştur</Text>
+              <Text style={styles.addPortfolioButtonText}>{t('Create New Portfolio')}</Text>
             </TouchableOpacity>
           }
 
@@ -215,9 +217,9 @@ const AssetsScreen = () => {
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Yeni Portföy Oluştur</Text>
+              <Text style={styles.modalTitle}>{t('Create New Portfolio')}</Text>
               <TextInput
-                placeholder="Portföy Adı (örn: Hisse Senetlerim)"
+                placeholder={t('Portfolio Name (e.g., My Stocks)')}
                 placeholderTextColor={COLORS.textSecondary}
                 style={styles.input}
                 value={newPortfolioName}
@@ -228,13 +230,13 @@ const AssetsScreen = () => {
                   style={[styles.modalButton, styles.cancelButton]}
                   onPress={() => setModalVisible(false)}
                 >
-                  <Text style={[styles.modalButtonText, styles.cancelButtonText]}>İptal</Text>
+                  <Text style={[styles.modalButtonText, styles.cancelButtonText]}>{t('Cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.modalButton, styles.createButton]}
                   onPress={createPortfolio}
                 >
-                  <Text style={[styles.modalButtonText, styles.createButtonText]}>Oluştur</Text>
+                  <Text style={[styles.modalButtonText, styles.createButtonText]}>{t('Create')}</Text>
                 </TouchableOpacity>
               </View>
             </View>

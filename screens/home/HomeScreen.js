@@ -562,7 +562,7 @@ const HomeScreen = () => {
           <View style={styles.sectionHeader}>
             <View style={styles.sectionTitleIcon}>
               <MaterialCommunityIcons name="trending-up" size={24} color="#1e3a8a" />
-              <Text style={[styles.sectionTitle, styles.sectionTitleText]}>Yükselen Hisseler</Text>
+              <Text style={[styles.sectionTitle, styles.sectionTitleText]}>{t('Top Gainers')}</Text>
             </View>
           </View>
 
@@ -605,11 +605,11 @@ const HomeScreen = () => {
           <View style={styles.sectionHeader}>
             <View style={styles.sectionTitleIcon}>
               <FontAwesome5 name="bookmark" size={20} color="#1e3a8a" />
-              <Text style={[styles.sectionTitle, styles.sectionTitleText]}>Takip Listelerim</Text>
+              <Text style={[styles.sectionTitle, styles.sectionTitleText]}>{t('My Watchlists')}</Text>
             </View>
             <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
               <Ionicons name="add" size={18} color="white" />
-              <Text style={styles.addText}>Yeni Liste</Text>
+              <Text style={styles.addText}>{t('New List')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -625,7 +625,7 @@ const HomeScreen = () => {
                   <Text style={styles.watchlistName}>{list.name}</Text>
                 </TouchableOpacity>
               )) : (
-                <Text style={styles.emptyState}>Henüz takip listesi yok</Text>
+                <Text style={styles.emptyState}>{t('No watchlists yet')}</Text>
               )
             )}
           </View>
@@ -636,7 +636,7 @@ const HomeScreen = () => {
           <View style={styles.sectionHeader}>
             <View style={styles.sectionTitleIcon}>
               <MaterialCommunityIcons name="newspaper-variant-outline" size={22} color="#1e3a8a" />
-              <Text style={[styles.sectionTitle, styles.sectionTitleText]}>Pazar Haberleri</Text>
+              <Text style={[styles.sectionTitle, styles.sectionTitleText]}>{t('Market News')}</Text>
             </View>
           </View>
           {news && news.length > 0 ? (
@@ -663,11 +663,11 @@ const HomeScreen = () => {
       <Modal transparent visible={modalVisible} animationType="slide">
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Yeni Liste Oluştur</Text>
+            <Text style={styles.modalTitle}>{t('Create New List')}</Text>
             <TextInput
               value={newListName}
               onChangeText={setNewListName}
-              placeholder="Liste adı girin"
+              placeholder={t('Enter list name')}
               style={styles.modalInput}
               placeholderTextColor="#9ca3af"
             />
@@ -676,13 +676,13 @@ const HomeScreen = () => {
                 style={[styles.modalButton, styles.cancelButton]} 
                 onPress={() => setModalVisible(false)}
               >
-                <Text style={styles.cancelButtonText}>İptal</Text>
+                <Text style={styles.cancelButtonText}>{t('Cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[styles.modalButton, styles.createButton]} 
                 onPress={createWatchlist}
               >
-                <Text style={styles.createButtonText}>Oluştur</Text>
+                <Text style={styles.createButtonText}>{t('Create')}</Text>
               </TouchableOpacity>
             </View>
           </View>
