@@ -17,6 +17,7 @@ import axios from 'axios';
 import { Ionicons, FontAwesome5, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from '@react-navigation/native';
+import { useLocalization } from '../../services/LocalizationContext';
 
 const { width } = Dimensions.get('window');
 const indexInfo = {
@@ -26,6 +27,7 @@ const indexInfo = {
 
 const HomeScreen = () => {
   const navigation = useNavigation();
+  const { t } = useLocalization();
   const [watchlists, setWatchlists] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [newListName, setNewListName] = useState('');
@@ -691,10 +693,10 @@ const HomeScreen = () => {
         <View style={styles.modalContainer}>
           <View style={styles.profileMenuContent}>
             <TouchableOpacity style={styles.profileMenuItem} onPress={() => { setProfileMenuVisible(false); navigation.navigate('AccountInfo'); }}>
-              <Text style={styles.profileMenuText}>Hesap Bilgileri</Text>
+              <Text style={styles.profileMenuText}>{t('Account Information')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.profileMenuItem} onPress={() => { setProfileMenuVisible(false); navigation.navigate('ChangePassword'); }}>
-              <Text style={styles.profileMenuText}>Şifre Değiştir</Text>
+              <Text style={styles.profileMenuText}>{t('Change Password')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.profileMenuItem} onPress={async () => {
               setProfileMenuVisible(false);
@@ -702,7 +704,7 @@ const HomeScreen = () => {
               await AsyncStorage.removeItem('userId');
               navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
             }}>
-              <Text style={styles.profileMenuText}>Çıkış Yap</Text>
+              <Text style={styles.profileMenuText}>{t('Logout')}</Text>
             </TouchableOpacity>
           </View>
         </View>
