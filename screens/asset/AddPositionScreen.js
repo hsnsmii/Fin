@@ -29,6 +29,7 @@ const AddPositionScreen = () => {
   const [stocks, setStocks] = useState([]);
   const [filteredStocks, setFilteredStocks] = useState([]);
   const [searchText, setSearchText] = useState('');
+  const [showStocks, setShowStocks] = useState(false);
 
   useEffect(() => {
     const fetchStocks = async () => {
@@ -118,20 +119,23 @@ const AddPositionScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{isEdit ? 'Pozisyonu Düzenle' : 'Pozisyon Ekle'}</Text>
 
       <TextInput
         placeholder="Hisse ara"
         style={styles.input}
         value={searchText}
         onChangeText={handleSearch}
+        onFocus={() => setShowStocks(true)}
+        onBlur={() => setShowStocks(false)}
       />
-      <FlatList
-        data={filteredStocks}
-        keyExtractor={(item) => item.symbol}
-        renderItem={renderStockItem}
-        style={{ maxHeight: 200, marginBottom: 12 }}
-      />
+      {showStocks && (
+        <FlatList
+          data={filteredStocks}
+          keyExtractor={(item) => item.symbol}
+          renderItem={renderStockItem}
+          style={{ maxHeight: 200, marginBottom: 12 }}
+        />
+      )}
 
       {symbol !== '' && (
         <>
@@ -180,8 +184,11 @@ const AddPositionScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 20 },
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#fff',
+  },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
@@ -195,7 +202,7 @@ const styles = StyleSheet.create({
     color: '#555',
   },
   button: {
-    backgroundColor: '#ffa500',
+    backgroundColor: '#007bff',
     padding: 14,
     borderRadius: 8,
     alignItems: 'center',
