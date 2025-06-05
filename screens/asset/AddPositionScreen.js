@@ -1,5 +1,5 @@
 // screens/AddPositionScreen.js
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -30,6 +30,9 @@ const AddPositionScreen = () => {
   const [filteredStocks, setFilteredStocks] = useState([]);
   const [searchText, setSearchText] = useState('');
   const [showStocks, setShowStocks] = useState(false);
+
+  const searchInputRef = useRef(null);
+main
 
   useEffect(() => {
     const fetchStocks = async () => {
@@ -110,7 +113,12 @@ const AddPositionScreen = () => {
   const renderStockItem = ({ item }) => (
     <TouchableOpacity
       style={styles.stockItem}
-      onPress={() => setSymbol(item.symbol)}
+      onPress={() => {
+        setSymbol(item.symbol);
+        setSearchText(item.symbol);
+        setShowStocks(false);
+        searchInputRef.current?.blur();
+      }}
     >
       <Text style={styles.symbol}>{item.symbol}</Text>
       <Text>{item.companyName}</Text>
@@ -123,6 +131,7 @@ const AddPositionScreen = () => {
       <TextInput
         placeholder="Hisse ara"
         style={styles.input}
+        ref={searchInputRef}
         value={searchText}
         onChangeText={handleSearch}
         onFocus={() => setShowStocks(true)}
