@@ -2,6 +2,8 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
+import { LocalizationProvider, useLocalization } from './services/LocalizationContext';
+
 import LoginScreen from './screens/auth/LoginScreen';
 import RegisterScreen from './screens/auth/RegisterScreen';
 import StockDetailScreen from './screens/market/StockDetailScreen';
@@ -15,7 +17,8 @@ import MainTabs from './screens/TabBar'; // <--- Tab yapısı buradan gelecek
 
 const Stack = createStackNavigator();
 
-const App = () => {
+const RootNavigator = () => {
+  const { t } = useLocalization();
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Login">
@@ -26,12 +29,18 @@ const App = () => {
         <Stack.Screen name="WatchlistDetail" component={WatchlistDetailScreen} />
         <Stack.Screen name="PortfolioDetail" component={PortfolioDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="AddPosition" component={AddPositionScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="AccountInfo" component={AccountInfoScreen} options={{ title: 'Hesap Bilgileri' }} />
-        <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'Şifre Değiştir' }} />
+        <Stack.Screen name="AccountInfo" component={AccountInfoScreen} options={{ title: t('Account Information') }} />
+        <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: t('Change Password') }} />
 
       </Stack.Navigator>
     </NavigationContainer>
   );
 };
+
+const App = () => (
+  <LocalizationProvider>
+    <RootNavigator />
+  </LocalizationProvider>
+);
 
 export default App;

@@ -16,6 +16,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import AnimatedLogoBanner from './AnimatedLogoBanner';
+import { useLocalization } from '../../services/LocalizationContext';
 
 const LOGO = require('../../assets/Ekran Resmi 2025.png');
 
@@ -25,6 +26,7 @@ export default function LoginScreen({ navigation, route }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const { t } = useLocalization();
 
   // Animasyonlar (login kartı için)
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -55,7 +57,7 @@ export default function LoginScreen({ navigation, route }) {
   const handleLogin = async () => {
     setErrorMessage('');
     if (!email || !password) {
-      setErrorMessage('Please fill in all fields');
+      setErrorMessage(t('Please fill in all fields.'));
       return;
     }
     setIsLoading(true);
@@ -75,10 +77,10 @@ export default function LoginScreen({ navigation, route }) {
           routes: [{ name: 'Main' }],
         });
       } else {
-        setErrorMessage(data.error || 'Login failed');
+        setErrorMessage(data.error || t('Login failed'));
       }
     } catch (error) {
-      setErrorMessage('Something went wrong');
+      setErrorMessage(t('Something went wrong'));
     } finally {
       setIsLoading(false);
     }
@@ -98,16 +100,16 @@ export default function LoginScreen({ navigation, route }) {
             { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
           ]}
         >
-          <Text style={styles.title}>Login</Text>
-          <Text style={styles.subtitle}>Welcome back! Please login.</Text>
+          <Text style={styles.title}>{t('Login')}</Text>
+          <Text style={styles.subtitle}>{t('Welcome back! Please login.')}</Text>
 
           <View style={styles.formContainer}>
             {/* E-Mail */}
             <View style={styles.inputWrapper}>
-              <Text style={styles.label}>EMAIL</Text>
+              <Text style={styles.label}>{t('Email')}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Email Address"
+                placeholder={t('Email Address')}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -118,11 +120,11 @@ export default function LoginScreen({ navigation, route }) {
 
             {/* Password */}
             <View style={styles.inputWrapper}>
-              <Text style={styles.label}>PASSWORD</Text>
+              <Text style={styles.label}>{t('PASSWORD')}</Text>
               <View style={styles.passwordContainer}>
                 <TextInput
                   style={styles.passwordInput}
-                  placeholder="Password"
+                  placeholder={t('Password')}
                   secureTextEntry={!isPasswordVisible}
                   value={password}
                   onChangeText={setPassword}
@@ -145,7 +147,7 @@ export default function LoginScreen({ navigation, route }) {
 
             {/* Forgot Password */}
             <TouchableOpacity style={styles.forgotPassword}>
-              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+              <Text style={styles.forgotPasswordText}>{t('Forgot Password?')}</Text>
             </TouchableOpacity>
 
             {/* Login Button */}
@@ -157,15 +159,15 @@ export default function LoginScreen({ navigation, route }) {
               {isLoading ? (
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
-                <Text style={styles.loginButtonText}>Login</Text>
+                <Text style={styles.loginButtonText}>{t('Login')}</Text>
               )}
             </TouchableOpacity>
 
             {/* Register link */}
             <View style={styles.registerContainer}>
-              <Text style={styles.footerText}>Don't have an account? </Text>
+              <Text style={styles.footerText}>{t("Don't have an account? ")}</Text>
               <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-                <Text style={styles.registerLink}>Signup!</Text>
+                <Text style={styles.registerLink}>{t('Signup')}</Text>
               </TouchableOpacity>
             </View>
           </View>

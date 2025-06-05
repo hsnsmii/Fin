@@ -8,11 +8,13 @@ import FAQScreen from '../screens/FAQScreen';
 import AssetsScreen from '../screens/asset/AssetsScreen'
 import PortfolioRiskScreen from '../screens/PortfolioRiskScreen';
 import PortfolioDetailScreen from '../screens/asset/PortfolioDetailScreen';
+import { useLocalization } from '../services/LocalizationContext';
 
 
 const Tab = createBottomTabNavigator();
 
 export default function MainTabs() {
+  const { t } = useLocalization();
   return (
     <Tab.Navigator
       initialRouteName="Home"
@@ -41,7 +43,7 @@ export default function MainTabs() {
         name="Home"
         component={HomeScreen}
         options={{
-          tabBarLabel: 'Ana Sayfa',
+          tabBarLabel: t('Home'),
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons 
               name="home-sharp" 
@@ -55,7 +57,7 @@ export default function MainTabs() {
         name="Market"
         component={MarketScreen}
         options={{
-          tabBarLabel: 'Piyasa',
+          tabBarLabel: t('Market'),
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons 
               name="stats-chart" 
@@ -69,7 +71,7 @@ export default function MainTabs() {
         name="Risk"
         component={PortfolioRiskScreen}
         options={{
-          tabBarLabel: 'Risk',
+          tabBarLabel: t('Risk'),
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons 
               name="shield-outline" 
@@ -83,7 +85,7 @@ export default function MainTabs() {
         name="Profile"
         component={AssetsScreen}
         options={{
-          tabBarLabel: 'Assests',
+          tabBarLabel: t('Assets'),
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons 
               name="person" 
@@ -97,7 +99,7 @@ export default function MainTabs() {
         name="FAQ"
         component={FAQScreen}
         options={{
-          tabBarLabel: 'SSS',
+          tabBarLabel: t('FAQ'),
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons 
               name="help-circle" 

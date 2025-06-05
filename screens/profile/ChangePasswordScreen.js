@@ -2,14 +2,16 @@ import React, { useState } from 'react';
 import { SafeAreaView, Text, TextInput, StyleSheet, TouchableOpacity, View, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { useLocalization } from '../../services/LocalizationContext';
 
 const ChangePasswordScreen = () => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const { t } = useLocalization();
 
   const handleChange = async () => {
     if (!currentPassword || !newPassword) {
-      Alert.alert('Hata', 'Lütfen tüm alanları doldurun.');
+      Alert.alert(t('Error'), t('Please fill in all fields.'));
       return;
     }
 
@@ -22,35 +24,35 @@ const ChangePasswordScreen = () => {
       );
 
       if (res.status === 200) {
-        Alert.alert('Başarılı', 'Şifreniz güncellendi.');
+        Alert.alert(t('Success'), t('Password updated.'));
         setCurrentPassword('');
         setNewPassword('');
       }
     } catch (err) {
-      const msg = err?.response?.data?.error || 'Şifre güncellenemedi.';
-      Alert.alert('Hata', msg);
+      const msg = err?.response?.data?.error || t('Could not update password.');
+      Alert.alert(t('Error'), msg);
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Şifre Değiştir</Text>
+      <Text style={styles.title}>{t('Change Password')}</Text>
       <TextInput
-        placeholder="Mevcut Şifre"
+        placeholder={t('Current Password')}
         secureTextEntry
         style={styles.input}
         value={currentPassword}
         onChangeText={setCurrentPassword}
       />
       <TextInput
-        placeholder="Yeni Şifre"
+        placeholder={t('New Password')}
         secureTextEntry
         style={styles.input}
         value={newPassword}
         onChangeText={setNewPassword}
       />
       <TouchableOpacity style={styles.button} onPress={handleChange}>
-        <Text style={styles.buttonText}>Güncelle</Text>
+        <Text style={styles.buttonText}>{t('Update')}</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );

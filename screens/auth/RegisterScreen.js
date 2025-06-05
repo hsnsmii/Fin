@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AnimatedLogoBanner from './AnimatedLogoBanner';
+import { useLocalization } from '../../services/LocalizationContext';
 
 const LOGO = require('../../assets/Ekran Resmi 2025.png');
 
@@ -25,6 +26,7 @@ export default function RegisterScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const { t } = useLocalization();
 
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -48,18 +50,18 @@ export default function RegisterScreen({ navigation }) {
 
   const handleRegister = async () => {
     if (!username || !email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert(t('Error'), t('Please fill in all fields.'));
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert('Error', 'Please enter a valid email address');
+      Alert.alert(t('Error'), t('Please enter a valid email address'));
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Error', 'Password should be at least 6 characters');
+      Alert.alert(t('Error'), t('Password should be at least 6 characters'));
       return;
     }
 
@@ -76,7 +78,7 @@ export default function RegisterScreen({ navigation }) {
       const data = await response.json();
 
       if (response.ok) {
-        Alert.alert('Success', 'Registration successful!');
+        Alert.alert(t('Success'), t('Registration successful!'));
         // Animate out before navigating
         Animated.parallel([
           Animated.timing(fadeAnim, {
@@ -93,10 +95,10 @@ export default function RegisterScreen({ navigation }) {
           navigation.navigate('Login', { fromRegister: true });
         });
       } else {
-        Alert.alert('Error', data.error || 'Registration failed');
+        Alert.alert(t('Error'), data.error || t('Registration failed'));
       }
     } catch (error) {
-      Alert.alert('Error', 'Something went wrong');
+      Alert.alert(t('Error'), t('Something went wrong'));
     } finally {
       setIsLoading(false);
     }
@@ -129,14 +131,14 @@ export default function RegisterScreen({ navigation }) {
             { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
           ]}
         >
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Sign up to get started</Text>
+          <Text style={styles.title}>{t('Create Account')}</Text>
+          <Text style={styles.subtitle}>{t('Sign up to get started')}</Text>
 
           <View style={styles.formContainer}>
             <View style={styles.inputWrapper}>
-              <Text style={styles.label}>NAME</Text>
+              <Text style={styles.label}>{t('NAME')}</Text>
               <TextInput
-                placeholder="Full Name"
+                placeholder={t('Full Name')}
                 value={username}
                 onChangeText={setUsername}
                 style={styles.input}
@@ -146,9 +148,9 @@ export default function RegisterScreen({ navigation }) {
             </View>
 
             <View style={styles.inputWrapper}>
-              <Text style={styles.label}>EMAIL</Text>
+              <Text style={styles.label}>{t('Email')}</Text>
               <TextInput
-                placeholder="Email Address"
+                placeholder={t('Email Address')}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -159,10 +161,10 @@ export default function RegisterScreen({ navigation }) {
             </View>
 
             <View style={styles.inputWrapper}>
-              <Text style={styles.label}>PASSWORD</Text>
+              <Text style={styles.label}>{t('PASSWORD')}</Text>
               <View style={styles.passwordContainer}>
                 <TextInput
-                  placeholder="Password"
+                  placeholder={t('Password')}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!isPasswordVisible}
@@ -191,12 +193,12 @@ export default function RegisterScreen({ navigation }) {
               {isLoading ? (
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
-                <Text style={styles.registerButtonText}>Register</Text>
+                <Text style={styles.registerButtonText}>{t('Register')}</Text>
               )}
             </TouchableOpacity>
 
             <View style={styles.loginContainer}>
-              <Text style={styles.loginText}>Already have an account? </Text>
+              <Text style={styles.loginText}>{t('Already have an account? ')}</Text>
               <TouchableOpacity
                 onPress={() => {
                   Animated.parallel([
@@ -215,7 +217,7 @@ export default function RegisterScreen({ navigation }) {
                   });
                 }}
               >
-                <Text style={styles.loginLink}>Login</Text>
+                <Text style={styles.loginLink}>{t('Login')}</Text>
               </TouchableOpacity>
             </View>
           </View>
