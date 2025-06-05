@@ -34,6 +34,22 @@ module.exports = (pool) => {
     res.status(500).json({ error: err.message });
   }
 });
+  // POST /api/watchlists
+  router.post('/', async (req, res) => {
+    const { name, user_id, type } = req.body;
+    if (!name || !user_id) {
+      return res.status(400).json({ error: 'Eksik parametre' });
+    }
+    try {
+      const result = await pool.query(
+        'INSERT INTO watchlists (name, user_id, type) VALUES ($1, $2, $3) RETURNING *',
+        [name, user_id, type || null]
+      );
+      res.status(201).json(result.rows[0]);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
 
 
 
