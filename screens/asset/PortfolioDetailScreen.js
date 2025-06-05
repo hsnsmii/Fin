@@ -17,20 +17,22 @@ import { getStockDetails } from '../../services/fmpApi';
 import { Ionicons } from '@expo/vector-icons';
 import { PieChart } from 'react-native-chart-kit';
 
+const API_URL = "http://192.168.1.27:3000"; // <<<<<<<< KENDİ BACKENDİNİ YAZ
+
 const AppColors = {
-  background: '#F4F6F8',        
-  cardBackground: '#FFFFFF',     
-  primaryText: '#2C3E50',       
-  secondaryText: '#7F8C8D',     
-  tertiaryText: '#B0BEC5',      
-  primaryAction: '#FFA500',     
-  primaryActionText: '#FFFFFF',  
-  separator: '#E0E6ED',         
-  profit: '#2ECC71',            
-  loss: '#E74C3C',              
-  edit: '#3498DB',              
-  delete: '#E74C3C',            
-  neutral: '#B0BEC5',           
+  background: '#F4F6F8',
+  cardBackground: '#FFFFFF',
+  primaryText: '#2C3E50',
+  secondaryText: '#7F8C8D',
+  tertiaryText: '#B0BEC5',
+  primaryAction: '#FFA500',
+  primaryActionText: '#FFFFFF',
+  separator: '#E0E6ED',
+  profit: '#2ECC71',
+  loss: '#E74C3C',
+  edit: '#3498DB',
+  delete: '#E74C3C',
+  neutral: '#B0BEC5',
 };
 
 const PIE_CHART_COLORS = [
@@ -61,7 +63,7 @@ const PortfolioDetailScreen = () => {
 
     try {
       console.log('⏳ Portföy ID:', listId);
-      const res = await axios.get(http:
+      const res = await axios.get(`${API_URL}/api/positions/${listId}`);
       console.log('📥 Gelen pozisyonlar:', res.data);
 
       if (!res.data || !Array.isArray(res.data)) {
@@ -76,13 +78,13 @@ const PortfolioDetailScreen = () => {
       }
 
       if (res.data.length === 0) {
-          setPositions([]);
-          setTotalValue(0);
-          setTotalProfit(0);
-          setPieChartData([]);
-          if (!isRefresh) setLoading(false);
-          else setRefreshing(false);
-          return;
+        setPositions([]);
+        setTotalValue(0);
+        setTotalProfit(0);
+        setPieChartData([]);
+        if (!isRefresh) setLoading(false);
+        else setRefreshing(false);
+        return;
       }
 
       const enrichedPositionsPromises = res.data.map(async (item) => {
@@ -92,52 +94,52 @@ const PortfolioDetailScreen = () => {
         }
 
         try {
-            const stockData = await getStockDetails(item.symbol);
-            if (!stockData || typeof stockData.price !== 'number') {
-              console.warn('⚠ API verisi eksik veya fiyat geçersiz:', item.symbol, stockData);
+          const stockData = await getStockDetails(item.symbol);
+          if (!stockData || typeof stockData.price !== 'number') {
+            console.warn('⚠ API verisi eksik veya fiyat geçersiz:', item.symbol, stockData);
 
-              const cost = Number(item.quantity) * Number(item.price);
-              return {
-                ...item,
-                dbPrice: Number(item.price), 
-                companyName: stockData?.companyName || item.symbol,
-                marketPrice: null, 
-                profitLoss: null,
-                profitLossPercent: null,
-                cost,
-                marketValue: null, 
-              };
-            }
-
-            const marketPrice = parseFloat(stockData.price);
             const cost = Number(item.quantity) * Number(item.price);
-            const marketValue = Number(item.quantity) * marketPrice;
-            const profitLoss = marketValue - cost;
-            const profitLossPercent = cost !== 0 ? (profitLoss / cost) * 100 : 0;
-
             return {
               ...item,
               dbPrice: Number(item.price), 
-              companyName: stockData.companyName || item.symbol,
-              marketPrice,
-              profitLoss,
-              profitLossPercent,
+              companyName: stockData?.companyName || item.symbol,
+              marketPrice: null, 
+              profitLoss: null,
+              profitLossPercent: null,
               cost,
-              marketValue,
+              marketValue: null, 
             };
+          }
+
+          const marketPrice = parseFloat(stockData.price);
+          const cost = Number(item.quantity) * Number(item.price);
+          const marketValue = Number(item.quantity) * marketPrice;
+          const profitLoss = marketValue - cost;
+          const profitLossPercent = cost !== 0 ? (profitLoss / cost) * 100 : 0;
+
+          return {
+            ...item,
+            dbPrice: Number(item.price), 
+            companyName: stockData.companyName || item.symbol,
+            marketPrice,
+            profitLoss,
+            profitLossPercent,
+            cost,
+            marketValue,
+          };
         } catch (apiError) {
-            console.error(❌ ${item.symbol} için FMP API hatası:, apiError);
-            const cost = Number(item.quantity) * Number(item.price);
-            return { 
-                ...item,
-                dbPrice: Number(item.price),
-                companyName: item.symbol, 
-                marketPrice: null,
-                profitLoss: null,
-                profitLossPercent: null,
-                cost,
-                marketValue: null,
-            };
+          console.error(`❌ ${item.symbol} için FMP API hatası:`, apiError);
+          const cost = Number(item.quantity) * Number(item.price);
+          return { 
+            ...item,
+            dbPrice: Number(item.price),
+            companyName: item.symbol, 
+            marketPrice: null,
+            profitLoss: null,
+            profitLossPercent: null,
+            cost,
+            marketValue: null,
+          };
         }
       });
 
@@ -175,7 +177,7 @@ const PortfolioDetailScreen = () => {
       if (!isRefresh) setLoading(false);
       else setRefreshing(false);
     }
-  }, [listId, getStockDetails]); 
+  }, [listId]);
 
   useEffect(() => {
     const unsubscribeFocus = navigation.addListener('focus', () => {
@@ -191,7 +193,7 @@ const PortfolioDetailScreen = () => {
   const handleDelete = async (symbol) => {
     Alert.alert(
       'Pozisyonu Sil',
-      ${symbol} sembollü pozisyonu portföyden kalıcı olarak silmek istediğinize emin misiniz?,
+      `${symbol} sembollü pozisyonu portföyden kalıcı olarak silmek istediğinize emin misiniz?`,
       [
         { text: 'İptal', style: 'cancel' },
         {
@@ -199,12 +201,12 @@ const PortfolioDetailScreen = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await axios.delete(http:
-              Alert.alert('Başarılı', ${symbol} portföyden silindi.);
+              await axios.delete(`${API_URL}/api/positions/${listId}/${symbol}`);
+              Alert.alert('Başarılı', `${symbol} portföyden silindi.`);
               fetchPositions(true); 
             } catch (err) {
               console.error('Silme hatası:', err.response?.data || err.message);
-              Alert.alert('Hata', ${symbol} silinirken bir sorun oluştu: ${err.response?.data?.message || 'Sunucu hatası'});
+              Alert.alert('Hata', `${symbol} silinirken bir sorun oluştu: ${err.response?.data?.message || 'Sunucu hatası'}`);
             }
           },
         },
@@ -236,13 +238,16 @@ const PortfolioDetailScreen = () => {
         <Text style={styles.positionDetailText}>
           Alım: {item.quantity} adet @ ₺{item.dbPrice.toFixed(2)}
         </Text>
-        <Text style={styles.positionDetailText}>Maliyet: ₺{item.cost.toFixed(2)}</Text>
         <Text style={styles.positionDetailText}>
-          Güncel Fiyat: {item.marketPrice !== null ? ₺${item.marketPrice.toFixed(2)} : 'Veri Yok'}
-        </Text>
-        <Text style={styles.positionDetailText}>
-          Piyasa Değeri: {item.marketValue !== null ? ₺${item.marketValue.toFixed(2)} : 'Hesaplanamadı'}
-        </Text>
+  Güncel Fiyat: {item.marketPrice !== null ? "₺" + item.marketPrice.toFixed(2) : 'Veri Yok'}
+</Text>
+<Text style={styles.positionDetailText}>
+  Piyasa Değeri: {item.marketValue !== null ? "₺" + item.marketValue.toFixed(2) : 'Hesaplanamadı'}
+</Text>
+<Text style={styles.positionDetailText}>
+  Maliyet: {"₺" + item.cost.toFixed(2)}
+</Text>
+
         {item.profitLoss !== null && item.profitLossPercent !== null ? (
             <Text style={[
                 styles.positionProfitLoss, 
@@ -352,7 +357,7 @@ const PortfolioDetailScreen = () => {
         <FlatList
           data={positions}
           renderItem={renderItem}
-          keyExtractor={(item, index) => item.id ? item.id.toString() : ${item.symbol}-${index}}
+          keyExtractor={(item, index) => item.id ? item.id.toString() : `${item.symbol}-${index}`}
           ListHeaderComponent={renderListHeader}
           contentContainerStyle={styles.listContentContainer}
           showsVerticalScrollIndicator={false}
