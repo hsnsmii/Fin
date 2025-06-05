@@ -19,6 +19,10 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
+const indexInfo = {
+  'XU100.IS': { name: 'BIST 100', currency: '₺' },
+  '^NDX': { name: 'NASDAQ 100', currency: '$' },
+};
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -26,9 +30,10 @@ const HomeScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [newListName, setNewListName] = useState('');
   const [loading, setLoading] = useState(true);
-  const [marketData, setMarketData] = useState([]); 
-  const [popularStocks, setPopularStocks] = useState([]); 
-  const [news, setNews] = useState([]); 
+  const [marketData, setMarketData] = useState([]);
+  const [popularStocks, setPopularStocks] = useState([]);
+  const [news, setNews] = useState([]);
+  const [profileMenuVisible, setProfileMenuVisible] = useState(false);
 
   const handleSettingsPress1 = () => navigation.navigate('Market');
 
@@ -253,7 +258,7 @@ const HomeScreen = () => {
       borderRadius: 24,
       padding: 20,
       marginRight: 16,
-      width: 180,
+      width: 160,
       shadowColor: '#1e3a8a',
       shadowOffset: { width: 0, height: 8 },
       shadowOpacity: 0.12,
@@ -485,6 +490,22 @@ const HomeScreen = () => {
       fontSize: 16,
       paddingVertical: 40,
     },
+    profileMenuContent: {
+      backgroundColor: 'white',
+      borderRadius: 12,
+      paddingVertical: 20,
+      width: '80%',
+      maxWidth: 300,
+      alignItems: 'stretch',
+    },
+    profileMenuItem: {
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+    },
+    profileMenuText: {
+      fontSize: 16,
+      color: '#1a202c',
+    },
   };
 
   return (
@@ -495,7 +516,7 @@ const HomeScreen = () => {
           <View style={styles.headerTop}>
             <View style={{ width: 44 }} />
             <Text style={styles.headerTitle}>FINOVER</Text>
-            <TouchableOpacity style={styles.profileCircle}>
+            <TouchableOpacity style={styles.profileCircle} onPress={() => setProfileMenuVisible(true)}>
               <Ionicons name="person" size={20} color="#1e3a8a" />
             </TouchableOpacity>
           </View>
@@ -506,17 +527,17 @@ const HomeScreen = () => {
               marketData.map((item, index) => (
                 <View key={index} style={styles.marketCard}>
                   <View style={styles.marketCardHeader}>
-                    <Text style={styles.marketCardTitle}>{item.symbol}</Text>
-                    <MaterialCommunityIcons 
-                      name="chart-line" 
-                      size={18} 
-                      color={item.change > 0 ? "#4CAF50" : "#E53935"} 
+                    <Text style={styles.marketCardTitle}>{indexInfo[item.symbol]?.name || item.symbol}</Text>
+                    <MaterialCommunityIcons
+                      name="chart-line"
+                      size={18}
+                      color={item.change > 0 ? "#4CAF50" : "#E53935"}
                     />
                   </View>
-                  <Text style={styles.marketCardValue}>{item.price}</Text>
+                  <Text style={styles.marketCardValue}>{indexInfo[item.symbol]?.currency || ''}{item.price}</Text>
                   <View style={styles.marketCardTrend}>
-                    <Ionicons 
-                      name={item.change > 0 ? "arrow-up" : "arrow-down"} 
+                    <Ionicons
+                      name={item.change > 0 ? "arrow-up" : "arrow-down"}
                       size={14} 
                       color={item.change > 0 ? "#4CAF50" : "#E53935"} 
                     />
@@ -541,9 +562,6 @@ const HomeScreen = () => {
               <MaterialCommunityIcons name="trending-up" size={24} color="#1e3a8a" />
               <Text style={[styles.sectionTitle, styles.sectionTitleText]}>Yükselen Hisseler</Text>
             </View>
-            <TouchableOpacity>
-              <Text style={styles.seeAllText}>Tümünü Gör</Text>
-            </TouchableOpacity>
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.preferredStocksScroll}>
@@ -665,6 +683,27 @@ const HomeScreen = () => {
                 <Text style={styles.createButtonText}>Oluştur</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal transparent visible={profileMenuVisible} animationType="fade">
+        <View style={styles.modalContainer}>
+          <View style={styles.profileMenuContent}>
+            <TouchableOpacity style={styles.profileMenuItem} onPress={() => { setProfileMenuVisible(false); navigation.navigate('AccountInfo'); }}>
+              <Text style={styles.profileMenuText}>Hesap Bilgileri</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.profileMenuItem} onPress={() => { setProfileMenuVisible(false); navigation.navigate('ChangePassword'); }}>
+              <Text style={styles.profileMenuText}>Şifre Değiştir</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.profileMenuItem} onPress={async () => {
+              setProfileMenuVisible(false);
+              await AsyncStorage.removeItem('token');
+              await AsyncStorage.removeItem('userId');
+              navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+            }}>
+              <Text style={styles.profileMenuText}>Çıkış Yap</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>

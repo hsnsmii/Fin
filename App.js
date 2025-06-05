@@ -8,6 +8,8 @@ import StockDetailScreen from './screens/market/StockDetailScreen';
 import WatchlistDetailScreen from './screens/home/WatchlistDetailScreen';
 import PortfolioDetailScreen from './screens/asset/PortfolioDetailScreen';
 import AddPositionScreen from './screens/asset/AddPositionScreen';
+import AccountInfoScreen from './screens/profile/AccountInfoScreen';
+import ChangePasswordScreen from './screens/profile/ChangePasswordScreen';
 
 import MainTabs from './screens/TabBar'; // <--- Tab yapısı buradan gelecek
 
@@ -24,6 +26,8 @@ const App = () => {
         <Stack.Screen name="WatchlistDetail" component={WatchlistDetailScreen} />
         <Stack.Screen name="PortfolioDetail" component={PortfolioDetailScreen} />
         <Stack.Screen name="AddPosition" component={AddPositionScreen} />
+        <Stack.Screen name="AccountInfo" component={AccountInfoScreen} options={{ title: 'Hesap Bilgileri' }} />
+        <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'Şifre Değiştir' }} />
 
       </Stack.Navigator>
     </NavigationContainer>
