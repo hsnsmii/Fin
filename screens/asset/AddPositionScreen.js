@@ -13,7 +13,7 @@ import {
 import axios from 'axios';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { getSelectedStocks } from '../../services/fmpApi';
+import { getSelectedStocks, getPriceOnDate } from '../../services/fmpApi';
 
 const AddPositionScreen = () => {
   const route = useRoute();
@@ -38,6 +38,21 @@ const AddPositionScreen = () => {
     };
     fetchStocks();
   }, []);
+
+  useEffect(() => {
+    const fetchPrice = async () => {
+      if (!symbol) return;
+      try {
+        const p = await getPriceOnDate(symbol, date);
+        if (p !== null) {
+          setPrice(String(p));
+        }
+      } catch (err) {
+        console.error('Fiyat otomatik getirilemedi:', err);
+      }
+    };
+    fetchPrice();
+  }, [symbol, date]);
 
   useEffect(() => {
     const fetchExisting = async () => {

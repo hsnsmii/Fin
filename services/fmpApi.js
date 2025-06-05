@@ -49,4 +49,37 @@ export const getStockHistory = async (symbol) => {
       return [];
     }
   };
+
+export const getPriceOnDate = async (symbol, date) => {
+  try {
+    const formatted = typeof date === 'string' ? date : date.toISOString().split('T')[0];
+    const res = await fetch(
+      `https://financialmodelingprep.com/api/v3/historical-price-full/${symbol}?from=${formatted}&to=${formatted}&apikey=${FMP_API_KEY}`
+    );
+    const data = await res.json();
+    if (data && data.historical && data.historical.length > 0) {
+      return parseFloat(data.historical[0].close);
+    }
+    return null;
+  } catch (error) {
+    console.error('Price on date fetch error:', error);
+    return null;
+  }
+};
+
+export const getCurrentPrice = async (symbol) => {
+  try {
+    const res = await fetch(
+      `https://financialmodelingprep.com/api/v3/quote/${symbol}?apikey=${FMP_API_KEY}`
+    );
+    const data = await res.json();
+    if (Array.isArray(data) && data.length > 0) {
+      return parseFloat(data[0].price);
+    }
+    return null;
+  } catch (error) {
+    console.error('Current price fetch error:', error);
+    return null;
+  }
+};
   

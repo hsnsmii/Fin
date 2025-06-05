@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import axios from 'axios';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { getStockDetails } from '../../services/fmpApi'; 
+import { getStockDetails, getPriceOnDate, getCurrentPrice } from '../../services/fmpApi';
 import { Ionicons } from '@expo/vector-icons';
 import { PieChart } from 'react-native-chart-kit';
 
@@ -89,6 +89,9 @@ const PortfolioDetailScreen = () => {
         return;
       }
 
+      const currentUsdRate = await getCurrentPrice('USDTRY');
+      const currentGoldUsd = await getCurrentPrice('XAUUSD');
+
       const enrichedPositionsPromises = res.data.map(async (item) => {
         if (!item.symbol || typeof item.quantity === 'undefined' || typeof item.price === 'undefined') {
           console.warn('⚠ Eksik DB verisi atlandı:', item);
@@ -119,28 +122,46 @@ const PortfolioDetailScreen = () => {
           const profitLoss = marketValue - cost;
           const profitLossPercent = cost !== 0 ? (profitLoss / cost) * 100 : 0;
 
+          const usdOnDate = await getPriceOnDate('USDTRY', item.date);
+          const goldUsdOnDate = await getPriceOnDate('XAUUSD', item.date);
+
+          let altUsdValue = null;
+          let altGoldValue = null;
+          if (usdOnDate && currentUsdRate) {
+            const usdAmount = cost / usdOnDate;
+            altUsdValue = usdAmount * currentUsdRate;
+          }
+          if (usdOnDate && goldUsdOnDate && currentUsdRate && currentGoldUsd) {
+            const goldAmount = cost / (goldUsdOnDate * usdOnDate);
+            altGoldValue = goldAmount * currentGoldUsd * currentUsdRate;
+          }
+
           return {
             ...item,
-            dbPrice: Number(item.price), 
+            dbPrice: Number(item.price),
             companyName: stockData.companyName || item.symbol,
             marketPrice,
             profitLoss,
             profitLossPercent,
             cost,
             marketValue,
+            usdAlternative: altUsdValue,
+            goldAlternative: altGoldValue,
           };
         } catch (apiError) {
           console.error(`❌ ${item.symbol} için FMP API hatası:`, apiError);
           const cost = Number(item.quantity) * Number(item.price);
-          return { 
+          return {
             ...item,
             dbPrice: Number(item.price),
-            companyName: item.symbol, 
+            companyName: item.symbol,
             marketPrice: null,
             profitLoss: null,
             profitLossPercent: null,
             cost,
             marketValue: null,
+            usdAlternative: null,
+            goldAlternative: null,
           };
         }
       });
@@ -248,8 +269,14 @@ const PortfolioDetailScreen = () => {
 <Text style={styles.positionDetailText}>
   Piyasa Değeri: {item.marketValue !== null ? "₺" + item.marketValue.toFixed(2) : 'Hesaplanamadı'}
 </Text>
-<Text style={styles.positionDetailText}>
+        <Text style={styles.positionDetailText}>
   Maliyet: {"₺" + item.cost.toFixed(2)}
+</Text>
+        <Text style={styles.positionDetailText}>
+  Dolar Alsaydın: {item.usdAlternative !== null ? `₺${item.usdAlternative.toFixed(2)}` : 'Hesaplanamadı'}
+</Text>
+        <Text style={styles.positionDetailText}>
+  Altın Alsaydın: {item.goldAlternative !== null ? `₺${item.goldAlternative.toFixed(2)}` : 'Hesaplanamadı'}
 </Text>
 
         {item.profitLoss !== null && item.profitLossPercent !== null ? (
