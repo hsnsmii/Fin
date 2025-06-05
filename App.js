@@ -25,11 +25,15 @@ const App = () => {
         <Stack.Screen name="StockDetail" component={StockDetailScreen} options={{ title: 'Hisse Detayı' }} />
         <Stack.Screen name="WatchlistDetail" component={WatchlistDetailScreen} />
         <Stack.Screen name="PortfolioDetail" component={PortfolioDetailScreen} />
+
         <Stack.Screen
           name="AddPosition"
           component={AddPositionScreen}
           options={{ title: '' }}
         />
+
+        <Stack.Screen name="AddPosition" component={AddPositionScreen} options={{ headerShown: false }} />
+ main
         <Stack.Screen name="AccountInfo" component={AccountInfoScreen} options={{ title: 'Hesap Bilgileri' }} />
         <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'Şifre Değiştir' }} />
 

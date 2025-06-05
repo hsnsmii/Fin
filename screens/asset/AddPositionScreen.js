@@ -30,7 +30,9 @@ const AddPositionScreen = () => {
   const [filteredStocks, setFilteredStocks] = useState([]);
   const [searchText, setSearchText] = useState('');
   const [showStocks, setShowStocks] = useState(false);
+
   const searchInputRef = useRef(null);
+main
 
   useEffect(() => {
     const fetchStocks = async () => {
