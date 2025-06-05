@@ -64,6 +64,26 @@ app.post('/login', async (req, res) => {
   }
 });
 
+// 📌 Change Password API
+app.post('/change-password', authenticateToken, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  try {
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
+    const user = result.rows[0];
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const valid = await bcrypt.compare(currentPassword, user.password);
+    if (!valid) return res.status(401).json({ error: 'Current password incorrect' });
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await pool.query('UPDATE users SET password = $1 WHERE id = $2', [hashed, req.user.id]);
+    res.json({ message: 'Password updated' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Password update failed' });
+  }
+});
+
 // 📦 Watchlist routes
 const watchlistsRoute = require('./routes/watchlists')(pool); // ← dikkat: fonksiyon çağrısı
 app.use('/api/watchlists', watchlistsRoute);
