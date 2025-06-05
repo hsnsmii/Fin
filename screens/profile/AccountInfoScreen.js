@@ -62,6 +62,6 @@ const styles = StyleSheet.create({
   langButtonActive: { backgroundColor: '#1e3a8a' },
   langButtonText: { color: '#000' },
 });
-});
+
 
 export default AccountInfoScreen;
