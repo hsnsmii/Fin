@@ -3,6 +3,7 @@ import { View, Text, FlatList, ActivityIndicator, StyleSheet, TouchableOpacity }
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
+import { API_BASE_URL } from '../../services/config';
 
 const WatchlistScreen = () => {
   const [lists, setLists] = useState([]);
@@ -13,7 +14,7 @@ const WatchlistScreen = () => {
     const fetchLists = async () => {
       try {
         const userId = await AsyncStorage.getItem('userId');
-        const response = await axios.get(`http://192.168.1.27:3000/api/watchlists/${userId}`);
+        const response = await axios.get(`${API_BASE_URL}/api/watchlists/${userId}`);
         setLists(response.data);
       } catch (err) {
         console.error('Liste çekilemedi:', err);

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, Modal, Alert, Dimensions } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getStockDetails, getStockHistory } from '../../services/fmpApi';
+import { API_BASE_URL, ML_BASE_URL } from '../../services/config';
 import { LineChart } from 'react-native-chart-kit';
 import { Feather } from '@expo/vector-icons';
 import { styles } from "../../styles/StockDetailStyle";
@@ -85,7 +86,7 @@ const StockDetailScreen = ({ route, navigation }) => {
         const payload = { ...indicators, beta, symbol };
         console.log("Gönderilen veriler:", payload);
 
-        const response = await fetch("http://192.168.1.27:5050/predict-risk", {
+        const response = await fetch(`${ML_BASE_URL}/predict-risk`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -105,7 +106,7 @@ const StockDetailScreen = ({ route, navigation }) => {
       try {
         const userId = await AsyncStorage.getItem('userId');
         if (!userId) return;
-        const response = await fetch(`http://192.168.1.27:3000/api/watchlists/${userId}`);
+        const response = await fetch(`${API_BASE_URL}/api/watchlists/${userId}`);
         const data = await response.json();
         setWatchlists(data);
       } catch (err) {
@@ -126,7 +127,7 @@ const StockDetailScreen = ({ route, navigation }) => {
 
   const handleAddToWatchlist = async (listId) => {
     try {
-      const response = await fetch(`http://192.168.1.27:3000/api/watchlists/${listId}/stocks`, {
+      const response = await fetch(`${API_BASE_URL}/api/watchlists/${listId}/stocks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ symbol }),
@@ -146,7 +147,7 @@ const StockDetailScreen = ({ route, navigation }) => {
   const handleAddWithFallback = async () => {
     const userId = await AsyncStorage.getItem('userId');
     if (watchlists.length === 0) {
-      const response = await fetch(`http://192.168.1.27:3000/api/watchlists`, {
+      const response = await fetch(`${API_BASE_URL}/api/watchlists`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: 'Favoriler', user_id: userId }),

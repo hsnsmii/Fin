@@ -18,6 +18,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { getSelectedStocks, getPriceOnDate } from '../../services/fmpApi';
+import { API_BASE_URL } from '../../services/config';
 
 const AddPositionScreen = () => {
   const route = useRoute();
@@ -64,7 +65,7 @@ const AddPositionScreen = () => {
     const fetchExisting = async () => {
       if (isEdit && listId && editSymbol) {
         try {
-          const res = await axios.get(`http://192.168.1.27:3000/api/watchlists/${listId}/stocks`);
+          const res = await axios.get(`${API_BASE_URL}/api/watchlists/${listId}/stocks`);
           const match = res.data.find((s) => s.symbol === editSymbol);
           if (match) {
             setSymbol(match.symbol);
@@ -99,7 +100,7 @@ const AddPositionScreen = () => {
       return;
     }
     try {
-      await axios.post(`http://192.168.1.27:3000/api/watchlists/${listId}/stocks`, {
+      await axios.post(`${API_BASE_URL}/api/watchlists/${listId}/stocks`, {
         symbol: symbol.toUpperCase(),
         quantity: parseFloat(quantity),
         price: parseFloat(price),

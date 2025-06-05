@@ -3,6 +3,7 @@ import { SafeAreaView, Text, TextInput, StyleSheet, TouchableOpacity, View, Aler
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useLocalization } from '../../services/LocalizationContext';
+import { API_BASE_URL } from '../../services/config';
 
 const ChangePasswordScreen = () => {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -18,7 +19,7 @@ const ChangePasswordScreen = () => {
     try {
       const token = await AsyncStorage.getItem('token');
       const res = await axios.post(
-        'http://192.168.1.27:3000/change-password',
+        `${API_BASE_URL}/change-password`,
         { currentPassword, newPassword },
         { headers: { Authorization: `Bearer ${token}` } }
       );
