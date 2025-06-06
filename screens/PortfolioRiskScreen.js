@@ -111,6 +111,7 @@ const PortfolioRiskScreen = () => {
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [recommendations, setRecommendations] = useState([]);
+  const [analysisSummary, setAnalysisSummary] = useState(null);
 
   // watchlists ve önerileri çek
   useEffect(() => {
@@ -182,6 +183,28 @@ const PortfolioRiskScreen = () => {
       }
       const results = (await Promise.all(riskDataPromises)).filter(r => r !== null);
       setPortfolioRiskData(results.sort((a, b) => b.risk - a.risk));
+
+      // Advanced analysis via backend
+      const riskMap = {};
+      results.forEach((r) => { riskMap[r.symbol] = r.risk; });
+      const positions = stocks.map((s) => ({
+        symbol: s.symbol,
+        quantity: s.quantity || 1,
+        price: s.price || 1,
+        risk_score: (riskMap[s.symbol] || 0) / 100,
+      }));
+
+      try {
+        const analysisRes = await fetch(`${ML_BASE_URL}/portfolio-analysis`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ positions }),
+        });
+        const analysisJson = await analysisRes.json();
+        setAnalysisSummary(analysisJson);
+      } catch (e) {
+        setAnalysisSummary(null);
+      }
     } catch (err) {
       Alert.alert("Analiz Hatası", "Portföy risk analizi sırasında bir sorun oluştu.");
       setPortfolioRiskData([]);
@@ -191,12 +214,13 @@ const PortfolioRiskScreen = () => {
   };
 
   // Watchlist seçimi
-  const handleListSelect = async (list, isInitialLoad = false) => {
-    setSelectedList(list);
-    setModalVisible(false);
-    if (list && list.stocks) {
-      await fetchPortfolioRisk(list.stocks);
-    } else {
+const handleListSelect = async (list, isInitialLoad = false) => {
+  setSelectedList(list);
+  setModalVisible(false);
+  setAnalysisSummary(null);
+  if (list && list.stocks) {
+    await fetchPortfolioRisk(list.stocks);
+  } else {
       setPortfolioRiskData([]);
       if (!isInitialLoad) setLoading(false);
     }
@@ -313,8 +337,27 @@ const PortfolioRiskScreen = () => {
                 backgroundColor={"transparent"}
                 paddingLeft={"15"}
                 hasLegend={true}
-                style={styles.pieChartStyle}
+              style={styles.pieChartStyle}
               />
+            </View>
+          )}
+
+          {analysisSummary && (
+            <View style={styles.sectionCard}>
+              <Text style={styles.sectionTitle}>Portföy Analizi</Text>
+              <Text style={styles.analysisText}>
+                Yüksek Risk Oranı: {analysisSummary.high_risk_percentage?.toFixed(1) || '0'}%
+              </Text>
+              <Text style={styles.analysisText}>
+                Çeşitlilik Skoru: {analysisSummary.diversification_score?.toFixed(2) || '0'}
+              </Text>
+              {analysisSummary.suggestions && analysisSummary.suggestions.length > 0 && (
+                <View style={{ marginTop: 8 }}>
+                  {analysisSummary.suggestions.map((s, idx) => (
+                    <Text key={idx} style={styles.analysisSuggestion}>• {s}</Text>
+                  ))}
+                </View>
+              )}
             </View>
           )}
 
@@ -674,6 +717,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: AppColors.secondaryText,
     lineHeight: 18,
+  },
+  analysisText: {
+    fontSize: 14,
+    color: AppColors.primaryText,
+    marginBottom: 4,
+  },
+  analysisSuggestion: {
+    fontSize: 13,
+    color: AppColors.secondaryText,
+    marginBottom: 2,
   },
   modalOverlay: {
     flex: 1,
