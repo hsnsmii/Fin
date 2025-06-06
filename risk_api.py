@@ -30,7 +30,12 @@ def predict_risk():
             return jsonify({"error": f"Model bulunamadı: {symbol}"}), 404
 
         model = joblib.load(model_path)
-        score = model.predict(df)[0]
+        raw_score = model.predict(df)[0]
+        try:
+            score = float(raw_score)
+        except (ValueError, TypeError):
+            return jsonify({"error": f"Model output not numeric: {raw_score}"}), 500
+
         risk_percentage = round(score * 100)
 
         print("Tahmin skoru (%):", risk_percentage)
