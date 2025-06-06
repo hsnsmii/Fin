@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, ActivityIndicator, StyleSheet, TouchableOpacity, Modal,
-  Dimensions, ScrollView, SafeAreaView, Alert
+  Dimensions, ScrollView, SafeAreaView, Alert, TextInput
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { PieChart } from 'react-native-chart-kit';
 import { getStockHistory } from '../services/fmpApi';
 import { API_BASE_URL, ML_BASE_URL } from '../services/config';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 const AppColors = {
   background: '#F4F6F8',
@@ -110,47 +111,63 @@ const PortfolioRiskScreen = () => {
   const [portfolioRiskData, setPortfolioRiskData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
+  const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [newPortfolioName, setNewPortfolioName] = useState('');
   const [recommendations, setRecommendations] = useState([]);
   const [analysisSummary, setAnalysisSummary] = useState(null);
+  const [weightedRisk, setWeightedRisk] = useState(null);
+  const navigation = useNavigation();
 
-  // watchlists ve önerileri çek
-  useEffect(() => {
-    const initialFetch = async () => {
-      setLoading(true);
-      try {
-        const userId = await AsyncStorage.getItem('userId');
-        if (!userId) {
-          Alert.alert("Hata", "Kullanıcı ID bulunamadı. Lütfen tekrar giriş yapın.");
-          setLoading(false);
-          return;
-        }
-        // Watchlists
-        const res = await fetch(`${API_BASE_URL}/api/watchlists/${userId}`);
-        const watchlistData = await res.json();
-        setWatchlists(watchlistData);
-
-        // Öneriler
-        const recRes = await fetch(`${ML_BASE_URL}/recommend-low-risk`);
-        const recData = await recRes.json();
-        setRecommendations(recData);
-
-        if (watchlistData.length > 0) {
-          await handleListSelect(watchlistData[0], true);
-        } else {
-          setLoading(false);
-        }
-      } catch (err) {
-        Alert.alert("Veri Yükleme Hatası", err.message || "Veriler yüklenirken bir sorun oluştu.");
-        setLoading(false);
+  const fetchWatchlists = async () => {
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        Alert.alert('Hata', 'Kullanıcı ID bulunamadı. Lütfen tekrar giriş yapın.');
+        return [];
       }
-    };
+      const res = await fetch(`${API_BASE_URL}/api/watchlists/${userId}?type=risk`);
+      const data = await res.json();
+      setWatchlists(data);
+      return data;
+    } catch (err) {
+      Alert.alert('Veri Yükleme Hatası', err.message || 'Veriler yüklenirken bir sorun oluştu.');
+      return [];
+    }
+  };
+
+  const initialFetch = async () => {
+    setLoading(true);
+    const lists = await fetchWatchlists();
+    try {
+      const recRes = await fetch(`${ML_BASE_URL}/recommend-low-risk`);
+      const recData = await recRes.json();
+      setRecommendations(recData);
+    } catch (e) {
+      setRecommendations([]);
+    }
+
+    if (lists.length > 0) {
+      await handleListSelect(lists[0], true);
+    } else {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     initialFetch();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      initialFetch();
+    }, [])
+  );
 
   // Portföy risk verisi
   const fetchPortfolioRisk = async (stocks) => {
     if (!stocks || stocks.length === 0) {
       setPortfolioRiskData([]);
+      setWeightedRisk(null);
       setLoading(false);
       return;
     }
@@ -194,6 +211,19 @@ const PortfolioRiskScreen = () => {
         risk_score: (riskMap[s.symbol] || 0) / 100,
       }));
 
+      const values = positions.map(p => (p.quantity || 0) * (p.price || 0));
+      const totalValue = values.reduce((acc, v) => acc + v, 0);
+      if (totalValue > 0) {
+        let wRisk = 0;
+        positions.forEach((p, idx) => {
+          const weight = values[idx] / totalValue;
+          wRisk += (p.risk_score || 0) * weight;
+        });
+        setWeightedRisk(wRisk * 100);
+      } else {
+        setWeightedRisk(null);
+      }
+
       try {
         const analysisRes = await fetch(`${ML_BASE_URL}/portfolio-analysis`, {
           method: 'POST',
@@ -213,11 +243,32 @@ const PortfolioRiskScreen = () => {
     }
   };
 
+  const createRiskPortfolio = async () => {
+    if (!newPortfolioName.trim()) return;
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      const res = await fetch(`${API_BASE_URL}/api/watchlists`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newPortfolioName.trim(), user_id: userId, type: 'risk' }),
+      });
+      const json = await res.json();
+      setNewPortfolioName('');
+      setCreateModalVisible(false);
+      setModalVisible(false);
+      await initialFetch();
+      navigation.navigate('AddPosition', { listId: json.id });
+    } catch (err) {
+      Alert.alert('Hata', 'Portföy oluşturulamadı.');
+    }
+  };
+
   // Watchlist seçimi
 const handleListSelect = async (list, isInitialLoad = false) => {
   setSelectedList(list);
   setModalVisible(false);
   setAnalysisSummary(null);
+  setWeightedRisk(null);
   if (list && list.stocks) {
     await fetchPortfolioRisk(list.stocks);
   } else {
@@ -228,13 +279,11 @@ const handleListSelect = async (list, isInitialLoad = false) => {
 
   // Genel risk
   const overallPortfolioRisk = () => {
-    if (portfolioRiskData.length === 0) return null;
-    const totalRisk = portfolioRiskData.reduce((acc, p) => acc + (p.risk || 0), 0);
-    const avgRisk = totalRisk / portfolioRiskData.length;
+    if (weightedRisk === null) return null;
     return {
-      score: avgRisk.toFixed(1),
-      category: getRiskCategoryText(avgRisk),
-      color: getColorByRisk(avgRisk),
+      score: weightedRisk.toFixed(1),
+      category: getRiskCategoryText(weightedRisk),
+      color: getColorByRisk(weightedRisk),
     };
   };
 
@@ -271,13 +320,23 @@ const handleListSelect = async (list, isInitialLoad = false) => {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.headerContainer}>
         <Text style={styles.headerTitle}>Portföy Risk Değerlendirmesi</Text>
-        <TouchableOpacity style={styles.listSelectorButton} onPress={() => setModalVisible(true)}>
-          <Ionicons name="list-circle-outline" size={22} color={AppColors.primaryAction} />
-          <Text style={styles.listSelectorText}>
-            {selectedList ? selectedList.name : "Liste Seçin"}
-          </Text>
-          <Ionicons name="chevron-down" size={18} color={AppColors.primaryAction} />
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.listSelectorButton} onPress={() => setModalVisible(true)}>
+            <Ionicons name="list-circle-outline" size={22} color={AppColors.primaryAction} />
+            <Text style={styles.listSelectorText}>
+              {selectedList ? selectedList.name : "Liste Seçin"}
+            </Text>
+            <Ionicons name="chevron-down" size={18} color={AppColors.primaryAction} />
+          </TouchableOpacity>
+          {selectedList && (
+            <TouchableOpacity
+              style={styles.addStockButton}
+              onPress={() => navigation.navigate('AddPosition', { listId: selectedList.id })}
+            >
+              <Ionicons name="add-circle-outline" size={26} color={AppColors.primaryAction} />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {loading && selectedList ? (
@@ -465,6 +524,38 @@ const handleListSelect = async (list, isInitialLoad = false) => {
                 <Text style={styles.noWatchlistInModalText}>Gösterilecek izleme listesi bulunmuyor.</Text>
               )}
             </ScrollView>
+            <TouchableOpacity style={styles.newListButton} onPress={() => setCreateModalVisible(true)}>
+              <Ionicons name="add" size={20} color={AppColors.white} style={{marginRight:8}} />
+              <Text style={styles.newListButtonText}>Yeni Portföy Oluştur</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+      <Modal
+        visible={createModalVisible}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setCreateModalVisible(false)}
+      >
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPressOut={() => setCreateModalVisible(false)}>
+          <View style={styles.modalContainer} onStartShouldSetResponder={() => true}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Yeni Portföy</Text>
+              <TouchableOpacity onPress={() => setCreateModalVisible(false)} style={styles.modalCloseIcon}>
+                <Ionicons name="close-circle" size={30} color={AppColors.tertiaryText} />
+              </TouchableOpacity>
+            </View>
+            <View style={{padding:20}}>
+              <TextInput
+                placeholder="Portföy adı"
+                value={newPortfolioName}
+                onChangeText={setNewPortfolioName}
+                style={styles.input}
+              />
+              <TouchableOpacity style={styles.createButton} onPress={createRiskPortfolio}>
+                <Text style={styles.createButtonText}>Oluştur</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </TouchableOpacity>
       </Modal>
@@ -542,6 +633,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     textAlign: 'center',
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   listSelectorButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -553,6 +649,9 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     borderWidth: 1,
     borderColor: AppColors.separator,
+  },
+  addStockButton: {
+    marginLeft: 12,
   },
   listSelectorText: {
     fontSize: 15,
@@ -817,6 +916,40 @@ const styles = StyleSheet.create({
     color: AppColors.white,
     fontSize: 16,
     fontWeight: '500',
+  },
+  newListButton: {
+    backgroundColor: AppColors.primaryAction,
+    margin: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  newListButtonText: {
+    color: AppColors.white,
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: AppColors.separator,
+    backgroundColor: AppColors.cardBackground,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 12,
+  },
+  createButton: {
+    backgroundColor: AppColors.primaryAction,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  createButtonText: {
+    color: AppColors.white,
+    fontSize: 16,
+    fontWeight: '600',
   },
   noWatchlistInModalText: {
     textAlign: 'center',
