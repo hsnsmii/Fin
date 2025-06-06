@@ -13,19 +13,20 @@ export const getSelectedStocks = async () => {
   // ];
 
   try {
-    const requests = symbols.map(symbol =>
-      fetch(`https://financialmodelingprep.com/api/v3/profile/${symbol}?apikey=${FMP_API_KEY}`)
-    );
+    const url = `https://financialmodelingprep.com/api/v3/quote/${symbols.join(',')}?apikey=${FMP_API_KEY}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    console.log('Quote data from API:', data);
 
-    const responses = await Promise.all(requests);
-    const jsonArrays = await Promise.all(responses.map(res => res.json()));
-
-    // 🔍 Buraya log ekle:
-    console.log("JSON arrays from API:", jsonArrays);
-
-    return jsonArrays
-      .map(arr => arr[0])
-      .filter(stock => stock && stock.symbol && stock.companyName);
+    return data
+      .filter(stock => stock && stock.symbol && stock.name)
+      .map(stock => ({
+        symbol: stock.symbol,
+        companyName: stock.name,
+        price: stock.price,
+        changes: stock.change,
+        changesPercentage: parseFloat(stock.changesPercentage),
+      }));
   } catch (error) {
     console.error('Error fetching selected stocks:', error);
     return [];

@@ -59,8 +59,13 @@ const MarketScreen = () => {
 
   const renderItem = ({ item }) => {
     const price = Number(item.price).toFixed(2);
-    const priceColor = item.change > 0 ? styles.priceUp : item.change < 0 ? styles.priceDown : styles.priceNeutral;
-    const changeText = item.change > 0 ? `+${item.change}%` : `${item.change}%`;
+    const changePercent = Number(item.changesPercentage || 0);
+    const priceColor =
+      changePercent > 0 ? styles.priceUp : changePercent < 0 ? styles.priceDown : styles.priceNeutral;
+    const changeText =
+      changePercent > 0
+        ? `+${changePercent.toFixed(2)}%`
+        : `${changePercent.toFixed(2)}%`;
 
     return (
       <TouchableOpacity
