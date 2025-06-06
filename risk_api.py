@@ -3,6 +3,7 @@ from flask_cors import CORS
 import joblib
 import pandas as pd
 import os
+from portfolio_analysis import analyze_portfolio
 
 app = Flask(__name__)
 CORS(app)
@@ -95,6 +96,19 @@ def recommend_low_risk():
 
     except Exception as e:
         print("Öneri hatası:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/portfolio-analysis", methods=["POST"])
+def portfolio_analysis_endpoint():
+    """Return advanced portfolio risk analysis."""
+    try:
+        data = request.get_json(force=True)
+        positions = data.get("positions", [])
+        threshold = data.get("high_risk_threshold", 0.6)
+        result = analyze_portfolio(positions, high_risk_threshold=threshold)
+        return jsonify(result)
+    except Exception as e:
+        print("ANALYSIS ERROR:", str(e))
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
