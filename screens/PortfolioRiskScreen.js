@@ -116,7 +116,30 @@ const PortfolioRiskScreen = () => {
   const [recommendations, setRecommendations] = useState([]);
   const [analysisSummary, setAnalysisSummary] = useState(null);
   const [weightedRisk, setWeightedRisk] = useState(null);
+  const [selectedFeatureImportance, setSelectedFeatureImportance] = useState(null);
+  const [featureModalVisible, setFeatureModalVisible] = useState(false);
+
   const navigation = useNavigation();
+
+  // Yardımcı: SHAP ile feature importance çek
+  const fetchFeatureImportance = async (symbol, indicators) => {
+    try {
+      const response = await fetch(`${ML_BASE_URL}/predict-risk-explain`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...indicators, symbol }),
+      });
+      const data = await response.json();
+      if (data.feature_importance) {
+        setSelectedFeatureImportance({ symbol, feature_importance: data.feature_importance });
+        setFeatureModalVisible(true);
+      } else {
+        Alert.alert("XAI Hata", data.error || "Feature importance alınamadı");
+      }
+    } catch (e) {
+      Alert.alert("XAI Hata", "Model açıklaması alınamadı.");
+    }
+  };
 
   const fetchWatchlists = async () => {
     try {
@@ -263,21 +286,19 @@ const PortfolioRiskScreen = () => {
     }
   };
 
-  // Watchlist seçimi
-const handleListSelect = async (list, isInitialLoad = false) => {
-  setSelectedList(list);
-  setModalVisible(false);
-  setAnalysisSummary(null);
-  setWeightedRisk(null);
-  if (list && list.stocks) {
-    await fetchPortfolioRisk(list.stocks);
-  } else {
+ const handleListSelect = async (list, isInitialLoad = false) => {
+    setSelectedList(list);
+    setModalVisible(false);
+    setAnalysisSummary(null);
+    setWeightedRisk(null);
+    if (list && list.stocks) {
+      await fetchPortfolioRisk(list.stocks);
+    } else {
       setPortfolioRiskData([]);
       if (!isInitialLoad) setLoading(false);
     }
   };
 
-  // Genel risk
   const overallPortfolioRisk = () => {
     if (weightedRisk === null) return null;
     return {
@@ -434,7 +455,14 @@ const handleListSelect = async (list, isInitialLoad = false) => {
                     `RSI (14): ${breakdown.rsi?.toFixed(1) || 'N/A'}\n` +
                     `SMA (20): ${breakdown.sma_20?.toFixed(1) || 'N/A'}\n` +
                     `Volatilite (20 Gün): ${breakdown.volatility ? (breakdown.volatility * 100).toFixed(2) + '%' : 'N/A'}\n` +
-                    `Beta: ${breakdown.beta?.toFixed(3) || 'N/A'}`
+                    `Beta: ${breakdown.beta?.toFixed(3) || 'N/A'}`,
+                     [
+                      { text: "Kapat", style: "cancel" },
+                      {
+                        text: "Detaylı Açıklama",
+                        onPress: () => fetchFeatureImportance(item.symbol, breakdown)
+                      }
+                    ]
                   )
                 }}
               >
@@ -485,8 +513,8 @@ const handleListSelect = async (list, isInitialLoad = false) => {
 
       {/* Liste seçme modalı */}
       <Modal
-        visible={modalVisible}
-        animationType="fade"
+        visible={featureModalVisible}
+        animationType="slide"
         transparent={true}
         onRequestClose={() => setModalVisible(false)}
       >

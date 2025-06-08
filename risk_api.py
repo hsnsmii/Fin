@@ -5,11 +5,40 @@ import pandas as pd
 import os
 from portfolio_analysis import analyze_portfolio
 
+# SHAP ekle
+import shap
+
 app = Flask(__name__)
 CORS(app)
 
 MODEL_DIR = "data/models"
 CSV_DIR = "data/csv"
+
+@app.route("/predict-risk-explain", methods=["POST"])
+def predict_risk_explain():
+    try:
+        data = request.get_json(force=True)
+        symbol = data.get("symbol")
+        features = {key: data[key] for key in ['rsi', 'sma_20', 'volatility', 'beta'] if key in data}
+        df = pd.DataFrame([features])
+        model_path = os.path.join(MODEL_DIR, f"{symbol}_risk_model.pkl")
+        if not os.path.exists(model_path):
+            return jsonify({"error": f"Model bulunamadı: {symbol}"}), 404
+        model = joblib.load(model_path)
+        # SHAP açıklaması (TreeExplainer RandomForest için uygun)
+        explainer = shap.TreeExplainer(model)
+        shap_values = explainer.shap_values(df)
+        importance = dict(zip(df.columns, shap_values[0]))
+        score = float(model.predict(df)[0])
+        risk_percentage = round(score * 100)
+        return jsonify({
+            "risk_percentage": risk_percentage,
+            "feature_importance": importance
+        })
+    except Exception as e:
+        print("SHAP HATA:", str(e))
+        return jsonify({"error": str(e)}), 500
+
 
 @app.route("/predict-risk", methods=["POST"])
 def predict_risk():
