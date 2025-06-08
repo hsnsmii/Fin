@@ -118,6 +118,28 @@ const PortfolioRiskScreen = () => {
   const [weightedRisk, setWeightedRisk] = useState(null);
   const navigation = useNavigation();
 
+  const [selectedFeatureImportance, setSelectedFeatureImportance] = useState(null);
+  const [featureModalVisible, setFeatureModalVisible] = useState(false);
+
+  const fetchFeatureImportance = async (symbol, indicators) => {
+    try {
+      const response = await fetch(`${ML_BASE_URL}/predict-risk-explain`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...indicators, symbol }),
+      });
+      const data = await response.json();
+      if (data.feature_importance) {
+        setSelectedFeatureImportance({ symbol, feature_importance: data.feature_importance });
+        setFeatureModalVisible(true);
+      } else {
+        Alert.alert("XAI Hata", data.error || "Feature importance alınamadı");
+      }
+    } catch (e) {
+      Alert.alert("XAI Hata", "Model açıklaması alınamadı.");
+    }
+  };
+
   const fetchWatchlists = async () => {
     try {
       const userId = await AsyncStorage.getItem('userId');
@@ -434,8 +456,15 @@ const handleListSelect = async (list, isInitialLoad = false) => {
                     `RSI (14): ${breakdown.rsi?.toFixed(1) || 'N/A'}\n` +
                     `SMA (20): ${breakdown.sma_20?.toFixed(1) || 'N/A'}\n` +
                     `Volatilite (20 Gün): ${breakdown.volatility ? (breakdown.volatility * 100).toFixed(2) + '%' : 'N/A'}\n` +
-                    `Beta: ${breakdown.beta?.toFixed(3) || 'N/A'}`
-                  )
+                    `Beta: ${breakdown.beta?.toFixed(3) || 'N/A'}`,
+                    [
+                      { text: "Kapat", style: "cancel" },
+                      {
+                        text: "Detaylı Açıklama",
+                        onPress: () => fetchFeatureImportance(item.symbol, breakdown),
+                      },
+                    ]
+                  );
                 }}
               >
                 <View style={[styles.stockItemRiskBar, { backgroundColor: getColorByRisk(item.risk) }]} />
@@ -558,6 +587,31 @@ const handleListSelect = async (list, isInitialLoad = false) => {
             </View>
           </View>
         </TouchableOpacity>
+      </Modal>
+      <Modal
+        visible={featureModalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setFeatureModalVisible(false)}
+      >
+        <View style={[styles.modalOverlay, { justifyContent: 'center', alignItems: 'center' }]}>
+          <View style={[styles.modalContainer, { padding: 24, maxWidth: 320 }]}>
+            <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 12 }}>
+              {selectedFeatureImportance?.symbol} Feature Importance (AI Açıklaması)
+            </Text>
+            {selectedFeatureImportance && Object.entries(selectedFeatureImportance.feature_importance).map(([key, value]) => (
+              <Text key={key} style={{ fontSize: 14, marginBottom: 6 }}>
+                {key}: {parseFloat(value).toFixed(4)}
+              </Text>
+            ))}
+            <TouchableOpacity
+              onPress={() => setFeatureModalVisible(false)}
+              style={[styles.emptyStateButton, { marginTop: 18 }]}
+            >
+              <Text style={styles.emptyStateButtonText}>Kapat</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </Modal>
     </SafeAreaView>
   );
