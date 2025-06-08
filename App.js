@@ -12,6 +12,7 @@ import PortfolioDetailScreen from './screens/asset/PortfolioDetailScreen';
 import AddPositionScreen from './screens/asset/AddPositionScreen';
 import AccountInfoScreen from './screens/profile/AccountInfoScreen';
 import ChangePasswordScreen from './screens/profile/ChangePasswordScreen';
+import PortfolioRiskScreen from './screens/PortfolioRiskScreen';
 
 import MainTabs from './screens/TabBar'; // <--- Tab yapısı buradan gelecek
 
@@ -31,6 +32,7 @@ const RootNavigator = () => {
         <Stack.Screen name="AddPosition" component={AddPositionScreen} options={{ headerShown: false }} />
         <Stack.Screen name="AccountInfo" component={AccountInfoScreen} options={{ title: t('Account Information') }} />
         <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: t('Change Password') }} />
+        <Stack.Screen name="PortfolioRisk" component={PortfolioRiskScreen} options={{ headerShown: false }} />
 
       </Stack.Navigator>
     </NavigationContainer>

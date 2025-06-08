@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { PieChart } from 'react-native-chart-kit';
 import { getStockHistory, getStockDetails } from '../services/fmpApi';
 import { API_BASE_URL, ML_BASE_URL } from '../services/config';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/native';
 
 const AppColors = {
   background: '#F4F6F8',
@@ -120,6 +120,7 @@ const PortfolioRiskScreen = () => {
   const [featureModalVisible, setFeatureModalVisible] = useState(false);
 
   const navigation = useNavigation();
+  const route = useRoute();
 
 
   const fetchFeatureImportance = async (symbol, indicators) => {
@@ -169,8 +170,15 @@ const PortfolioRiskScreen = () => {
       setRecommendations([]);
     }
 
-    if (lists.length > 0) {
-      await handleListSelect(lists[0], true);
+    let initialList = null;
+    if (route.params?.listId) {
+      initialList = lists.find(l => l.id === route.params.listId || l._id === route.params.listId);
+    }
+    if (!initialList && lists.length > 0) {
+      initialList = lists[0];
+    }
+    if (initialList) {
+      await handleListSelect(initialList, true);
     } else {
       setLoading(false);
     }

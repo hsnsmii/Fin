@@ -6,7 +6,7 @@ import HomeScreen from '../screens/home/HomeScreen';
 import MarketScreen from '../screens/market/MarketScreen';
 import FAQScreen from '../screens/FAQScreen';
 import AssetsScreen from '../screens/asset/AssetsScreen'
-import PortfolioRiskScreen from '../screens/PortfolioRiskScreen';
+import RiskHomeScreen from '../screens/risk/RiskHomeScreen';
 import PortfolioDetailScreen from '../screens/asset/PortfolioDetailScreen';
 import { useLocalization } from '../services/LocalizationContext';
 
@@ -69,7 +69,7 @@ export default function MainTabs() {
       />
       <Tab.Screen
         name="Risk"
-        component={PortfolioRiskScreen}
+        component={RiskHomeScreen}
         options={{
           tabBarLabel: t('Risk'),
           tabBarIcon: ({ color, size, focused }) => (
