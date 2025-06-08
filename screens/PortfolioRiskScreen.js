@@ -6,7 +6,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { PieChart } from 'react-native-chart-kit';
-import { getStockHistory } from '../services/fmpApi';
+import { getStockHistory, getStockDetails } from '../services/fmpApi';
 import { API_BASE_URL, ML_BASE_URL } from '../services/config';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
@@ -121,13 +121,6 @@ const PortfolioRiskScreen = () => {
 
   const navigation = useNavigation();
 
-<<<<<<< HEAD
-  // Yardımcı: SHAP ile feature importance çek
-=======
-  const [selectedFeatureImportance, setSelectedFeatureImportance] = useState(null);
-  const [featureModalVisible, setFeatureModalVisible] = useState(false);
-
->>>>>>> 0d4c8b79d38ff79c668efe86881cee3ce01d0e6c
   const fetchFeatureImportance = async (symbol, indicators) => {
     try {
       const response = await fetch(`${ML_BASE_URL}/predict-risk-explain`, {
@@ -204,6 +197,9 @@ const PortfolioRiskScreen = () => {
     try {
       const symbols = [...new Set(stocks.map(s => s.symbol))];
       const riskDataPromises = [];
+      const detailPromises = symbols.map(sym =>
+        getStockDetails(sym).catch(() => null)
+      );
       const marketHistory = await getStockHistory('SPY');
       for (const symbol of symbols) {
         const history = await getStockHistory(symbol);
@@ -228,6 +224,13 @@ const PortfolioRiskScreen = () => {
         );
       }
       const results = (await Promise.all(riskDataPromises)).filter(r => r !== null);
+      const detailResults = await Promise.all(detailPromises);
+      const sectorMap = {};
+      detailResults.forEach((d, idx) => {
+        if (d && (d.sector || d.sector === '')) {
+          sectorMap[symbols[idx]] = d.sector || 'Unknown';
+        }
+      });
       setPortfolioRiskData(results.sort((a, b) => b.risk - a.risk));
 
       // Advanced analysis via backend
@@ -238,6 +241,7 @@ const PortfolioRiskScreen = () => {
         quantity: s.quantity || 1,
         price: s.price || 1,
         risk_score: (riskMap[s.symbol] || 0) / 100,
+        sector: sectorMap[s.symbol] || 'Unknown',
       }));
 
       const values = positions.map(p => (p.quantity || 0) * (p.price || 0));
@@ -462,16 +466,6 @@ const PortfolioRiskScreen = () => {
                     `SMA (20): ${breakdown.sma_20?.toFixed(1) || 'N/A'}\n` +
                     `Volatilite (20 Gün): ${breakdown.volatility ? (breakdown.volatility * 100).toFixed(2) + '%' : 'N/A'}\n` +
                     `Beta: ${breakdown.beta?.toFixed(3) || 'N/A'}`,
-<<<<<<< HEAD
-                     [
-                      { text: "Kapat", style: "cancel" },
-                      {
-                        text: "Detaylı Açıklama",
-                        onPress: () => fetchFeatureImportance(item.symbol, breakdown)
-                      }
-                    ]
-                  )
-=======
                     [
                       { text: "Kapat", style: "cancel" },
                       {
@@ -480,7 +474,6 @@ const PortfolioRiskScreen = () => {
                       },
                     ]
                   );
->>>>>>> 0d4c8b79d38ff79c668efe86881cee3ce01d0e6c
                 }}
               >
                 <View style={[styles.stockItemRiskBar, { backgroundColor: getColorByRisk(item.risk) }]} />
