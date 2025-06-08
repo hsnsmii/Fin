@@ -121,6 +121,7 @@ const PortfolioRiskScreen = () => {
 
   const navigation = useNavigation();
 
+
   const fetchFeatureImportance = async (symbol, indicators) => {
     try {
       const response = await fetch(`${ML_BASE_URL}/predict-risk-explain`, {
@@ -466,6 +467,7 @@ const PortfolioRiskScreen = () => {
                     `SMA (20): ${breakdown.sma_20?.toFixed(1) || 'N/A'}\n` +
                     `Volatilite (20 Gün): ${breakdown.volatility ? (breakdown.volatility * 100).toFixed(2) + '%' : 'N/A'}\n` +
                     `Beta: ${breakdown.beta?.toFixed(3) || 'N/A'}`,
+
                     [
                       { text: "Kapat", style: "cancel" },
                       {
@@ -474,6 +476,7 @@ const PortfolioRiskScreen = () => {
                       },
                     ]
                   );
+
                 }}
               >
                 <View style={[styles.stockItemRiskBar, { backgroundColor: getColorByRisk(item.risk) }]} />
