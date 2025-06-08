@@ -119,6 +119,9 @@ const PortfolioRiskScreen = () => {
   const [selectedFeatureImportance, setSelectedFeatureImportance] = useState(null);
   const [featureModalVisible, setFeatureModalVisible] = useState(false);
 
+  // Threshold for classifying a holding as high risk when sending data
+  const HIGH_RISK_THRESHOLD = 0.5; // 50%
+
   const navigation = useNavigation();
 
 
@@ -262,7 +265,7 @@ const PortfolioRiskScreen = () => {
         const analysisRes = await fetch(`${ML_BASE_URL}/portfolio-analysis`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ positions }),
+          body: JSON.stringify({ positions, high_risk_threshold: HIGH_RISK_THRESHOLD }),
         });
         const analysisJson = await analysisRes.json();
         setAnalysisSummary(analysisJson);

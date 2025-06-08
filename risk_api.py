@@ -138,7 +138,7 @@ def portfolio_analysis_endpoint():
     try:
         data = request.get_json(force=True)
         positions = data.get("positions", [])
-        threshold = data.get("high_risk_threshold", 0.6)
+        threshold = data.get("high_risk_threshold", 0.5)
         result = analyze_portfolio(positions, high_risk_threshold=threshold)
         return jsonify(result)
     except Exception as e:
