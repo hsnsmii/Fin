@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View, Text, ActivityIndicator, StyleSheet, TouchableOpacity, Modal,
   Dimensions, ScrollView, SafeAreaView, Alert, TextInput
@@ -124,6 +124,30 @@ const PortfolioRiskScreen = () => {
 
   const navigation = useNavigation();
   const route = useRoute();
+
+  const showHighRiskInfo = () => {
+    Alert.alert(
+      'Yüksek Risk Oranı',
+      'Portföyünüzde risk eşiğini aşan varlıkların toplam değerinin, tüm portföy değerine oranını gösterir.'
+    );
+  };
+
+  const showDiversificationInfo = () => {
+    Alert.alert(
+      'Çeşitlilik Skoru',
+      "Portföyünüzdeki sektör dağılımının ne kadar dengeli olduğunu ifade eder. 1'e yaklaştıkça daha dengeli bir dağılım anlamına gelir."
+    );
+  };
+
+  const topSector = useMemo(() => {
+    if (analysisSummary && analysisSummary.sector_distribution) {
+      const entries = Object.entries(analysisSummary.sector_distribution);
+      if (entries.length === 0) return null;
+      const [sector, weight] = entries.reduce((a, b) => (b[1] > a[1] ? b : a));
+      return { sector, weight };
+    }
+    return null;
+  }, [analysisSummary]);
 
 
   const fetchFeatureImportance = async (symbol, indicators) => {
@@ -447,12 +471,31 @@ const PortfolioRiskScreen = () => {
           {analysisSummary && (
             <View style={styles.sectionCard}>
               <Text style={styles.sectionTitle}>Portföy Analizi</Text>
-              <Text style={styles.analysisText}>
-                Yüksek Risk Oranı: {analysisSummary.high_risk_percentage?.toFixed(1) || '0'}%
-              </Text>
-              <Text style={styles.analysisText}>
-                Çeşitlilik Skoru: {analysisSummary.diversification_score?.toFixed(2) || '0'}
-              </Text>
+
+              <View style={styles.metricRow}>
+                <Text style={styles.analysisText}>
+                  Yüksek Risk Oranı: {analysisSummary.high_risk_percentage?.toFixed(1) || '0'}%
+                </Text>
+                <TouchableOpacity onPress={showHighRiskInfo} style={styles.infoButton}>
+                  <Ionicons name="information-circle-outline" size={16} color={AppColors.secondaryText} />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.metricRow}>
+                <Text style={styles.analysisText}>
+                  Çeşitlilik Skoru: {analysisSummary.diversification_score?.toFixed(2) || '0'}
+                </Text>
+                <TouchableOpacity onPress={showDiversificationInfo} style={styles.infoButton}>
+                  <Ionicons name="information-circle-outline" size={16} color={AppColors.secondaryText} />
+                </TouchableOpacity>
+              </View>
+
+              {topSector && (
+                <Text style={styles.analysisSuggestion}>
+                  Azaltılması önerilen sektör: {topSector.sector} ({(topSector.weight * 100).toFixed(1)}%)
+                </Text>
+              )}
+
               {analysisSummary.suggestions && analysisSummary.suggestions.length > 0 && (
                 <View style={{ marginTop: 8 }}>
                   {analysisSummary.suggestions.map((s, idx) => (
@@ -903,6 +946,14 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: AppColors.secondaryText,
     marginBottom: 2,
+  },
+  metricRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  infoButton: {
+    marginLeft: 4,
   },
   modalOverlay: {
     flex: 1,
