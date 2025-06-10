@@ -1,235 +1,254 @@
-// styles.js
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
+
+const { width: screenWidth } = Dimensions.get('window');
+
+export const theme = {
+  colors: {
+    background: '#f7f9fc',      
+    card: '#FFFFFF',            
+    text: '#1D232C',            
+    textSecondary: '#6A717D',    
+    primary: '#007AFF',         
+    accent: '#FDB833',          
+    positive: '#28a745',        
+    negative: '#dc3545',        
+    warning: '#ffc107',         
+    border: '#EAECEF',          
+  },
+  spacing: {
+    s: 8,
+    m: 16,
+    l: 24,
+  },
+  typography: {
+    h1: { fontSize: 34, fontWeight: 'bold' },
+    h2: { fontSize: 22, fontWeight: 'bold' },
+    body: { fontSize: 16 },
+    caption: { fontSize: 12 },
+  },
+
+  chartConfig: {
+    backgroundGradientFrom: '#FFFFFF',
+    backgroundGradientTo: '#FFFFFF',
+    color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`, 
+    labelColor: (opacity = 1) => `rgba(106, 113, 125, ${opacity})`, 
+    strokeWidth: 2,
+    propsForDots: {
+      r: '4',
+      strokeWidth: '2',
+      stroke: '#007AFF',
+    },
+    fillShadowGradient: '#007AFF',
+    fillShadowGradientOpacity: 0.1, 
+  },
+};
 
 export const styles = StyleSheet.create({
+
   container: {
     flex: 1,
-    backgroundColor: '#f7f9fc',
+    backgroundColor: theme.colors.background,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f7f9fc',
+    backgroundColor: theme.colors.background,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
-  },
-  companyInfo: {
-    flex: 1,
-  },
-  companyName: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
+
+  headerContainer: {
+    paddingHorizontal: theme.spacing.m,
+    paddingTop: theme.spacing.s,
   },
   symbol: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 2,
+    color: theme.colors.text,
+    fontSize: theme.typography.h2.fontSize,
+    fontWeight: theme.typography.h2.fontWeight,
   },
-  addButton: {
-    flexDirection: 'row',
-    backgroundColor: '#007AFF',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    alignItems: 'center',
+  companyName: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.typography.body.fontSize,
   },
-  addText: {
-    color: 'white',
-    fontWeight: '600',
-    marginLeft: 4,
-  },
-  priceCard: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 20,
-    margin: 20,
-    marginTop: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  price: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  changeContainer: {
+  priceContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 6,
-  },
-  change: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginRight: 5,
-  },
-  positive: {
-    color: '#2ecc71',
-  },
-  negative: {
-    color: '#e74c3c',
-  },
-  chartCard: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 20,
-    marginHorizontal: 20,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  chartHeader: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
+    paddingHorizontal: theme.spacing.m,
+    paddingVertical: theme.spacing.s,
+    marginBottom: theme.spacing.m,
   },
-  chartTitle: {
-    fontSize: 18,
+  currentPrice: {
+    color: theme.colors.text,
+    fontSize: 40,
+    fontWeight: 'bold',
+  },
+  priceChangeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  priceChangeText: {
+    color: theme.colors.text,
     fontWeight: '600',
-    color: '#333',
+    marginLeft: 5,
+  },
+  positiveBg: {
+    backgroundColor: 'rgba(40, 167, 69, 0.15)',
+  },
+  negativeBg: {
+    backgroundColor: 'rgba(220, 53, 69, 0.15)',
+  },
+
+  card: {
+    backgroundColor: theme.colors.card,
+    borderRadius: 16,
+    marginHorizontal: theme.spacing.m,
+    marginBottom: theme.spacing.m,
+    padding: theme.spacing.m,
+
+    shadowColor: '#95A5A6',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.1,
+    shadowRadius: 15,
+    elevation: 5,
+  },
+  cardTitle: {
+    color: theme.colors.text,
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: theme.spacing.m,
+  },
+
+  chart: {
+    borderRadius: 8,
+    marginLeft: -theme.spacing.m,
   },
   timeRangeSelector: {
     flexDirection: 'row',
-    backgroundColor: '#F0F2F5',
-    borderRadius: 8,
-    padding: 2,
+    justifyContent: 'space-around',
+    backgroundColor: '#EDF0F4', 
+    borderRadius: 10,
+    padding: 4,
+    marginTop: theme.spacing.m,
   },
   rangeButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-  },
-  rangeText: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '500',
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 8,
+    alignItems: 'center',
   },
   activeRange: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.card, 
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
-    elevation: 1,
+    elevation: 2,
+  },
+  rangeText: {
+    color: theme.colors.textSecondary,
+    fontWeight: '600',
   },
   activeRangeText: {
-    color: '#007AFF',
+    color: theme.colors.primary, 
   },
-  chart: {
-    marginVertical: 8,
-    borderRadius: 8,
-  },
-  infoCard: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 20,
-    marginHorizontal: 20,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 15,
-  },
-  infoRow: {
+
+  statsContainer: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
   },
-  infoLabel: {
-    fontSize: 16,
-    color: '#666',
+  statBox: {
+    width: '48%',
+    backgroundColor: theme.colors.background, 
+    padding: theme.spacing.m,
+    borderRadius: 10,
+    marginBottom: theme.spacing.s,
   },
-  infoValue: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
+  statLabel: {
+    color: theme.colors.textSecondary,
+    fontSize: 13,
+    marginBottom: 4,
   },
-  descriptionCard: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 20,
-    marginHorizontal: 20,
-    marginBottom: 30,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  descriptionText: {
+  statValue: {
+    color: theme.colors.text,
     fontSize: 15,
-    lineHeight: 24,
-    color: '#444',
+    fontWeight: 'bold',
   },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
+
+  riskContent: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
+  riskScore: {
+    color: theme.colors.text,
+    fontSize: 32,
+    fontWeight: 'bold',
+  },
+  riskLabel: {
+    color: theme.colors.text,
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  riskBarContainer: {
+    height: 10,
+    backgroundColor: theme.colors.border,
+    borderRadius: 5,
+    overflow: 'hidden',
+  },
+  riskBar: {
+    height: '100%',
+    borderRadius: 5,
+  },
+
+  descriptionText: {
+    color: theme.colors.textSecondary,
+    fontSize: 15,
+    lineHeight: 22,
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
   modalContent: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 20,
-    width: '80%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 5,
+    position: 'absolute',
+    bottom: 0,
+    width: '100%',
+    backgroundColor: theme.colors.card, 
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: theme.spacing.m,
+    paddingBottom: 40,
+  },
+  modalHandle: {
+    width: 40,
+    height: 5,
+    backgroundColor: theme.colors.border,
+    borderRadius: 3,
+    alignSelf: 'center',
+    marginBottom: theme.spacing.m,
   },
   modalTitle: {
-    fontSize: 18,
+    color: theme.colors.text,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 15,
     textAlign: 'center',
+    marginBottom: theme.spacing.l,
   },
   modalItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: theme.spacing.m,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: theme.colors.border,
   },
   modalItemText: {
-    fontSize: 16,
-    color: '#333',
-    marginLeft: 10,
-  },
-  closeButton: {
-    backgroundColor: '#f0f0f0',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  closeButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#007AFF',
+    color: theme.colors.text,
+    fontSize: 18,
+    marginLeft: 15,
   },
 });
