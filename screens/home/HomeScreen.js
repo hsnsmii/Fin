@@ -571,15 +571,6 @@ const HomeScreen = () => {
             {popularStocks && popularStocks.length > 0 ? (
               popularStocks.map((stock, index) => (
                 <TouchableOpacity key={index} style={styles.stockCard}>
-                  <LinearGradient
-                    colors={['#1e3a8a', '#3730a3']}
-                    style={styles.stockCardGradient}
-                  />
-                  {index < 3 && (
-                    <View style={styles.trendingBadge}>
-                      <Text style={styles.trendingText}>HOT</Text>
-                    </View>
-                  )}
                   <Text style={styles.stockSymbol}>{stock.symbol}</Text>
                   <Text style={styles.stockName} numberOfLines={2}>{stock.name}</Text>
                   <View style={styles.stockPriceContainer}>
