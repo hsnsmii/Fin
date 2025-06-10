@@ -20,6 +20,7 @@ import { styles, theme } from "../../styles/StockDetailStyle";
 
 const screenWidth = Dimensions.get('window').width;
 
+
 const calculateBeta = (stockHistory, marketHistory) => {
   if (!stockHistory || !marketHistory || stockHistory.length < 21 || marketHistory.length < 21) return null;
   const stockCloses = stockHistory.map(h => h.close).reverse();
