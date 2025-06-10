@@ -9,11 +9,13 @@ import AssetsScreen from '../screens/asset/AssetsScreen'
 import RiskHomeScreen from '../screens/risk/RiskHomeScreen';
 import PortfolioDetailScreen from '../screens/asset/PortfolioDetailScreen';
 import { useLocalization } from '../services/LocalizationContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context'; 
 
 
 const Tab = createBottomTabNavigator();
 
 export default function MainTabs() {
+  const insets = useSafeAreaInsets();
   const { t } = useLocalization();
   return (
     <Tab.Navigator
@@ -22,10 +24,11 @@ export default function MainTabs() {
         tabBarShowLabel: true,
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
-          height: 60,
+          height: 40 + insets.bottom, 
           borderTopWidth: 0,
           elevation: 0,
           shadowOpacity: 0,
+          paddingBottom: insets.bottom,
         },
         tabBarItemStyle: {
           paddingVertical: 5,
@@ -85,7 +88,7 @@ export default function MainTabs() {
         name="Profile"
         component={AssetsScreen}
         options={{
-          tabBarLabel: t('Assets'),
+          tabBarLabel: t('Varlıklar'),
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons 
               name="person" 
