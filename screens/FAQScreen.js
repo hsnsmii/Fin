@@ -12,12 +12,14 @@ import {
 import { FontAwesome } from '@expo/vector-icons';
 import styles from "../styles/faqscreenstyle";
 
-const FAQScreen = () => {
+const FAQScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBox, setSelectedBox] = useState(null);
   const [activeCategory, setActiveCategory] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
-
+  const goToGlossary = () => {
+    navigation.navigate('Glossary');
+  };
   const questions = [
     // Hesap
     {
@@ -326,6 +328,10 @@ const FAQScreen = () => {
           <Text style={styles.noResultsText}>Aradığınız kriterlere uygun soru bulunamadı.</Text>
         </View>
       )}
+       <TouchableOpacity style={styles.glossaryButton} onPress={goToGlossary}>
+        <FontAwesome name="book" size={18} color="#fff" style={{ marginRight: 10 }} />
+        <Text style={styles.glossaryButtonText}>Yatırımcı Sözlüğü</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
