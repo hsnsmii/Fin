@@ -519,7 +519,7 @@ const HomeScreen = () => {
           <View style={styles.headerTop}>
             <View style={{ width: 44 }} />
             <Text style={styles.headerTitle}>FINOVER</Text>
-            <TouchableOpacity style={styles.profileCircle} onPress={() => setProfileMenuVisible(true)}>
+            <TouchableOpacity style={styles.profileCircle} onPress={() => navigation.navigate('AccountInfo')}>
               <Ionicons name="person" size={20} color="#1e3a8a" />
             </TouchableOpacity>
           </View>
@@ -690,26 +690,6 @@ const HomeScreen = () => {
         </View>
       </Modal>
 
-      <Modal transparent visible={profileMenuVisible} animationType="fade">
-        <View style={styles.modalContainer}>
-          <View style={styles.profileMenuContent}>
-            <TouchableOpacity style={styles.profileMenuItem} onPress={() => { setProfileMenuVisible(false); navigation.navigate('AccountInfo'); }}>
-              <Text style={styles.profileMenuText}>{t('Account Information')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.profileMenuItem} onPress={() => { setProfileMenuVisible(false); navigation.navigate('ChangePassword'); }}>
-              <Text style={styles.profileMenuText}>{t('Change Password')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.profileMenuItem} onPress={async () => {
-              setProfileMenuVisible(false);
-              await AsyncStorage.removeItem('token');
-              await AsyncStorage.removeItem('userId');
-              navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
-            }}>
-              <Text style={styles.profileMenuText}>{t('Logout')}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 };
