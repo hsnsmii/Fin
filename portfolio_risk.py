@@ -39,6 +39,66 @@ def calculate_weighted_portfolio_risk(positions: List[Dict[str, Any]]) -> Dict[s
     return {"portfolio_risk": portfolio_risk, "details": details}
 
 
+def calculate_portfolio_risk_advanced(positions: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Estimate portfolio risk using weights, volatility and correlations.
+
+    Each position dictionary may include ``volatility`` (daily standard
+    deviation of returns), ``beta`` and a list of ``returns`` for optional
+    correlation calculations.
+
+    The resulting risk score combines weighted portfolio volatility and
+    average beta as a simple proxy for systematic risk.
+    """
+
+    if not positions:
+        return {"portfolio_risk": 0.0, "weighted_beta": 0.0}
+
+    values = [pos.get("quantity", 0) * pos.get("price", 0.0) for pos in positions]
+    total_value = float(sum(values))
+
+    if total_value == 0:
+        return {"portfolio_risk": 0.0, "weighted_beta": 0.0}
+
+    weights = [v / total_value for v in values]
+    volatilities = [pos.get("volatility", 0.0) for pos in positions]
+    betas = [pos.get("beta", 1.0) for pos in positions]
+    returns = [pos.get("returns") for pos in positions if pos.get("returns")]
+
+    # Correlation matrix if returns are provided
+    if len(returns) == len(positions):
+        min_len = min(len(r) for r in returns)
+        aligned = [r[-min_len:] for r in returns]
+        corr_matrix = list(
+            map(list, (  # type: ignore[list-item]
+                __import__("numpy").corrcoef(aligned)
+            ))
+        )
+    else:
+        corr_matrix = [[1.0 if i == j else 0.0 for j in range(len(positions))] for i in range(len(positions))]
+
+    # Portfolio variance
+    port_var = 0.0
+    for i in range(len(positions)):
+        for j in range(len(positions)):
+            port_var += (
+                weights[i]
+                * weights[j]
+                * volatilities[i]
+                * volatilities[j]
+                * corr_matrix[i][j]
+            )
+
+    weighted_beta = sum(w * b for w, b in zip(weights, betas))
+    # Simple risk score scaled between 0 and 1
+    risk_score = min(1.0, (port_var ** 0.5) * 0.5 + weighted_beta * 0.5)
+
+    return {
+        "portfolio_risk": risk_score,
+        "weighted_beta": weighted_beta,
+        "portfolio_volatility": port_var ** 0.5,
+    }
+
+
 if __name__ == "__main__":
     example = [
         {"symbol": "AAPL", "quantity": 3, "price": 100.0, "risk_score": 0.8},
