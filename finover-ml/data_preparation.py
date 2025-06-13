@@ -7,7 +7,12 @@ load_dotenv()
 
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_score
+
+try:
+    from xgboost import XGBRegressor
+except Exception:
+    XGBRegressor = None  # type: ignore
 import joblib
 
 API_KEY = os.getenv("FMP_API_KEY")
@@ -66,10 +71,26 @@ def calculate_beta(stock_df, market_df):
 
 # Teknik göstergeler ekle
 def add_indicators(df, beta_value):
+    # some datasets only include close price; reuse close for high/low if absent
+    if 'high' not in df.columns:
+        df['high'] = df['close']
+    if 'low' not in df.columns:
+        df['low'] = df['close']
+
     df['rsi'] = ta.rsi(df['close'])
     df['sma_20'] = ta.sma(df['close'], length=20)
+    df['ema_20'] = ta.ema(df['close'], length=20)
+    macd = ta.macd(df['close'])
+    df['macd'] = macd['MACD_12_26_9'] if 'MACD_12_26_9' in macd else None
+    df['atr'] = ta.atr(df['high'], df['low'], df['close'])
+    stoch = ta.stoch(df['high'], df['low'], df['close'])
+    df['stoch_k'] = stoch['STOCHk_14_3_3'] if 'STOCHk_14_3_3' in stoch else None
     df['volatility'] = df['close'].rolling(20).std()
     df['beta'] = beta_value
+    # Placeholder fundamental ratios
+    df['pe_ratio'] = 10.0
+    df['pb_ratio'] = 2.0
+    df['de_ratio'] = 1.0
     return df
 
 # Model eğitimi (yüzdesel skor tahmini için regresyon modeli)
@@ -84,15 +105,27 @@ def train_model(df, symbol):
         0.1 * np.random.rand(len(df))
     ).clip(0, 1)
 
-    features = df[['rsi', 'sma_20', 'volatility', 'beta']]
+    feature_cols = [
+        'rsi', 'sma_20', 'ema_20', 'macd', 'atr', 'stoch_k',
+        'volatility', 'beta', 'pe_ratio', 'pb_ratio', 'de_ratio'
+    ]
+    features = df[feature_cols]
     targets = df['risk_score']
 
     X_train, X_test, y_train, y_test = train_test_split(features, targets, test_size=0.2)
-    model = RandomForestRegressor()
+    if XGBRegressor is not None:
+        model = XGBRegressor(objective='reg:squarederror')
+    else:
+        model = RandomForestRegressor()
     model.fit(X_train, y_train)
 
-    joblib.dump(model, f"data/models/{symbol}_risk_model.pkl")
-    print(f"[✓] Model kaydedildi: data/models/{symbol}_risk_model.pkl")
+    scores = cross_val_score(model, features, targets, cv=3, scoring='neg_mean_absolute_error')
+    print(f"[CV] MAE: {-scores.mean():.4f}")
+
+    version = pd.Timestamp.utcnow().strftime('%Y%m%d%H%M%S')
+    model_path = f"data/models/{symbol}_risk_model_{version}.pkl"
+    joblib.dump(model, model_path)
+    print(f"[✓] Model kaydedildi: {model_path}")
 
 # Her sembol için süreci işlet
 def run_pipeline(symbol, market_df):
@@ -122,3 +155,16 @@ if __name__ == "__main__":
         for symbol in symbols:
             print(f"\n🚀 İşleniyor: {symbol}")
             run_pipeline(symbol, market_df)
+
+    # Basit zamanlanmış eğitim (örnek)
+    try:
+        import schedule
+        def job():
+            for symbol in symbols:
+                run_pipeline(symbol, market_df)
+        schedule.every().week.do(job)
+        print("[i] Scheduled weekly retraining aktif")
+        while True:
+            schedule.run_pending()
+    except Exception:
+        pass

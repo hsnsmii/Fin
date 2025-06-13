@@ -4,6 +4,7 @@ import joblib
 import pandas as pd
 import os
 from portfolio_analysis import analyze_portfolio
+from portfolio_risk import calculate_portfolio_risk_advanced
 
 # SHAP ekle
 import shap
@@ -143,6 +144,19 @@ def portfolio_analysis_endpoint():
         return jsonify(result)
     except Exception as e:
         print("ANALYSIS ERROR:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/portfolio-risk", methods=["POST"])
+def portfolio_risk_endpoint():
+    """Return overall portfolio risk score using advanced calculation."""
+    try:
+        data = request.get_json(force=True)
+        positions = data.get("positions", [])
+        result = calculate_portfolio_risk_advanced(positions)
+        return jsonify(result)
+    except Exception as e:
+        print("PORTFOLIO RISK ERROR:", str(e))
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
