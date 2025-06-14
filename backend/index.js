@@ -3,7 +3,8 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
-require('dotenv').config();
+require('dotenv').config({ path: __dirname + '/.env' }); // bu satır önemli!
+
 
 const app = express();
 const port = 3000;
@@ -92,5 +93,9 @@ app.use('/api/watchlists', watchlistsRoute);
 // 🚀 Başlat
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
+  console.log('DATABASE_URL:', process.env.DATABASE_URL);
+  console.log("Full DATABASE_URL:", JSON.stringify(process.env.DATABASE_URL));
+
+
 });
 

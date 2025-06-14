@@ -28,7 +28,7 @@ const RootNavigator = () => {
         <Stack.Screen name="Register" component={RegisterScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
         <Stack.Screen name="StockDetail" component={StockDetailScreen} options={{ title: 'Hisse Detayı' }} />
-        <Stack.Screen name="WatchlistDetail" component={WatchlistDetailScreen} options={{ title: ''} />
+        <Stack.Screen name="WatchlistDetail" component={WatchlistDetailScreen} options={{ title: ''}} />
         <Stack.Screen name="PortfolioDetail" component={PortfolioDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="AddPosition" component={AddPositionScreen} options={{ headerShown: false }} />
         <Stack.Screen name="AccountInfo" component={AccountInfoScreen} options={{ title: t('Account Information') }} />
