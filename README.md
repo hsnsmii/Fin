@@ -24,3 +24,15 @@ Example payload:
   ]
 }
 ```
+
+## Advanced Modelling Features
+
+The machine learning pipeline also includes tools for more sophisticated
+analysis:
+
+- **Time series cross validation** using `TimeSeriesSplit` to avoid data leakage
+  when evaluating models.
+- **Hyperparameter optimization** with `GridSearchCV` for models like
+  `RandomForestRegressor` or `XGBRegressor`.
+- **Risk metrics** such as Value-at-Risk (VaR) and Conditional VaR are available
+  through helper functions in `portfolio_risk.py`.
