@@ -2,6 +2,8 @@
 
 from typing import Any, Dict, List
 
+import numpy as np
+
 
 def calculate_weighted_portfolio_risk(positions: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Calculate weighted risk score for a portfolio.
@@ -37,6 +39,25 @@ def calculate_weighted_portfolio_risk(positions: List[Dict[str, Any]]) -> Dict[s
         })
 
     return {"portfolio_risk": portfolio_risk, "details": details}
+
+
+def value_at_risk(returns: List[float], confidence: float = 0.95) -> float:
+    """Calculate the Value-at-Risk (VaR) for a list of returns."""
+    if not returns:
+        return 0.0
+    percentile = np.percentile(returns, (1 - confidence) * 100)
+    return abs(percentile)
+
+
+def conditional_value_at_risk(returns: List[float], confidence: float = 0.95) -> float:
+    """Calculate the Conditional VaR (Expected Shortfall)."""
+    if not returns:
+        return 0.0
+    var_threshold = np.percentile(returns, (1 - confidence) * 100)
+    tail_losses = [r for r in returns if r <= var_threshold]
+    if not tail_losses:
+        return 0.0
+    return abs(float(np.mean(tail_losses)))
 
 
 def calculate_portfolio_risk_advanced(positions: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -107,3 +128,4 @@ if __name__ == "__main__":
     from pprint import pprint
 
     pprint(calculate_weighted_portfolio_risk(example))
+

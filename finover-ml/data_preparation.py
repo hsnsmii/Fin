@@ -7,7 +7,12 @@ load_dotenv()
 
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.model_selection import (
+    TimeSeriesSplit,
+    GridSearchCV,
+    train_test_split,
+    cross_val_score,
+)
 
 try:
     from xgboost import XGBRegressor
@@ -16,6 +21,21 @@ except Exception:
 import joblib
 
 API_KEY = os.getenv("FMP_API_KEY")
+
+
+def time_series_cv_score(model, X, y, n_splits: int = 5):
+    """Evaluate a model using time series cross validation."""
+    tscv = TimeSeriesSplit(n_splits=n_splits)
+    scores = cross_val_score(model, X, y, cv=tscv, scoring="neg_mean_absolute_error")
+    return scores
+
+
+def optimize_hyperparameters(model, param_grid, X, y):
+    """Run grid search to find best hyperparameters."""
+    tscv = TimeSeriesSplit(n_splits=3)
+    search = GridSearchCV(model, param_grid, cv=tscv, scoring="neg_mean_absolute_error")
+    search.fit(X, y)
+    return search.best_estimator_
 
 # S&P 500 verisi çek
 def get_market_data():
@@ -114,13 +134,15 @@ def train_model(df, symbol):
 
     X_train, X_test, y_train, y_test = train_test_split(features, targets, test_size=0.2)
     if XGBRegressor is not None:
-        model = XGBRegressor(objective='reg:squarederror')
+        base_model = XGBRegressor(objective='reg:squarederror')
     else:
-        model = RandomForestRegressor()
-    model.fit(X_train, y_train)
+        base_model = RandomForestRegressor()
 
-    scores = cross_val_score(model, features, targets, cv=3, scoring='neg_mean_absolute_error')
-    print(f"[CV] MAE: {-scores.mean():.4f}")
+    param_grid = {"n_estimators": [50, 100], "max_depth": [3, None]}
+    model = optimize_hyperparameters(base_model, param_grid, X_train, y_train)
+
+    scores = time_series_cv_score(model, features, targets, n_splits=3)
+    print(f"[TS CV] MAE: {-scores.mean():.4f}")
 
     version = pd.Timestamp.utcnow().strftime('%Y%m%d%H%M%S')
     model_path = f"data/models/{symbol}_risk_model_{version}.pkl"
