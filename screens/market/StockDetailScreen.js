@@ -16,14 +16,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LineChart } from 'react-native-chart-kit';
 import { Feather } from '@expo/vector-icons';
 
-// YENİ: getIncomeStatement fonksiyonu import edildi
 import { getStockDetails, getStockHistory, getIncomeStatement } from '../../services/fmpApi';
 import { API_BASE_URL, ML_BASE_URL } from '../../services/config';
 import { getStyles, lightTheme, darkTheme } from "../../styles/StockDetailStyle";
 
 const screenWidth = Dimensions.get('window').width;
 
-// Beta ve İndikatör hesaplama fonksiyonları (değişiklik yok)
 const calculateBeta = (stockHistory, marketHistory) => {
   if (!stockHistory || !marketHistory || stockHistory.length < 21 || marketHistory.length < 21) return null;
   const stockCloses = stockHistory.map(h => h.close).reverse();
@@ -44,7 +42,7 @@ const calculateBeta = (stockHistory, marketHistory) => {
     marketVariance += Math.pow(marketReturns[i] - meanMarket, 2);
   }
 
-  return marketVariance === 0 ? null : covariance / marketVariance; // Sıfıra bölünmeyi engellemek için null dön
+  return marketVariance === 0 ? null : covariance / marketVariance; 
 };
 const calculateIndicators = (history) => {
   if (!history || history.length < 20) return null;
@@ -66,7 +64,6 @@ const calculateIndicators = (history) => {
 
   return { rsi, sma_20, volatility };
 };
-
 
 const StockDetailScreen = ({ route, navigation }) => {
   const { symbol } = route.params;
@@ -92,40 +89,36 @@ const StockDetailScreen = ({ route, navigation }) => {
       setLoading(true);
       setRiskPercentage(null);
       try {
-        // GÜNCELLENDİ: Promise.all'a getIncomeStatement eklendi
+
         const [detail, historical, marketHistorical, incomeStatementData, userId] = await Promise.all([
           getStockDetails(symbol),
           getStockHistory(symbol, timeRange),
           getStockHistory('SPY', timeRange),
-          getIncomeStatement(symbol), // Beta ve F/K için ek veri
+          getIncomeStatement(symbol), 
           AsyncStorage.getItem('userId'),
         ]);
 
-        // YENİ: Beta Hesaplama
         const calculatedBeta = calculateBeta(historical, marketHistorical);
-        
-        // YENİ: F/K Oranı (P/E Ratio) Hesaplama
+
         let calculatedPe = null;
         if (incomeStatementData && incomeStatementData.length > 0 && detail.price) {
           const latestEPS = incomeStatementData[0].eps;
-          // Hisse başına kazanç pozitifse F/K oranını hesapla
+
           if (latestEPS && latestEPS > 0) {
             calculatedPe = detail.price / latestEPS;
           }
         }
-        
-        // GÜNCELLENDİ: Orijinal `detail` verisine hesaplanan değerler ekleniyor
+
         setStock({
           ...detail,
-          beta: calculatedBeta, // Hesaplanmış beta'yı ekle
-          pe: calculatedPe,     // Hesaplanmış F/K'yı ekle
+          beta: calculatedBeta, 
+          pe: calculatedPe,     
         });
 
         setHistory(historical);
 
         const indicators = calculateIndicators(historical);
-        
-        // YENİ: ML modeli için payload'a hesaplanan beta eklendi
+
         if (indicators && calculatedBeta !== null) {
           const payload = { ...indicators, beta: calculatedBeta, symbol };
           const response = await fetch(`${ML_BASE_URL}/predict-risk`, {
@@ -158,7 +151,6 @@ const StockDetailScreen = ({ route, navigation }) => {
     fetchStockData();
   }, [symbol, timeRange]);
 
-  // Diğer fonksiyonlarda değişiklik yok...
   useLayoutEffect(() => {
     navigation.setOptions({
       title: stock ? stock.companyName : symbol,
@@ -269,8 +261,7 @@ const StockDetailScreen = ({ route, navigation }) => {
       </View>
     );
   };
-  
-  // Bu fonksiyonda değişiklik yapmaya gerek yok, çünkü artık `stock.beta` ve `stock.pe` doğru verileri içeriyor.
+
   const renderKeyStats = () => {
     const stats = [
       { label: 'Piyasa Değeri', value: `$${(stock.marketCap / 1e9).toFixed(2)}B` },
@@ -294,8 +285,6 @@ const StockDetailScreen = ({ route, navigation }) => {
     return <View style={styles.loadingContainer}><ActivityIndicator size="large" color={theme.colors.primary} /></View>;
   }
 
-  // JSX kısmında (return) hiçbir değişiklik yok.
-  // ... (Mevcut return bloğunuzu buraya kopyalayabilirsiniz)
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
