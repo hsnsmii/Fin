@@ -519,9 +519,6 @@ const HomeScreen = () => {
           <View style={styles.headerTop}>
             <View style={{ width: 44 }} />
             <Text style={styles.headerTitle}>FINOVER</Text>
-            <TouchableOpacity style={styles.profileCircle} onPress={() => navigation.navigate('AccountInfo')}>
-              <Ionicons name="person" size={20} color="#1e3a8a" />
-            </TouchableOpacity>
           </View>
 
           {/* Market Overview */}
