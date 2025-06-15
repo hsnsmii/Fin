@@ -523,7 +523,7 @@ const PortfolioRiskScreen = () => {
           >
             {selectedStock && (
               <>
-                <Text style={styles.modalTitle}>
+                <Text style={styles.modalTitleAlert}>
                   {selectedStock.symbol} Risk Detayları
                 </Text>
 
@@ -558,20 +558,10 @@ const PortfolioRiskScreen = () => {
 
                 <View style={styles.modalButtonContainer}>
                   <TouchableOpacity
-                    onPress={() => {
-                      setRiskModalVisible(false);
-                      fetchFeatureImportance(selectedStock.symbol);
-                    }}
+                    onPress={() => setRiskModalVisible(false)}
                     style={[styles.modalButton, styles.primaryButton]}
                   >
-                    <Text style={[styles.modalButtonText, styles.primaryButtonText]}>Detaylı Açıklama (AI)</Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity
-                    onPress={() => setRiskModalVisible(false)}
-                    style={styles.modalButton}
-                  >
-                    <Text style={styles.modalButtonText}>Kapat</Text>
+                    <Text style={[styles.modalButtonText, styles.primaryButtonText]}>Kapat</Text>
                   </TouchableOpacity>
                 </View>
               </>
@@ -582,7 +572,7 @@ const PortfolioRiskScreen = () => {
 
           {recommendations.length > 0 && (
             <View style={styles.sectionCard}>
-              <Text style={styles.sectionTitle}>📉 Düşük Riskli Hisse Önerileri</Text>
+              <Text style={styles.sectionTitle}>Düşük Riskli Hisse Önerileri</Text>
               {recommendations.map((rec, index) => (
                 <View key={`${rec.symbol}-${index}`} style={[styles.recommendationItem, index === recommendations.length - 1 && styles.recommendationItemLast]}>
                   <Ionicons
@@ -1094,14 +1084,14 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: AppColors.secondaryText,
   },
-  modalOverlay: {
+  modalOverlayAlert: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
-  modalContainer: {
+  modalContainerAlert: {
     backgroundColor: 'white',
     borderRadius: 16,
     padding: 20,
@@ -1113,7 +1103,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 5,
   },
-  modalTitle: {
+  modalTitleAlert: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#1C1C1E',
