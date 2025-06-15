@@ -531,18 +531,18 @@ const HomeScreen = () => {
                     <MaterialCommunityIcons
                       name="chart-line"
                       size={18}
-                      color={item.change > 0 ? "#4CAF50" : "#E53935"}
+                      color={item.changesPercentage > 0 ? "#4CAF50" : "#E53935"}
                     />
                   </View>
-                  <Text style={styles.marketCardValue}>{indexInfo[item.symbol]?.currency || ''}{item.price}</Text>
+                  <Text style={styles.marketCardValue}>{indexInfo[item.symbol]?.currency || ''}{item.price?.toFixed(2)}</Text>
                   <View style={styles.marketCardTrend}>
                     <Ionicons
-                      name={item.change > 0 ? "arrow-up" : "arrow-down"}
+                      name={item.changesPercentage > 0 ? "arrow-up" : "arrow-down"}
                       size={14} 
-                      color={item.change > 0 ? "#4CAF50" : "#E53935"} 
+                      color={item.changesPercentage > 0 ? "#4CAF50" : "#E53935"} 
                     />
-                    <Text style={item.change > 0 ? styles.trendUp : styles.trendDown}>
-                      {item.change.toFixed(2)}%
+                    <Text style={item.changesPercentage > 0 ? styles.trendUp : styles.trendDown}>
+                      {item.changesPercentage > 0 ? '+' : ''}{item.changesPercentage?.toFixed(2)}%
                     </Text>
                   </View>
                 </View>
