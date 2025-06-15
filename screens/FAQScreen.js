@@ -17,11 +17,7 @@ const FAQScreen = ({ navigation }) => {
   const [selectedBox, setSelectedBox] = useState(null);
   const [activeCategory, setActiveCategory] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
-  const goToGlossary = () => {
-    navigation.navigate('Glossary');
-  };
   const questions = [
-    // Hesap
     {
       id: '1',
       category: 'account',
@@ -328,10 +324,7 @@ const FAQScreen = ({ navigation }) => {
           <Text style={styles.noResultsText}>Aradığınız kriterlere uygun soru bulunamadı.</Text>
         </View>
       )}
-       <TouchableOpacity style={styles.glossaryButton} onPress={goToGlossary}>
-        <FontAwesome name="book" size={18} color="#fff" style={{ marginRight: 10 }} />
-        <Text style={styles.glossaryButtonText}>Yatırımcı Sözlüğü</Text>
-      </TouchableOpacity>
+
     </SafeAreaView>
   );
 };
