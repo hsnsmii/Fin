@@ -36,7 +36,6 @@ const LanguageSelector = ({ language, onSelectLanguage }) => (
     </TouchableOpacity>
   </View>
 );
-
 const SettingsItem = ({ icon, label, rightComponent, isLast = false, onPress }) => (
   <TouchableOpacity onPress={onPress} disabled={!onPress} style={[styles.itemContainer, isLast && styles.lastItem]}>
     <View style={styles.itemLeft}>
