@@ -36,7 +36,7 @@ const RootNavigator = () => {
         <Stack.Screen name="AccountInfo" component={AccountInfoScreen} options={{ title: t('Account Information') }} />
         <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: t('Change Password') }} />
         <Stack.Screen name="PortfolioRisk" component={PortfolioRiskScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Glossary" component={GlossaryScreen} options={{ title: 'Yatırımcı Sözlüğü' }} />
+        <Stack.Screen name="Glossary" component={GlossaryScreen} options={{ title: 'Yatırımcı Sözlüğü', headerBackVisible: false, headerShown: false }} />
         <Stack.Screen name="FAQ" component={FAQScreen} options={{ title: ' ', headerLeft: () => null, headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>
