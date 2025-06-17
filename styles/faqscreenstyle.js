@@ -3,7 +3,6 @@ import { StyleSheet } from 'react-native';
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
     backgroundColor: '#f8f9fa',
   },
   titleContainer: {
@@ -14,12 +13,15 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: '#2c3e50',
-    marginBottom: 8,
+    marginBottom: 4,
+    textAlign: 'center',
+    marginTop:20,
   },
   subtitle: {
     fontSize: 16,
     color: '#7f8c8d',
     textAlign: 'center',
+    padding:20
   },
   searchContainer: {
     flexDirection: 'row',
@@ -132,7 +134,23 @@ const styles = StyleSheet.create({
   noResultsIcon: {
     marginBottom: 16,
     color: '#bdc3c7',
-  }
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center', 
+    alignItems: 'center',
+    marginBottom: 24,
+    position: 'relative',
+  },
+  backButton: {
+    position: 'absolute',
+    left: 20,
+    zIndex: 1, 
+    marginTop: 70,
+  },
+  titleWrapper: {
+    alignItems: 'center', 
+  },
 });
 
 export default styles;
