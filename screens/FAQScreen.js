@@ -244,8 +244,17 @@ const FAQScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
+    
       <StatusBar barStyle="dark-content" backgroundColor="#f8f9fa" />
-      <View style={styles.titleContainer}>
+       <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()} 
+          activeOpacity={0.8}
+        >
+          <FontAwesome name="arrow-left" size={20} color="#3498db" />
+        </TouchableOpacity>
+
+      <View style={styles.titleWrapper}>
         <Text style={styles.title}>Sık Sorulan Sorular</Text>
         <Text style={styles.subtitle}>Yardım merkezimizde sık sorulan sorular</Text>
       </View>
