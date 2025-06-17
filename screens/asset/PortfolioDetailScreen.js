@@ -11,12 +11,13 @@ import {
   Dimensions,
   RefreshControl,
 } from 'react-native';
-import axios from 'axios';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { getStockDetails, getPriceOnDate, getCurrentPrice } from '../../services/fmpApi';
 import { Ionicons } from '@expo/vector-icons';
-import { PieChart } from 'react-native-chart-kit';
-import { API_BASE_URL } from '../../services/config';
+import { PieChart } from 'react-native-gifted-charts'; 
+import axios from 'axios'; 
+
+import { getStockDetails, getPriceOnDate, getCurrentPrice } from '../../services/fmpApi'; 
+import { API_BASE_URL } from '../../services/config'; 
 
 const API_URL = API_BASE_URL;
 
@@ -84,18 +85,10 @@ const PortfolioDetailScreen = () => {
     else setRefreshing(true);
 
     try {
-      const res = await axios.get(`${API_URL}/api/watchlists/${listId}/stocks`);
-      if (!res.data || !Array.isArray(res.data)) {
-        setPositions([]);
-        setTotalValue(0);
-        setTotalProfit(0);
-        setPieChartData([]);
-        if (!isRefresh) setLoading(false);
-        else setRefreshing(false);
-        return;
-      }
 
-      if (res.data.length === 0) {
+      const res = await axios.get(`${API_URL}/api/watchlists/${listId}/stocks`);
+
+      if (!res.data || !Array.isArray(res.data) || res.data.length === 0) {
         setPositions([]);
         setTotalValue(0);
         setTotalProfit(0);
@@ -109,23 +102,13 @@ const PortfolioDetailScreen = () => {
       const currentGoldUsd = await getCurrentPrice('XAUUSD');
 
       const enrichedPositionsPromises = res.data.map(async (item) => {
-        if (!item.symbol || typeof item.quantity === 'undefined' || typeof item.price === 'undefined') {
-          return null;
-        }
-
         try {
           const stockData = await getStockDetails(item.symbol);
           if (!stockData || typeof stockData.price !== 'number') {
             const cost = Number(item.quantity) * Number(item.price);
             return {
-              ...item,
-              dbPrice: Number(item.price),
-              companyName: stockData?.companyName || item.symbol,
-              marketPrice: null,
-              profitLoss: null,
-              profitLossPercent: null,
-              cost,
-              marketValue: null,
+              ...item, dbPrice: Number(item.price), companyName: stockData?.companyName || item.symbol, marketPrice: null,
+              profitLoss: null, profitLossPercent: null, cost, marketValue: null,
             };
           }
 
@@ -150,36 +133,19 @@ const PortfolioDetailScreen = () => {
           }
 
           return {
-            ...item,
-            dbPrice: Number(item.price),
-            companyName: stockData.companyName || item.symbol,
-            marketPrice,
-            profitLoss,
-            profitLossPercent,
-            cost,
-            marketValue,
-            usdAlternative: altUsdValue,
-            goldAlternative: altGoldValue,
+            ...item, dbPrice: Number(item.price), companyName: stockData.companyName || item.symbol, marketPrice, profitLoss,
+            profitLossPercent, cost, marketValue, usdAlternative: altUsdValue, goldAlternative: altGoldValue,
           };
         } catch (apiError) {
           const cost = Number(item.quantity) * Number(item.price);
           return {
-            ...item,
-            dbPrice: Number(item.price),
-            companyName: item.symbol,
-            marketPrice: null,
-            profitLoss: null,
-            profitLossPercent: null,
-            cost,
-            marketValue: null,
-            usdAlternative: null,
-            goldAlternative: null,
+            ...item, dbPrice: Number(item.price), companyName: item.symbol, marketPrice: null, profitLoss: null, profitLossPercent: null,
+            cost, marketValue: null, usdAlternative: null, goldAlternative: null,
           };
         }
       });
 
       const enrichedPositionsResult = (await Promise.all(enrichedPositionsPromises)).filter(Boolean);
-
       const totalMarketValue = enrichedPositionsResult.reduce((acc, pos) => acc + (pos.marketValue || 0), 0);
       const totalCalculatedProfit = enrichedPositionsResult.reduce((acc, pos) => acc + (pos.profitLoss || 0), 0);
 
@@ -187,24 +153,26 @@ const PortfolioDetailScreen = () => {
       setTotalProfit(totalCalculatedProfit);
       setPositions(enrichedPositionsResult);
 
-      if (enrichedPositionsResult.length > 0 && totalMarketValue > 0) {
+       if (enrichedPositionsResult.length > 0 && totalMarketValue > 0) {
         const chartData = enrichedPositionsResult
           .filter(pos => pos.marketValue && pos.marketValue > 0)
-          .map((pos, index) => ({
-            name: pos.symbol,
-            population: pos.marketValue,
-            color: getRandomColorForPie(index),
-            legendFontColor: AppColors.secondaryText,
-            legendFontSize: 13,
-          }))
-          .sort((a, b) => b.population - a.population);
+          .map((pos, index) => {
+              const percentage = (pos.marketValue / totalMarketValue) * 100;
+              return {
+                  value: pos.marketValue,
+                  color: getRandomColorForPie(index),
+                  legendLabel: pos.symbol, 
+                  text: `${percentage.toFixed(0)}%`, 
+              };
+          })
+          .sort((a, b) => b.value - a.value); 
         setPieChartData(chartData);
       } else {
         setPieChartData([]);
       }
 
     } catch (err) {
-      Alert.alert('Hata', 'Pozisyonlar alınamadı. Lütfen internet bağlantınızı kontrol edin veya daha sonra tekrar deneyin.');
+      Alert.alert('Hata', 'Pozisyonlar alınırken bir sorun oluştu. Lütfen internet bağlantınızı kontrol edin.');
       setPositions([]);
       setPieChartData([]);
     } finally {
@@ -217,10 +185,7 @@ const PortfolioDetailScreen = () => {
     const unsubscribeFocus = navigation.addListener('focus', () => {
       fetchPositions();
     });
-
-    return () => {
-      unsubscribeFocus();
-    };
+    return unsubscribeFocus;
   }, [navigation, fetchPositions, listId]);
 
   const handleDelete = async (symbol) => {
@@ -234,10 +199,12 @@ const PortfolioDetailScreen = () => {
           style: 'destructive',
           onPress: async () => {
             try {
+
               await axios.delete(`${API_URL}/api/watchlists/${listId}/stocks/${symbol}`);
               Alert.alert('Başarılı', `${symbol} portföyden silindi.`);
-              fetchPositions(true);
+              fetchPositions(true); 
             } catch (err) {
+
               Alert.alert('Hata', `${symbol} silinirken bir sorun oluştu: ${err.response?.data?.message || 'Sunucu hatası'}`);
             }
           },
@@ -248,11 +215,8 @@ const PortfolioDetailScreen = () => {
 
   const handleEdit = (position) => {
     navigation.navigate('AddPosition', {
-      listId,
-      symbol: position.symbol,
-      isEdit: true,
-      currentQuantity: position.quantity,
-      currentPrice: position.dbPrice,
+      listId, symbol: position.symbol, isEdit: true,
+      currentQuantity: position.quantity, currentPrice: position.dbPrice,
     });
   };
 
@@ -267,30 +231,14 @@ const PortfolioDetailScreen = () => {
           <Text style={styles.symbol}>{item.symbol}</Text>
           <Text style={styles.company} numberOfLines={1} ellipsizeMode="tail">{item.companyName || 'Şirket Adı Yüklenemedi'}</Text>
         </View>
-        <Text style={styles.positionDetailText}>
-          Alım: {item.quantity} adet @ ₺{item.dbPrice.toFixed(2)}
-        </Text>
-        <Text style={styles.positionDetailText}>
-          Güncel Fiyat: {item.marketPrice !== null ? "₺" + item.marketPrice.toFixed(2) : 'Veri Yok'}
-        </Text>
-        <Text style={styles.positionDetailText}>
-          Piyasa Değeri: {item.marketValue !== null ? "₺" + item.marketValue.toFixed(2) : 'Hesaplanamadı'}
-        </Text>
-        <Text style={styles.positionDetailText}>
-          Maliyet: {"₺" + item.cost.toFixed(2)}
-        </Text>
-        <Text style={styles.positionDetailText}>
-          Dolar Alsaydın: {item.usdAlternative !== null ? `₺${item.usdAlternative.toFixed(2)}` : 'Hesaplanamadı'}
-        </Text>
-        <Text style={styles.positionDetailText}>
-          Altın Alsaydın: {item.goldAlternative !== null ? `₺${item.goldAlternative.toFixed(2)}` : 'Hesaplanamadı'}
-        </Text>
-
+        <Text style={styles.positionDetailText}>Alım: {item.quantity} adet @ ₺{item.dbPrice.toFixed(2)}</Text>
+        <Text style={styles.positionDetailText}>Güncel Fiyat: {item.marketPrice !== null ? "₺" + item.marketPrice.toFixed(2) : 'Veri Yok'}</Text>
+        <Text style={styles.positionDetailText}>Piyasa Değeri: {item.marketValue !== null ? "₺" + item.marketValue.toFixed(2) : 'Hesaplanamadı'}</Text>
+        <Text style={styles.positionDetailText}>Maliyet: {"₺" + item.cost.toFixed(2)}</Text>
+        <Text style={styles.positionDetailText}>Dolar Alsaydın: {item.usdAlternative !== null ? `₺${item.usdAlternative.toFixed(2)}` : 'Hesaplanamadı'}</Text>
+        <Text style={styles.positionDetailText}>Altın Alsaydın: {item.goldAlternative !== null ? `₺${item.goldAlternative.toFixed(2)}` : 'Hesaplanamadı'}</Text>
         {item.profitLoss !== null && item.profitLossPercent !== null ? (
-          <Text style={[
-            styles.positionProfitLoss,
-            { color: item.profitLoss >= 0 ? AppColors.profit : AppColors.loss }
-          ]}>
+          <Text style={[styles.positionProfitLoss, { color: item.profitLoss >= 0 ? AppColors.profit : AppColors.loss }]}>
             K/Z: ₺{item.profitLoss.toFixed(2)} ({item.profitLossPercent.toFixed(2)}%)
           </Text>
         ) : (
@@ -308,9 +256,29 @@ const PortfolioDetailScreen = () => {
     </View>
   );
 
+  const renderDistributionTable = (data, total) => (
+    <View style={styles.tableContainer}>
+        <View style={styles.tableHeader}>
+            <Text style={[styles.tableHeaderText, { flex: 2 }]}>Varlık Türü</Text>
+            <Text style={[styles.tableHeaderText, { flex: 1, textAlign: 'right' }]}>Oran</Text>
+        </View>
+        {data.map((item, index) => {
+            const percentage = total > 0 ? (item.value / total) * 100 : 0;
+            return (
+                <View key={`row-${index}`} style={styles.tableRow}>
+                    <View style={styles.tableCellLabelContainer}>
+                        <View style={[styles.legendColorBox, { backgroundColor: item.color }]} />
+                        <Text style={styles.tableCellText}>{item.legendLabel}</Text>
+                    </View>
+                    <Text style={styles.tableCellPercentage}>{`%${percentage.toFixed(2)}`}</Text>
+                </View>
+            );
+        })}
+    </View>
+  );
+
   const renderListHeader = () => (
     <>
-      {/* PORTFÖY ÖZETİ ve GRAFİKLER */}
       <View style={[styles.summaryCard, { borderColor: totalProfit >= 0 ? AppColors.profit : AppColors.loss }]}>
         <Text style={styles.summaryCardTitle}>Portföy Özeti</Text>
         <View style={styles.summaryRow}>
@@ -326,33 +294,34 @@ const PortfolioDetailScreen = () => {
           </Text>
         </View>
       </View>
-
       {pieChartData.length > 0 && (
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Varlık Dağılımı (Piyasa Değerine Göre)</Text>
-          <PieChart
-            data={pieChartData}
-            width={Dimensions.get('window').width - 32}
-            height={230}
-            chartConfig={{
-              backgroundColor: AppColors.cardBackground,
-              backgroundGradientFrom: AppColors.cardBackground,
-              backgroundGradientTo: AppColors.cardBackground,
-              color: (opacity = 1) => AppColors.primaryText,
-              labelColor: (opacity = 1) => AppColors.primaryText,
-              style: { borderRadius: 8 },
-              propsForLabels: { fontSize: 11 }
-            }}
-            accessor={"population"}
-            backgroundColor={"transparent"}
-            paddingLeft={"10"}
-            center={[Dimensions.get('window').width * 0.1, 0]}
-            absolute={false}
-            hasLegend={true}
-            style={styles.pieChartStyle}
-          />
+          <Text style={styles.sectionTitle}>Varlık Dağılımı</Text>
+          <View style={styles.distributionContainer}>
+            <View style={styles.distributionTableContainer}>
+                {renderDistributionTable(pieChartData, totalValue)}
+            </View>
+            <View style={styles.pieChartContainer}>
+              <PieChart
+                data={pieChartData}
+                donut
+                showText={false}
+                radius={85}
+                innerRadius={45}
+                focusOnPress
+                centerLabelComponent={() => (
+                  <View style={styles.chartCenterLabelContainer}>
+                    <Text style={styles.chartCenterLabelValue}>
+                      {`₺${(totalValue / 1000).toFixed(1)}k`}
+                    </Text>
+                  </View>
+                )}
+              />
+            </View>
+          </View>
         </View>
       )}
+
       {positions.length > 0 && <Text style={styles.positionsHeaderTitle}>Pozisyonlar</Text>}
     </>
   );
@@ -370,24 +339,16 @@ const PortfolioDetailScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* STICKY HEADER */}
       <View style={styles.stickyHeader}>
-  <TouchableOpacity
-    onPress={() => navigation.goBack()}
-    style={styles.backButton}
-    hitSlop={{ top: 15, left: 15, bottom: 15, right: 15 }}
-  >
-    <Ionicons name="arrow-back" size={26} color={AppColors.primaryText} />
-  </TouchableOpacity>
-  <View style={styles.stickyHeaderTitleBlock}>
-    <Text style={styles.pageHeaderTitle}>{listName}</Text>
-    <Text style={styles.pageHeaderSubtitle}>Portföy Detayları</Text>
-  </View>
-  {/* Sağda boşluk olsun diye View */}
-  <View style={{ width: 36 }} />
-</View>
-
-
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton} hitSlop={{ top: 15, left: 15, bottom: 15, right: 15 }}>
+          <Ionicons name="arrow-back" size={26} color={AppColors.primaryText} />
+        </TouchableOpacity>
+        <View style={styles.stickyHeaderTitleBlock}>
+          <Text style={styles.pageHeaderTitle}>{listName}</Text>
+          <Text style={styles.pageHeaderSubtitle}>Portföy Detayları</Text>
+        </View>
+        <View style={{ width: 36 }} />
+      </View>
       {positions.length === 0 && !loading ? (
         <View style={styles.emptyStateParentContainer}>
           <View style={{ height: 16 }} />
@@ -409,12 +370,8 @@ const PortfolioDetailScreen = () => {
           <View style={styles.emptyStateContainer}>
             <Ionicons name="file-tray-stacked-outline" size={64} color={AppColors.tertiaryText} style={{ marginTop: 30 }} />
             <Text style={styles.emptyStateTitle}>Portföy Boş</Text>
-            <Text style={styles.emptyStateMessage}>
-              Bu portföyde henüz pozisyon bulunmamaktadır. Eklemeye başlayın!
-            </Text>
-            <TouchableOpacity
-              style={styles.emptyStateButton}
-              onPress={() => navigation.navigate('AddPosition', { listId })}>
+            <Text style={styles.emptyStateMessage}>Bu portföyde henüz pozisyon bulunmamaktadır. Eklemeye başlayın!</Text>
+            <TouchableOpacity style={styles.emptyStateButton} onPress={() => navigation.navigate('AddPosition', { listId })}>
               <Ionicons name="add-circle-outline" size={22} color={AppColors.primaryActionText} style={{ marginRight: 8 }} />
               <Text style={styles.emptyStateButtonText}>Pozisyon Ekle</Text>
             </TouchableOpacity>
@@ -438,11 +395,8 @@ const PortfolioDetailScreen = () => {
           }
         />
       )}
-
       {positions.length > 0 && !loading && (
-        <TouchableOpacity
-          style={styles.addButtonFab}
-          onPress={() => navigation.navigate('AddPosition', { listId })}>
+        <TouchableOpacity style={styles.addButtonFab} onPress={() => navigation.navigate('AddPosition', { listId })}>
           <Ionicons name="add-outline" size={32} color={AppColors.primaryActionText} />
         </TouchableOpacity>
       )}
@@ -451,274 +405,137 @@ const PortfolioDetailScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: AppColors.background,
-  },
-  stickyHeader: {
-    backgroundColor: AppColors.background,
-    paddingTop: 18,
-    paddingBottom: 4,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    zIndex: 100,
-    borderBottomWidth: 0.5,
-    borderBottomColor: AppColors.separator,
-  },
-  fullScreenLoader: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 15,
-    fontSize: 16,
-    color: AppColors.secondaryText,
-  },
-  pageHeaderTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: AppColors.primaryText,
-    textAlign: 'center',
-  },
-  pageHeaderSubtitle: {
-    fontSize: 16,
-    color: AppColors.secondaryText,
-    textAlign: 'center',
-    marginTop: 4,
-  },
+  safeArea: { flex: 1, backgroundColor: AppColors.background },
+  fullScreenLoader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  loadingText: { marginTop: 15, fontSize: 16, color: AppColors.secondaryText },
   summaryCard: {
-    backgroundColor: AppColors.cardBackground,
-    borderRadius: 12,
-    padding: 20,
-    marginHorizontal: 16,
-    marginTop: 10,
-    marginBottom: 20,
-    borderWidth: 1,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
+    backgroundColor: AppColors.cardBackground, borderRadius: 12, padding: 20, marginHorizontal: 16, marginTop: 10,
+    marginBottom: 20, borderWidth: 1, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08, shadowRadius: 4,
   },
-  summaryCardTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: AppColors.primaryText,
-    marginBottom: 15,
-    textAlign: 'center',
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: AppColors.separator,
-  },
-  summaryRowLast: {
-    borderBottomWidth: 0,
-  },
-  summaryIcon: {
-    marginRight: 12,
-  },
-  summaryLabel: {
-    fontSize: 16,
-    color: AppColors.secondaryText,
-    flex: 1,
-  },
-  summaryValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: AppColors.primaryText,
-  },
+  summaryCardTitle: { fontSize: 18, fontWeight: '600', color: AppColors.primaryText, marginBottom: 15, textAlign: 'center' },
+  summaryRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: AppColors.separator },
+  summaryRowLast: { borderBottomWidth: 0 },
+  summaryIcon: { marginRight: 12 },
+  summaryLabel: { fontSize: 16, color: AppColors.secondaryText, flex: 1 },
+  summaryValue: { fontSize: 16, fontWeight: 'bold', color: AppColors.primaryText },
   sectionCard: {
-    backgroundColor: AppColors.cardBackground,
-    borderRadius: 12,
-    paddingVertical: 16,
-    marginHorizontal: 16,
-    marginBottom: 20,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 3,
-    alignItems: 'center',
+    backgroundColor: AppColors.cardBackground, borderRadius: 12, paddingVertical: 16, marginHorizontal: 16, marginBottom: 20,
+    elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 3, alignItems: 'center',
   },
   sectionTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: AppColors.primaryText,
-    marginBottom: 5,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: AppColors.separator,
-    width: '90%',
-    textAlign: 'center',
+    fontSize: 17, fontWeight: '600', color: AppColors.primaryText, marginBottom: 5, paddingBottom: 8,
+    borderBottomWidth: 1, borderBottomColor: AppColors.separator, width: '90%', textAlign: 'center',
   },
-  pieChartStyle: {
-    alignSelf: 'center',
-    marginTop: 5,
-  },
-  listContentContainer: {
-    paddingBottom: 80,
-  },
-  positionsHeaderTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: AppColors.primaryText,
-    marginHorizontal: 16,
-    marginBottom: 12,
-    marginTop: 5,
-  },
+  listContentContainer: { paddingBottom: 80 },
+  positionsHeaderTitle: { fontSize: 20, fontWeight: '600', color: AppColors.primaryText, marginHorizontal: 16, marginBottom: 12, marginTop: 5 },
   positionCard: {
-    backgroundColor: AppColors.cardBackground,
-    borderRadius: 10,
-    marginHorizontal: 16,
-    marginBottom: 12,
-    flexDirection: 'row',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 3,
-    overflow: 'hidden',
+    backgroundColor: AppColors.cardBackground, borderRadius: 10, marginHorizontal: 16, marginBottom: 12, flexDirection: 'row',
+    elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 3, overflow: 'hidden',
   },
-  positionSideBar: {
-    width: 7,
-  },
-  positionInfo: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-  },
-  positionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-  },
-  symbol: {
-    fontSize: 19,
-    fontWeight: 'bold',
-    color: AppColors.primaryText,
-  },
-  company: {
-    fontSize: 13,
-    color: AppColors.secondaryText,
-    marginLeft: 8,
-    flexShrink: 1,
-    textAlign: 'left',
-  },
-  positionDetailText: {
-    fontSize: 13.5,
-    color: AppColors.secondaryText,
-    lineHeight: 19,
-  },
-  positionProfitLoss: {
-    fontSize: 14.5,
-    fontWeight: 'bold',
-    marginTop: 6,
-  },
+  positionSideBar: { width: 7 },
+  positionInfo: { flex: 1, paddingVertical: 12, paddingHorizontal: 14 },
+  positionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 },
+  symbol: { fontSize: 19, fontWeight: 'bold', color: AppColors.primaryText },
+  company: { fontSize: 13, color: AppColors.secondaryText, marginLeft: 8, flexShrink: 1, textAlign: 'left' },
+  positionDetailText: { fontSize: 13.5, color: AppColors.secondaryText, lineHeight: 19 },
+  positionProfitLoss: { fontSize: 14.5, fontWeight: 'bold', marginTop: 6 },
   actionContainer: {
-    flexDirection: 'column',
-    justifyContent: 'space-evenly',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    borderLeftWidth: 1,
-    borderLeftColor: AppColors.separator,
-    backgroundColor: '#FAFAFA',
+    flexDirection: 'column', justifyContent: 'space-evenly', alignItems: 'center', paddingHorizontal: 10,
+    borderLeftWidth: 1, borderLeftColor: AppColors.separator, backgroundColor: '#FAFAFA',
   },
-  actionButton: {
-    padding: 10,
-  },
-  emptyStateParentContainer: {
-    flex: 1,
-  },
-  emptyStateContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 30,
-    paddingBottom: 30,
-  },
-  emptyStateTitle: {
-    fontSize: 22,
-    fontWeight: '600',
-    color: AppColors.primaryText,
-    marginTop: 20,
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  emptyStateMessage: {
-    fontSize: 15,
-    color: AppColors.secondaryText,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 25,
-  },
+  actionButton: { padding: 10 },
+  emptyStateParentContainer: { flex: 1 },
+  emptyStateContainer: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 30, paddingBottom: 30 },
+  emptyStateTitle: { fontSize: 22, fontWeight: '600', color: AppColors.primaryText, marginTop: 20, marginBottom: 10, textAlign: 'center' },
+  emptyStateMessage: { fontSize: 15, color: AppColors.secondaryText, textAlign: 'center', lineHeight: 22, marginBottom: 25 },
   emptyStateButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: AppColors.primaryAction,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 25,
-    elevation: 2,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: AppColors.primaryAction,
+    paddingVertical: 12, paddingHorizontal: 24, borderRadius: 25, elevation: 2,
   },
-  emptyStateButtonText: {
-    color: AppColors.primaryActionText,
-    fontSize: 16,
-    fontWeight: '500',
-  },
+  emptyStateButtonText: { color: AppColors.primaryActionText, fontSize: 16, fontWeight: '500' },
   addButtonFab: {
-    position: 'absolute',
-    bottom: 25,
-    right: 25,
-    backgroundColor: AppColors.primaryAction,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    position: 'absolute', bottom: 25, right: 25, backgroundColor: AppColors.primaryAction, width: 60, height: 60,
+    borderRadius: 30, justifyContent: 'center', alignItems: 'center', elevation: 4, shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 3.84,
   },
   stickyHeader: {
-  backgroundColor: AppColors.background,
-  paddingVertical: 10,
-  paddingHorizontal: 0,
-  flexDirection: 'row',
-  alignItems: 'center',
-  borderBottomWidth: 0.5,
-  borderBottomColor: AppColors.separator,
-  zIndex: 100,
-},
-backButton: {
-  paddingLeft: 14,
-  paddingRight: 10,
-  paddingVertical: 4,
-},
-stickyHeaderTitleBlock: {
-  flex: 1,
-  justifyContent: 'center',
-  alignItems: 'center',
-  alignSelf: 'center',
-},
-pageHeaderTitle: {
-  fontSize: 22,
-  fontWeight: 'bold',
-  color: AppColors.primaryText,
-  textAlign: 'center',
-},
-pageHeaderSubtitle: {
-  fontSize: 14,
-  color: AppColors.secondaryText,
-  textAlign: 'center',
-  marginTop: 0,
-},
+    backgroundColor: AppColors.background, paddingVertical: 10, paddingHorizontal: 0, flexDirection: 'row',
+    alignItems: 'center', borderBottomWidth: 0.5, borderBottomColor: AppColors.separator, zIndex: 100,
+  },
+  backButton: { paddingLeft: 14, paddingRight: 10, paddingVertical: 4 },
+  stickyHeaderTitleBlock: { flex: 1, justifyContent: 'center', alignItems: 'center', alignSelf: 'center' },
+  pageHeaderTitle: { fontSize: 22, fontWeight: 'bold', color: AppColors.primaryText, textAlign: 'center' },
+  pageHeaderSubtitle: { fontSize: 14, color: AppColors.secondaryText, textAlign: 'center', marginTop: 0 },
+  distributionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    marginTop: 10,
+  },
+  distributionTableContainer: {
+    flex: 1.2,
+    paddingRight: 10,
+  },
+  pieChartContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tableContainer: {
+    width: '100%',
+    marginLeft: 15,
+  },
+  tableHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderBottomWidth: 1.5,
+    borderBottomColor: AppColors.separator,
+    paddingBottom: 6,
+    marginBottom: 6,
+  },
+  tableHeaderText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: AppColors.secondaryText,
+  },
+  tableRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 5,
+  },
+  tableCellLabelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 2,
+  },
+  legendColorBox: {
+    width: 10,
+    height: 10,
+    borderRadius: 2,
+    marginRight: 8,
+  },
+  tableCellText: {
+    fontSize: 14,
+    color: AppColors.primaryText,
+  },
+  tableCellPercentage: {
+    fontSize: 14,
+    color: AppColors.primaryText,
+    fontWeight: '500',
+    flex: 1,
+    textAlign: 'right',
+  },
+  chartCenterLabelContainer: {
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  chartCenterLabelValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: AppColors.primaryText
+  },
 
 });
 
