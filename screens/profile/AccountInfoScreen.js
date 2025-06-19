@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/Feather';
+import axios from 'axios';
+import { API_BASE_URL } from '../../services/config';
 
 import { useLocalization } from '../../services/LocalizationContext'; 
 
@@ -44,14 +46,18 @@ const AccountInfoScreen = ({ navigation }) => {
   const { language, setLanguage, t } = useLocalization();
 
   const [userId, setUserId] = useState('');
+  const [email, setEmail] = useState('');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   useEffect(() => {
     const loadUserId = async () => {
       try {
         const id = await AsyncStorage.getItem('userId');
-
-        setUserId(id || t('Not Found')); 
+        setUserId(id || t('Not Found'));
+        if (id) {
+          const res = await axios.get(`${API_BASE_URL}/user/${id}`);
+          setEmail(res.data.email);
+        }
       } catch (error) {
         console.log("Error reading user ID:", error);
         setUserId(t('Error'));
@@ -108,10 +114,10 @@ const AccountInfoScreen = ({ navigation }) => {
                     label={t('User ID')}
                     rightComponent={<Text style={styles.valueText}>{userId}</Text>}
                 />
-                 <SettingsItem 
-                    icon="mail" 
+                <SettingsItem
+                    icon="mail"
                     label={t('Email Address')}
-                    rightComponent={<Text style={styles.valueText}>kullanici@mail.com</Text>}
+                    rightComponent={<Text style={styles.valueText}>{email}</Text>}
                 />
                  <SettingsItem 
                     icon="lock" 
