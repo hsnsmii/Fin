@@ -179,7 +179,7 @@ export default function RegisterScreen({ navigation }) {
                   <Ionicons
   name={isPasswordVisible ? 'eye' : 'eye-off'}
   size={22}
-  color="#0B0B45" // <-- burada
+  color="#0B0B45"
 />
 
                 </TouchableOpacity>
@@ -230,11 +230,11 @@ export default function RegisterScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f6fbfd',
+    backgroundColor: '#F8F9FA',
   },
   card: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
     marginTop: -16,
     borderTopRightRadius: 56,
     borderTopLeftRadius: 56,
@@ -267,12 +267,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#0B0B45',
+    color: '#1A237E',
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
-    color: '#718096',
+    color: '#6B7280',
     fontSize: 16,
     marginBottom: 28,
     textAlign: 'center',
@@ -287,20 +287,20 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#4a5568',
+    color: '#4B5563',
     marginBottom: 8,
     letterSpacing: 0.5,
   },
   input: {
     height: 48,
-    backgroundColor: '#f7fafc',
+    backgroundColor: '#F8F9FA',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#E5E7EB',
     paddingHorizontal: 16,
     fontSize: 16,
-    color: '#2d3748',
-    shadowColor: '#718096',
+    color: '#1F2937',
+    shadowColor: '#6B7280',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 1,
@@ -308,10 +308,10 @@ const styles = StyleSheet.create({
   },
   passwordContainer: {
     flexDirection: 'row',
-    backgroundColor: '#f7fafc',
+    backgroundColor: '#F8F9FA',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#E5E7EB',
     height: 48,
     alignItems: 'center',
   },
@@ -319,7 +319,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: '#2d3748',
+    color: '#1F2937',
     height: '100%',
   },
   eyeButton: {
@@ -328,12 +328,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   registerButton: {
-    backgroundColor: '#0B0B45',
+    backgroundColor: '#1A237E',
     borderRadius: 8,
     height: 48,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#0B0B45',
+    shadowColor: '#1A237E',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.13,
     shadowRadius: 2,
@@ -354,11 +354,11 @@ const styles = StyleSheet.create({
     paddingBottom: 18,
   },
   loginText: {
-    color: '#718096',
+    color: '#6B7280',
     fontSize: 14,
   },
   loginLink: {
-    color: '#0B0B45',
+    color: '#1A237E',
     fontSize: 14,
     fontWeight: '600',
     marginLeft: 3,
