@@ -103,7 +103,7 @@ export default function MainTabs() {
         name="Menu"
         component={MenuScreen}
         options={{
-          tabBarLabel: 'Menü',
+          tabBarLabel: t('Menu'),
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons name="menu" size={22} color={color} />
           ),

@@ -15,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
 import { API_BASE_URL } from '../services/config';
+import { useLocalization } from '../services/LocalizationContext';
 
 const COLORS = {
   background: '#F8F9FA',           
@@ -52,9 +53,9 @@ const SettingsItem = ({ icon, label, rightComponent, isLast = false, onPress }) 
 
 const MenuScreen = () => {
   const navigation = useNavigation();
+  const { language, setLanguage, t } = useLocalization();
 
   const [userId, setUserId] = useState('');
-  const [language, setLanguage] = useState('tr');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [userEmail, setUserEmail] = useState('');
   const [userName, setUserName] = useState('');
@@ -79,12 +80,12 @@ const MenuScreen = () => {
 
   const handleLogout = () => {
     Alert.alert(
-      'Çıkış Yap',
-      'Hesabınızdan çıkış yapmak istediğinizden emin misiniz?',
+      t('Logout'),
+      t('Confirm Logout'),
       [
-        { text: 'İptal', style: 'cancel' },
+        { text: t('Cancel'), style: 'cancel' },
         {
-          text: 'Çıkış Yap',
+          text: t('Logout'),
           onPress: async () => {
             try {
 
@@ -92,7 +93,7 @@ const MenuScreen = () => {
 
               navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
             } catch (e) {
-              Alert.alert('Hata', 'Çıkış yapılırken bir sorun oluştu.');
+              Alert.alert(t('Error'), t('An error occurred while logging out.'));
             }
           },
           style: 'destructive',
@@ -114,13 +115,13 @@ const MenuScreen = () => {
 
         {}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Hesap</Text>
+          <Text style={styles.sectionTitle}>{t('Account')}</Text>
           <View style={styles.card}>
-            <SettingsItem icon="person-outline" label="Kullanıcı ID" rightComponent={<Text style={styles.valueText}>{userId}</Text>} />
-            <SettingsItem icon="mail-outline" label="E-posta" rightComponent={<Text style={styles.valueText}>{userEmail}</Text>} />
+            <SettingsItem icon="person-outline" label={t('User ID')} rightComponent={<Text style={styles.valueText}>{userId}</Text>} />
+            <SettingsItem icon="mail-outline" label={t('Email Address')} rightComponent={<Text style={styles.valueText}>{userEmail}</Text>} />
             <SettingsItem 
               icon="lock-closed-outline" 
-              label="Şifre Değiştir"
+              label={t('Change Password')}
               rightComponent={<Icon name="chevron-forward-outline" size={20} color={COLORS.textSecondary} />}
               onPress={() => navigation.navigate('ChangePassword')}
               isLast={true}
@@ -130,16 +131,16 @@ const MenuScreen = () => {
 
         {}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Ayarlar</Text>
+          <Text style={styles.sectionTitle}>{t('Settings')}</Text>
           <View style={styles.card}>
             <SettingsItem 
               icon="notifications-outline" 
-              label="Bildirimler"
+              label={t('Notifications')}
               rightComponent={<Switch value={notificationsEnabled} onValueChange={setNotificationsEnabled} trackColor={{ false: '#767577', true: COLORS.primary }} thumbColor={COLORS.card} />}
             />
             <SettingsItem 
               icon="globe-outline" 
-              label="Dil" 
+              label={t('Language')}
               rightComponent={<LanguageSelector language={language} onSelectLanguage={setLanguage} />} 
               isLast={true} 
             />
@@ -148,24 +149,24 @@ const MenuScreen = () => {
 
         {}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Destek</Text>
+          <Text style={styles.sectionTitle}>{t('Support')}</Text>
           <View style={styles.card}>
             <SettingsItem 
               icon="help-circle-outline" 
-              label="Yardım Merkezi"
+              label={t('Help Center')}
               rightComponent={<Icon name="chevron-forward-outline" size={20} color={COLORS.textSecondary} />}
               onPress={() => navigation.navigate('FAQ')}
             />
             <SettingsItem 
               icon= "book-outline" 
-              label="Yatırımcı Sözlüğü"
+              label={t('Glossary')}
               rightComponent={<Icon name="chevron-forward-outline" size={20} color={COLORS.textSecondary} />}
               onPress={() => navigation.navigate('Glossary')}
               isLast={true}
             />
             <SettingsItem 
               icon="information-circle-outline" 
-              label="Hakkımızda"
+              label={t('About')}
               rightComponent={<Icon name="chevron-forward-outline" size={20} color={COLORS.textSecondary} />}
               onPress={() => navigation.navigate('About')}
               isLast={true}
@@ -177,7 +178,7 @@ const MenuScreen = () => {
         {}
         <View style={styles.section}>
           <View style={styles.card}>
-            <SettingsItem icon="log-out-outline" label="Çıkış Yap" onPress={handleLogout} isLast={true} />
+            <SettingsItem icon="log-out-outline" label={t('Logout')} onPress={handleLogout} isLast={true} />
           </View>
         </View>
 
