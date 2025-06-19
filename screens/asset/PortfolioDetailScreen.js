@@ -81,7 +81,11 @@ const PortfolioDetailScreen = () => {
           if (!stockData || typeof stockData.price !== 'number') {
             const cost = Number(item.quantity) * Number(item.price);
             return {
-              ...item, id: item._id, dbPrice: Number(item.price), companyName: stockData?.companyName || item.symbol, marketPrice: null,
+              ...item,
+              id: item._id || item.id,
+              dbPrice: Number(item.price),
+              companyName: stockData?.companyName || item.symbol,
+              marketPrice: null,
               profitLoss: null, profitLossPercent: null, cost, marketValue: null,
             };
           }
@@ -102,14 +106,28 @@ const PortfolioDetailScreen = () => {
           }
 
           return {
-            ...item, id: item._id, 
-            dbPrice: Number(item.price), companyName: stockData.companyName || item.symbol, marketPrice, profitLoss,
-            profitLossPercent, cost, marketValue, usdAlternative: altUsdValue, goldAlternative: altGoldValue,
+            ...item,
+            id: item._id || item.id,
+            dbPrice: Number(item.price),
+            companyName: stockData.companyName || item.symbol,
+            marketPrice,
+            profitLoss,
+            profitLossPercent,
+            cost,
+            marketValue,
+            usdAlternative: altUsdValue,
+            goldAlternative: altGoldValue,
           };
         } catch (apiError) {
           const cost = Number(item.quantity) * Number(item.price);
           return {
-            ...item, id: item._id, dbPrice: Number(item.price), companyName: item.symbol, marketPrice: null, profitLoss: null, profitLossPercent: null,
+            ...item,
+            id: item._id || item.id,
+            dbPrice: Number(item.price),
+            companyName: item.symbol,
+            marketPrice: null,
+            profitLoss: null,
+            profitLossPercent: null,
             cost, marketValue: null, usdAlternative: null, goldAlternative: null,
           };
         }
@@ -371,7 +389,7 @@ const PortfolioDetailScreen = () => {
           data={positions}
           renderItem={renderItem}
 
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item) => (item.id ?? item.symbol).toString()}
           ListHeaderComponent={renderListHeader}
           contentContainerStyle={styles.listContentContainer}
           showsVerticalScrollIndicator={false}
