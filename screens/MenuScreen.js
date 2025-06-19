@@ -15,15 +15,15 @@ import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 const COLORS = {
-  background: '#F7F8FA',
-  card: '#FFFFFF',
-  textPrimary: '#1D232E',
-  textSecondary: '#8A94A6',
-  primary: '#0052FF',
-  lightPrimary: '#E6F0FF',
-  border: '#EFF1F3',
-  danger: '#FF3B30',
-  dangerLight: 'rgba(255, 59, 48, 0.1)', 
+  background: '#F8F9FA',           
+  card: '#FFFFFF',                 
+  textPrimary: '#1F2937',          
+  textSecondary: '#6B7280',        
+  primary: '#1A237E',              
+  lightPrimary: '#E5E7EB',         
+  border: '#E5E7EB',               
+  danger: '#EF4444',               
+  dangerLight: 'rgba(239, 68, 68, 0.1)', 
 };
 
 const LanguageSelector = ({ language, onSelectLanguage }) => (
