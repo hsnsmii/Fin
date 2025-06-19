@@ -512,7 +512,7 @@ const PortfolioRiskScreen = () => {
                   ]}
                   onPress={() => {
                     setSelectedStock(item);
-                    setRiskModalVisible(true);
+                    setIsRiskModalVisible(true);
                   }}
                 >
                   <View
@@ -592,12 +592,12 @@ const PortfolioRiskScreen = () => {
         animationType="fade"
         transparent={true}
         visible={isRiskModalVisible}
-        onRequestClose={() => setRiskModalVisible(false)}
+        onRequestClose={() => setIsRiskModalVisible(false)}
       >
         <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
-          onPressOut={() => setRiskModalVisible(false)}
+          onPressOut={() => setIsRiskModalVisible(false)}
         >
           <View
             style={styles.modalContainer}
@@ -640,7 +640,7 @@ const PortfolioRiskScreen = () => {
 
                 <View style={styles.modalButtonContainer}>
                   <TouchableOpacity
-                    onPress={() => setRiskModalVisible(false)}
+                    onPress={() => setIsRiskModalVisible(false)}
                     style={[styles.modalButton, styles.primaryButton]}
                   >
                     <Text style={[styles.modalButtonText, styles.primaryButtonText]}>Kapat</Text>
