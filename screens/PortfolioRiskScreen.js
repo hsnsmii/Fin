@@ -250,13 +250,20 @@ const PortfolioRiskScreen = () => {
       const detailPromises = symbols.map(sym =>
         getStockDetails(sym).catch(() => null)
       );
-      const marketHistory = await getStockHistory('SPY');
-      for (const symbol of symbols) {
-        const history = await getStockHistory(symbol);
-        if (!history || history.length === 0) continue;
+
+      const marketHistoryPromise = getStockHistory('SPY');
+      const historyPromises = symbols.map(sym => getStockHistory(sym).catch(() => null));
+      const [marketHistory, histories] = await Promise.all([
+        marketHistoryPromise,
+        Promise.all(historyPromises)
+      ]);
+
+      histories.forEach((history, idx) => {
+        const symbol = symbols[idx];
+        if (!history || history.length === 0) return;
         const indicators = calculateIndicators(history);
         const beta = calculateBeta(history, marketHistory);
-        if (!indicators || beta === null) continue;
+        if (!indicators || beta === null) return;
         const payload = { ...indicators, beta, symbol };
         riskDataPromises.push(
           fetch(`${ML_BASE_URL}/predict-risk`, {
@@ -272,7 +279,7 @@ const PortfolioRiskScreen = () => {
             }))
             .catch(() => null)
         );
-      }
+      });
       const results = (await Promise.all(riskDataPromises)).filter(r => r !== null);
       const detailResults = await Promise.all(detailPromises);
       const sectorMap = {};
