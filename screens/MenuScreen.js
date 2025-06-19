@@ -13,6 +13,8 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import axios from 'axios';
+import { API_BASE_URL } from '../services/config';
 
 const COLORS = {
   background: '#F8F9FA',           
@@ -54,14 +56,19 @@ const MenuScreen = () => {
   const [userId, setUserId] = useState('');
   const [language, setLanguage] = useState('tr');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [userEmail, setUserEmail] = useState('a@b.com'); 
-  const [userName, setUserName] = useState('Aksu'); 
+  const [userEmail, setUserEmail] = useState('');
+  const [userName, setUserName] = useState('');
 
   useEffect(() => {
     const loadUserData = async () => {
       try {
         const id = await AsyncStorage.getItem('userId');
         setUserId(id || 'Kullanıcı-12345');
+        if (id) {
+          const res = await axios.get(`${API_BASE_URL}/user/${id}`);
+          setUserEmail(res.data.email);
+          setUserName(res.data.username);
+        }
       } catch (error) {
         console.log("Kullanıcı verisi okunurken hata:", error);
         setUserId('Bulunamadı');

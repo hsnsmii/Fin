@@ -5,7 +5,6 @@ import { getSelectedStocks } from '../../services/fmpApi';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import styles from '../../styles/MarketScreenStyle';
-import mockData from '../../assets/mockStockData.json';
 
 const MarketScreen = () => {
   const [stocks, setStocks] = useState([]);
@@ -16,7 +15,6 @@ const MarketScreen = () => {
   useEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
-//mock data kullanmadan
   useEffect(() => {
     const fetchStocks = async () => {
       try {
@@ -31,30 +29,6 @@ const MarketScreen = () => {
     fetchStocks();
   }, []);
 
-  // useEffect(() => {
-  //   const fetchStocks = async () => {
-  //     try {
-  //       const data = await getSelectedStocks();
-  
-  //       // mockData diziyse doğrudan birleştirebilirsin
-  //       const combinedData = [...data, ...mockData]; // tek objeyi diziye çevir
-  //       console.log("Yüklenen tüm stock verileri:", stocks);
-
-  
-  //       setStocks(combinedData);
-  //     } catch (error) {
-  //       console.error('Stock fetch error:', error);
-  
-  //       // sadece mock veriyi göster (API başarısızsa)
-  //       setStocks(mockData);
-  //       console.log("Yüklenen tüm stock verileri:", stocks);
-
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-  //   fetchStocks();
-  // }, []);
   
 
   const renderItem = ({ item }) => {
