@@ -139,9 +139,7 @@ const AssetsScreen = () => {
     return unsubscribe;
   }, [navigation]);
 
-  const renderItem = ({ item }) => {
-  console.log('Navigating with item:', item); // ekle
-
+  const renderItem = ({ item }) => (
     <TouchableOpacity
       style={styles.portfolioItem}
       onPress={() =>
@@ -150,11 +148,9 @@ const AssetsScreen = () => {
     >
       <View style={styles.portfolioInfo}>
         <Text style={styles.portfolioName}>{item.name}</Text>
-        {}
         {item.totalValue && <Text style={styles.portfolioValue}>₺{item.totalValue}</Text>}
       </View>
-      {}
-      {item.change && (
+      {item.change ? (
         <View style={styles.portfolioChangeContainer}>
           <Text
             style={[
@@ -162,16 +158,16 @@ const AssetsScreen = () => {
               parseFloat(item.change) >= 0 ? styles.positiveChange : styles.negativeChange,
             ]}
           >
-            {parseFloat(item.change) >= 0 ? '+' : ''}{item.change}%
+            {parseFloat(item.change) >= 0 ? '+' : ''}
+            {item.change}%
           </Text>
           <Icon name="chevron-right" size={24} color={COLORS.textSecondary} />
         </View>
-      )}
-       {!item.change && ( 
+      ) : (
         <Icon name="chevron-right" size={24} color={COLORS.textSecondary} />
       )}
     </TouchableOpacity>
-  };
+  );
 
   if (loading) {
     return (
