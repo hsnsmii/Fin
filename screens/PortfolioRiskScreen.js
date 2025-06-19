@@ -106,6 +106,9 @@ const getRiskCategoryText = (risk) => {
 // ANA COMPONENT
 // ==========================
 const PortfolioRiskScreen = () => {
+  const [isRiskModalVisible, setIsRiskModalVisible] = useState(false);
+  const [selectedStock, setSelectedStock] = useState(null);
+
   const [watchlists, setWatchlists] = useState([]);
   const [selectedList, setSelectedList] = useState(null);
   const [portfolioRiskData, setPortfolioRiskData] = useState([]);

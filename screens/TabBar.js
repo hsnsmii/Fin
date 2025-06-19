@@ -100,7 +100,6 @@ export default function MainTabs() {
         }}
       />
       <Tab.Screen
-      <Tab.Screen
         name="Menu"
         component={MenuScreen}
         options={{
