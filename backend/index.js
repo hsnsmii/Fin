@@ -106,6 +106,10 @@ app.get('/user/:id', async (req, res) => {
 const watchlistsRoute = require('./routes/watchlists')(pool); // ← dikkat: fonksiyon çağrısı
 app.use('/api/watchlists', watchlistsRoute);
 
+// 📈 Stocks routes - static list of symbols
+const stocksRoute = require('./routes/stocks');
+app.use('/api/stocks', stocksRoute);
+
 
 // 🚀 Başlat
 app.listen(port, () => {

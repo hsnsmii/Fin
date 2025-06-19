@@ -130,7 +130,13 @@ const HomeScreen = () => {
 
   const deleteWatchlist = async (listId) => {
 
-    Alert.alert("Yapım Aşamasında", "Bu özellik yakında eklenecektir.");
+    try {
+      await axios.delete(`${API_BASE_URL}/api/watchlists/${listId}`);
+      setWatchlists(current => current.filter(l => l.id !== listId));
+    } catch (err) {
+      console.error('Liste silinemedi', err);
+      Alert.alert('Hata', 'Liste silinirken bir sorun oluştu.');
+    }
 
   };
 

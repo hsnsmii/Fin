@@ -117,6 +117,18 @@ router.post('/:listId/stocks', async (req, res) => {
       res.status(500).json({ error: err.message });
     }
   });
+
+  // DELETE /api/watchlists/:listId
+  router.delete('/:listId', async (req, res) => {
+    const { listId } = req.params;
+    try {
+      await pool.query('DELETE FROM watchlist_stocks WHERE watchlist_id = $1', [listId]);
+      await pool.query('DELETE FROM watchlists WHERE id = $1', [listId]);
+      res.sendStatus(204);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
   
 
   return router;
