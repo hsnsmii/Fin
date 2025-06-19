@@ -11,17 +11,17 @@ import { API_BASE_URL, ML_BASE_URL } from '../services/config';
 import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/native';
 
 const AppColors = {
-  background: '#F4F6F8',
-  cardBackground: '#FFFFFF',
-  primaryText: '#2C3E50',
-  secondaryText: '#7F8C8D',
-  tertiaryText: '#B0BEC5',
-  primaryAction: '#3498DB',
-  separator: '#E0E6ED',
-  riskLow: '#5DADE2',
-  riskMedium: '#F39C12',
-  riskHigh: '#E74C3C',
-  white: '#FFFFFF',
+  background: '#F8F9FA',          
+  cardBackground: '#FFFFFF',      
+  primaryText: '#1F2937',         
+  secondaryText: '#6B7280',       
+  tertiaryText: '#E5E7EB',        
+  primaryAction: '#1A237E',       
+  separator: '#E5E7EB',           
+  riskLow: '#10B981',             
+  riskMedium: '#F59E0B',          
+  riskHigh: '#EF4444',            
+  white: '#FFFFFF',               
 };
 
 // ==========================
