@@ -1,4 +1,8 @@
 import unittest
+import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from portfolio_risk import (
     calculate_portfolio_risk_advanced,
     value_at_risk,
