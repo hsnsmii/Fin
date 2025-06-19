@@ -117,7 +117,7 @@ const GlossaryScreen = ({ navigation }) => {
           onPress={() => navigation.goBack()}
           activeOpacity={0.8}
         >
-          <FontAwesome name="arrow-left" size={20} color="#3498db" />
+          <FontAwesome name="arrow-left" size={20} color="#1A237E" />
         </TouchableOpacity>
         <Text style={styles.mainTitle}>Finover Yatırımcı Sözlüğü</Text>
         {}
@@ -152,13 +152,13 @@ const GlossaryScreen = ({ navigation }) => {
 };
 
 const COLORS = {
-  primary: '#004D40',
-  secondary: '#1A237E',
-  background: '#f7f9fc',
-  cardBackground: '#ffffff',
-  text: '#333333',
-  textSecondary: '#666666',
-  border: '#E0E0E0',
+  primary: '#1A237E',          
+  secondary: '#10B981',        
+  background: '#F8F9FA',       
+  cardBackground: '#FFFFFF',   
+  text: '#1F2937',             
+  textSecondary: '#6B7280',    
+  border: '#E5E7EB',           
 };
 
 const styles = StyleSheet.create({
