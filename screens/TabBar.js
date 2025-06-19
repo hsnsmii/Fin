@@ -38,8 +38,8 @@ export default function MainTabs() {
           fontSize: 10,
           fontWeight: '500',
         },
-        tabBarActiveTintColor: '#2196F3',
-        tabBarInactiveTintColor: '#BBBBBB',
+        tabBarActiveTintColor: '#10B981',
+        tabBarInactiveTintColor: '#6B7280',
         headerShown: false,
       }}
     >
