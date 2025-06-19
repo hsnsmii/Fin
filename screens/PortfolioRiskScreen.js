@@ -194,9 +194,20 @@ const PortfolioRiskScreen = () => {
     const lists = await fetchWatchlists();
     try {
       const recRes = await fetch(`${ML_BASE_URL}/recommend-low-risk`);
+      if (!recRes.ok) {
+        const err = await recRes.text();
+        console.error('Recommendation API error:', err);
+        throw new Error(err);
+      }
       const recData = await recRes.json();
-      setRecommendations(recData);
+      if (Array.isArray(recData)) {
+        setRecommendations(recData);
+      } else {
+        console.error('Unexpected recommendation format:', recData);
+        setRecommendations([]);
+      }
     } catch (e) {
+      console.error('Failed to load recommendations', e);
       setRecommendations([]);
     }
 
