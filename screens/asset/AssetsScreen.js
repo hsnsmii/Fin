@@ -139,7 +139,9 @@ const AssetsScreen = () => {
     return unsubscribe;
   }, [navigation]);
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({ item }) => {
+  console.log('Navigating with item:', item); // ekle
+
     <TouchableOpacity
       style={styles.portfolioItem}
       onPress={() =>
@@ -169,7 +171,7 @@ const AssetsScreen = () => {
         <Icon name="chevron-right" size={24} color={COLORS.textSecondary} />
       )}
     </TouchableOpacity>
-  );
+  };
 
   if (loading) {
     return (
