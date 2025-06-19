@@ -101,7 +101,7 @@ const HomeScreen = () => {
         console.warn('Kullanıcı ID bulunamadı.');
         return;
       }
-      const res = await axios.get(`${API_BASE_URL}/api/watchlists/${userId}`);
+      const res = await axios.get(`${API_BASE_URL}/api/watchlists/${userId}?type=watchlist`);
       setWatchlists(res.data);
     } catch (err) {
       console.error('Takip listesi çekme hatası', err);
@@ -118,6 +118,7 @@ const HomeScreen = () => {
       const res = await axios.post(`${API_BASE_URL}/api/watchlists`, {
         name: newListName.trim(),
         user_id: userId,
+        type: 'watchlist',
       });
       setWatchlists(prev => [...prev, res.data]);
       setNewListName('');
