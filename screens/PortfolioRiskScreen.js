@@ -298,17 +298,21 @@ const PortfolioRiskScreen = () => {
       // Advanced analysis via backend
       const riskMap = {};
       results.forEach((r) => { riskMap[r.symbol] = r.risk; });
-      const positions = stocks.map((s) => ({
-        symbol: s.symbol,
-        quantity: s.quantity || 1,
-        price: s.price || 1,
-        risk_score: (riskMap[s.symbol] || 0) / 100,
-        sector: sectorMap[s.symbol] || 'Unknown',
-      }));
 
-      const values = positions.map(p => (p.quantity || 0) * (p.price || 0));
+      // Only include positions with a valid risk score
+      const positions = stocks
+        .filter((s) => riskMap[s.symbol] !== undefined)
+        .map((s) => ({
+          symbol: s.symbol,
+          quantity: s.quantity || 1,
+          price: s.price || 1,
+          risk_score: riskMap[s.symbol] / 100,
+          sector: sectorMap[s.symbol] || 'Unknown',
+        }));
+
+      const values = positions.map((p) => (p.quantity || 0) * (p.price || 0));
       const totalValue = values.reduce((acc, v) => acc + v, 0);
-      if (totalValue > 0) {
+      if (totalValue > 0 && positions.length > 0) {
         let wRisk = 0;
         positions.forEach((p, idx) => {
           const weight = values[idx] / totalValue;
