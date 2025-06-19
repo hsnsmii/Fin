@@ -90,14 +90,33 @@ export const getIncomeStatement = async (symbol) => {
 
 export const getPriceOnDate = async (symbol, date) => {
   try {
-    const formatted = typeof date === 'string' ? date.split('T')[0] : date.toISOString().split('T')[0];
-    const res = await fetch(
+    const formatted =
+      typeof date === 'string' ? date.split('T')[0] : date.toISOString().split('T')[0];
+
+    let res = await fetch(
       `https://financialmodelingprep.com/api/v3/historical-price-full/${symbol}?from=${formatted}&to=${formatted}&apikey=${FMP_API_KEY}`
     );
-    const data = await res.json();
+    let data = await res.json();
+
     if (data && data.historical && data.historical.length > 0) {
       return parseFloat(data.historical[0].close);
     }
+
+    // FMP does not provide data for weekends/holidays
+    const start = new Date(formatted);
+    start.setDate(start.getDate() - 5);
+    const fallbackFrom = start.toISOString().split('T')[0];
+
+    res = await fetch(
+      `https://financialmodelingprep.com/api/v3/historical-price-full/${symbol}?from=${fallbackFrom}&to=${formatted}&apikey=${FMP_API_KEY}`
+    );
+    data = await res.json();
+
+    if (data && data.historical && data.historical.length > 0) {
+      const last = data.historical[data.historical.length - 1];
+      return parseFloat(last.close);
+    }
+
     return null;
   } catch (error) {
     console.error(`Price on date fetch error for ${symbol}:`, error);
