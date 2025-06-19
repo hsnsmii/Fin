@@ -87,6 +87,7 @@ def predict_risk():
 @app.route("/recommend-low-risk", methods=["GET"])
 def recommend_low_risk():
     try:
+        all_scores = []
         recommendations = []
         for filename in os.listdir(MODEL_DIR):
             if filename.endswith("_risk_model.pkl"):
@@ -123,9 +124,14 @@ def recommend_low_risk():
                 model = joblib.load(model_path)
                 score = model.predict(df_model)[0]
                 risk = round(score * 100)
+                all_scores.append({"symbol": symbol, "risk_percentage": risk})
 
                 if risk < 30:
-                    recommendations.append({"symbol": symbol, "risk": risk})
+                    recommendations.append({"symbol": symbol, "risk_percentage": risk})
+
+        if not recommendations:
+            all_scores.sort(key=lambda x: x["risk_percentage"])
+            recommendations = all_scores[:3]
 
         return jsonify(recommendations)
 
