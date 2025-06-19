@@ -25,7 +25,7 @@ export default function MainTabs() {
         tabBarShowLabel: true,
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
-          height: 60, 
+          height: 80, 
           borderTopWidth: 0,
           elevation: 0,
           shadowOpacity: 0,
