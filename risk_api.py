@@ -128,7 +128,12 @@ def recommend_low_risk():
 
                 df_model = pd.DataFrame([features])
                 model = joblib.load(model_path)
-                score = model.predict(df_model)[0]
+                raw_score = model.predict(df_model)[0]
+                try:
+                    score = float(raw_score)
+                except (ValueError, TypeError):
+                    print(f"Invalid score for {symbol}: {raw_score}")
+                    continue
                 risk = round(score * 100)
                 all_scores.append({"symbol": symbol, "risk_percentage": risk})
 
