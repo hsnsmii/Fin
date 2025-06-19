@@ -122,6 +122,11 @@ const PortfolioRiskScreen = () => {
   const [selectedFeatureImportance, setSelectedFeatureImportance] = useState(null);
   const [featureModalVisible, setFeatureModalVisible] = useState(false);
 
+  const filteredRecommendations = useMemo(() => {
+    if (weightedRisk === null) return recommendations;
+    return recommendations.filter(r => r.risk_percentage < weightedRisk);
+  }, [recommendations, weightedRisk]);
+
   // Threshold for classifying a holding as high risk when sending data
   const HIGH_RISK_THRESHOLD = 0.5; // 50%
 
@@ -407,7 +412,12 @@ const PortfolioRiskScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.headerContainer}>
-        <Text style={styles.headerTitle}>Portföy Risk Değerlendirmesi</Text>
+        <View style={styles.headerTopRow}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color={AppColors.primaryAction} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Portföy Risk Değerlendirmesi</Text>
+        </View>
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.listSelectorButton} onPress={() => setModalVisible(true)}>
             <Ionicons name="list-circle-outline" size={22} color={AppColors.primaryAction} />
@@ -460,7 +470,7 @@ const PortfolioRiskScreen = () => {
                 </View>
               </View>
               <Text style={styles.summaryCardSubtitle}>
-                Portföyünüzdeki varlıkların ortalama risk seviyesini gösterir.
+                Portföyünüzdeki varlıkların ağırlıklı ortalama risk seviyesini gösterir.
               </Text>
             </View>
           )}
@@ -642,11 +652,11 @@ const PortfolioRiskScreen = () => {
         </TouchableOpacity>
       </Modal>
 
-          {recommendations.length > 0 && (
+          {filteredRecommendations.length > 0 && (
             <View style={styles.sectionCard}>
               <Text style={styles.sectionTitle}>Düşük Riskli Hisse Önerileri</Text>
-              {recommendations.map((rec, index) => (
-                <View key={`${rec.symbol}-${index}`} style={[styles.recommendationItem, index === recommendations.length - 1 && styles.recommendationItemLast]}>
+              {filteredRecommendations.map((rec, index) => (
+                <View key={`${rec.symbol}-${index}`} style={[styles.recommendationItem, index === filteredRecommendations.length - 1 && styles.recommendationItemLast]}>
                   <Ionicons
                     name={"bulb-outline"}
                     size={24}
@@ -661,6 +671,12 @@ const PortfolioRiskScreen = () => {
                   </View>
                 </View>
               ))}
+            </View>
+          )}
+          {filteredRecommendations.length === 0 && recommendations.length > 0 && (
+            <View style={styles.sectionCard}>
+              <Text style={styles.sectionTitle}>Düşük Riskli Hisse Önerileri</Text>
+              <Text style={styles.emptyStateMessage}>Portföy riskinizden düşük öneri bulunamadı.</Text>
             </View>
           )}
 
@@ -816,6 +832,18 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
+  },
+  headerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    marginBottom: 8,
+  },
+  backButton: {
+    padding: 4,
+    borderRadius: 20,
+    backgroundColor: AppColors.background,
+    marginRight: 8,
   },
   headerTitle: {
     fontSize: 20,
