@@ -29,11 +29,11 @@ export default function RegisterScreen({ navigation }) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const { t } = useLocalization();
 
-  // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
   useEffect(() => {
+
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -50,24 +50,25 @@ export default function RegisterScreen({ navigation }) {
   }, []);
 
   const handleRegister = async () => {
+
     if (!username || !email || !password) {
-      Alert.alert(t('Error'), t('Please fill in all fields.'));
+      Alert.alert(t('Hata'), t('Lütfen tüm alanları doldurun.'));
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert(t('Error'), t('Please enter a valid email address'));
+      Alert.alert(t('Hata'), t('Lütfen geçerli bir e-posta adresi girin.'));
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert(t('Error'), t('Password should be at least 6 characters'));
+      Alert.alert(t('Hata'), t('Şifre en az 6 karakter olmalıdır.'));
       return;
     }
 
     setIsLoading(true);
-    Keyboard.dismiss();
+    Keyboard.dismiss(); 
 
     try {
       const response = await fetch(`${API_BASE_URL}/register`, {
@@ -79,8 +80,8 @@ export default function RegisterScreen({ navigation }) {
       const data = await response.json();
 
       if (response.ok) {
-        Alert.alert(t('Success'), t('Registration successful!'));
-        // Animate out before navigating
+        Alert.alert(t('Başarılı'), t('Kayıt başarılı!'));
+
         Animated.parallel([
           Animated.timing(fadeAnim, {
             toValue: 0,
@@ -96,10 +97,11 @@ export default function RegisterScreen({ navigation }) {
           navigation.navigate('Login', { fromRegister: true });
         });
       } else {
-        Alert.alert(t('Error'), data.error || t('Registration failed'));
+
+        Alert.alert(t('Hata'), data.error || t('Kayıt işlemi başarısız oldu.'));
       }
     } catch (error) {
-      Alert.alert(t('Error'), t('Something went wrong'));
+      Alert.alert(t('Hata'), t('Bir şeyler ters gitti.'));
     } finally {
       setIsLoading(false);
     }
@@ -114,10 +116,10 @@ export default function RegisterScreen({ navigation }) {
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="dark-content" backgroundColor="#f6fbfd" />
 
-        {/* Animated Logo Banner */}
+        {}
         <AnimatedLogoBanner logoSource={LOGO} />
 
-        {/* Back Button */}
+        {}
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.navigate('Login')}
@@ -125,21 +127,21 @@ export default function RegisterScreen({ navigation }) {
           <Ionicons name="arrow-back" size={24} color="#0B0B45" />
         </TouchableOpacity>
 
-        {/* Registration Card */}
+        {}
         <Animated.View
           style={[
             styles.card,
             { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
           ]}
         >
-          <Text style={styles.title}>{t('Create Account')}</Text>
-          <Text style={styles.subtitle}>{t('Sign up to get started')}</Text>
+          <Text style={styles.title}>{t('Hesap Oluştur')}</Text>
+          <Text style={styles.subtitle}>{t('Başlamak için kaydolun')}</Text>
 
           <View style={styles.formContainer}>
             <View style={styles.inputWrapper}>
-              <Text style={styles.label}>{t('NAME')}</Text>
+              <Text style={styles.label}>{t('İSİM')}</Text>
               <TextInput
-                placeholder={t('Full Name')}
+                placeholder={t('Tam Adınız')}
                 value={username}
                 onChangeText={setUsername}
                 style={styles.input}
@@ -149,9 +151,9 @@ export default function RegisterScreen({ navigation }) {
             </View>
 
             <View style={styles.inputWrapper}>
-              <Text style={styles.label}>{t('Email')}</Text>
+              <Text style={styles.label}>{t('E-POSTA')}</Text>
               <TextInput
-                placeholder={t('Email Address')}
+                placeholder={t('E-posta Adresiniz')}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -162,10 +164,10 @@ export default function RegisterScreen({ navigation }) {
             </View>
 
             <View style={styles.inputWrapper}>
-              <Text style={styles.label}>{t('PASSWORD')}</Text>
+              <Text style={styles.label}>{t('ŞİFRE')}</Text>
               <View style={styles.passwordContainer}>
                 <TextInput
-                  placeholder={t('Password')}
+                  placeholder={t('Şifre')}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!isPasswordVisible}
@@ -177,11 +179,10 @@ export default function RegisterScreen({ navigation }) {
                   style={styles.eyeButton}
                 >
                   <Ionicons
-  name={isPasswordVisible ? 'eye' : 'eye-off'}
-  size={22}
-  color="#0B0B45" // <-- burada
-/>
-
+                    name={isPasswordVisible ? 'eye' : 'eye-off'}
+                    size={22}
+                    color="#0B0B45"
+                  />
                 </TouchableOpacity>
               </View>
             </View>
@@ -194,12 +195,12 @@ export default function RegisterScreen({ navigation }) {
               {isLoading ? (
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
-                <Text style={styles.registerButtonText}>{t('Register')}</Text>
+                <Text style={styles.registerButtonText}>{t('Kayıt Ol')}</Text>
               )}
             </TouchableOpacity>
 
             <View style={styles.loginContainer}>
-              <Text style={styles.loginText}>{t('Already have an account? ')}</Text>
+              <Text style={styles.loginText}>{t('Zaten bir hesabınız var mı? ')}</Text>
               <TouchableOpacity
                 onPress={() => {
                   Animated.parallel([
@@ -218,7 +219,7 @@ export default function RegisterScreen({ navigation }) {
                   });
                 }}
               >
-                <Text style={styles.loginLink}>{t('Login')}</Text>
+                <Text style={styles.loginLink}>{t('Giriş Yap')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -227,14 +228,15 @@ export default function RegisterScreen({ navigation }) {
     </TouchableWithoutFeedback>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f6fbfd',
+    backgroundColor: '#F8F9FA',
   },
   card: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
     marginTop: -16,
     borderTopRightRadius: 56,
     borderTopLeftRadius: 56,
@@ -267,12 +269,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#0B0B45',
+    color: '#1A237E',
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
-    color: '#718096',
+    color: '#6B7280',
     fontSize: 16,
     marginBottom: 28,
     textAlign: 'center',
@@ -287,20 +289,20 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#4a5568',
+    color: '#4B5563',
     marginBottom: 8,
     letterSpacing: 0.5,
   },
   input: {
     height: 48,
-    backgroundColor: '#f7fafc',
+    backgroundColor: '#F8F9FA',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#E5E7EB',
     paddingHorizontal: 16,
     fontSize: 16,
-    color: '#2d3748',
-    shadowColor: '#718096',
+    color: '#1F2937',
+    shadowColor: '#6B7280',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 1,
@@ -308,10 +310,10 @@ const styles = StyleSheet.create({
   },
   passwordContainer: {
     flexDirection: 'row',
-    backgroundColor: '#f7fafc',
+    backgroundColor: '#F8F9FA',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#E5E7EB',
     height: 48,
     alignItems: 'center',
   },
@@ -319,7 +321,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: '#2d3748',
+    color: '#1F2937',
     height: '100%',
   },
   eyeButton: {
@@ -328,12 +330,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   registerButton: {
-    backgroundColor: '#0B0B45',
+    backgroundColor: '#1A237E',
     borderRadius: 8,
     height: 48,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#0B0B45',
+    shadowColor: '#1A237E',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.13,
     shadowRadius: 2,
@@ -354,11 +356,11 @@ const styles = StyleSheet.create({
     paddingBottom: 18,
   },
   loginText: {
-    color: '#718096',
+    color: '#6B7280',
     fontSize: 14,
   },
   loginLink: {
-    color: '#0B0B45',
+    color: '#1A237E',
     fontSize: 14,
     fontWeight: '600',
     marginLeft: 3,

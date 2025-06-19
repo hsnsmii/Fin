@@ -11,17 +11,17 @@ import { API_BASE_URL, ML_BASE_URL } from '../services/config';
 import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/native';
 
 const AppColors = {
-  background: '#F4F6F8',
-  cardBackground: '#FFFFFF',
-  primaryText: '#2C3E50',
-  secondaryText: '#7F8C8D',
-  tertiaryText: '#B0BEC5',
-  primaryAction: '#3498DB',
-  separator: '#E0E6ED',
-  riskLow: '#5DADE2',
-  riskMedium: '#F39C12',
-  riskHigh: '#E74C3C',
-  white: '#FFFFFF',
+  background: '#F8F9FA',          
+  cardBackground: '#FFFFFF',      
+  primaryText: '#1F2937',         
+  secondaryText: '#6B7280',       
+  tertiaryText: '#E5E7EB',        
+  primaryAction: '#1A237E',       
+  separator: '#E5E7EB',           
+  riskLow: '#10B981',             
+  riskMedium: '#F59E0B',          
+  riskHigh: '#EF4444',            
+  white: '#FFFFFF',               
 };
 
 // ==========================
@@ -506,56 +506,73 @@ const PortfolioRiskScreen = () => {
             </View>
           )}
 
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>Hisse Senedi Bazlı Riskler</Text>
-            {portfolioRiskData.map((item, index) => (
-              <TouchableOpacity
-                key={item.symbol}
-                style={[styles.stockItemCard, index === portfolioRiskData.length - 1 && styles.stockItemCardLast]}
-                onPress={() => {
-                  const breakdown = item.breakdown || {};
-                  Alert.alert(
-                    `${item.symbol} Risk Detayları`,
-                    `Risk Puanı: ${item.risk}% (${getRiskCategoryText(item.risk)})\n\n` +
-                    `RSI (14): ${breakdown.rsi?.toFixed(1) || 'N/A'}\n` +
-                    `SMA (20): ${breakdown.sma_20?.toFixed(1) || 'N/A'}\n` +
-                    `Volatilite (20 Gün): ${breakdown.volatility ? (breakdown.volatility * 100).toFixed(2) + '%' : 'N/A'}\n` +
-                    `Beta: ${breakdown.beta?.toFixed(3) || 'N/A'}`,
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={isRiskModalVisible}
+        onRequestClose={() => setRiskModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPressOut={() => setRiskModalVisible(false)}
+        >
+          <View
+            style={styles.modalContainer}
+            onStartShouldSetResponder={() => true}
+          >
+            {selectedStock && (
+              <>
+                <Text style={styles.modalTitleAlert}>
+                  {selectedStock.symbol} Risk Detayları
+                </Text>
 
-                    [
-                      { text: "Kapat", style: "cancel" },
-                      {
-                        text: "Detaylı Açıklama",
-                        onPress: () => fetchFeatureImportance(item.symbol, breakdown),
-                      },
-                    ]
-                  );
+                <View style={styles.modalRow}>
+                  <Text style={styles.modalLabel}>Risk Puanı</Text>
+                  <Text style={[styles.modalValue, {color: getColorByRisk(selectedStock.risk)}]}>{selectedStock.risk}% ({getRiskCategoryText(selectedStock.risk)})</Text>
+                </View>
+                <View style={styles.separator} />
+                
+                <View style={styles.modalRow}>
+                  <Text style={styles.modalLabel}>RSI (14)</Text>
+                  <Text style={styles.modalValue}>{selectedStock.breakdown?.rsi?.toFixed(1) || 'N/A'}</Text>
+                </View>
+                <View style={styles.separator} />
+                
+                <View style={styles.modalRow}>
+                  <Text style={styles.modalLabel}>SMA (20)</Text>
+                  <Text style={styles.modalValue}>{selectedStock.breakdown?.sma_20?.toFixed(1) || 'N/A'}</Text>
+                </View>
+                <View style={styles.separator} />
+                
+                <View style={styles.modalRow}>
+                  <Text style={styles.modalLabel}>Volatilite (20 Gün)</Text>
+                  <Text style={styles.modalValue}>{selectedStock.breakdown?.volatility ? (selectedStock.breakdown.volatility * 100).toFixed(2) + '%' : 'N/A'}</Text>
+                </View>
+                <View style={styles.separator} />
 
-                }}
-              >
-                <View style={[styles.stockItemRiskBar, { backgroundColor: getColorByRisk(item.risk) }]} />
-                <View style={styles.stockItemInfo}>
-                  <Text style={styles.stockItemSymbol}>{item.symbol}</Text>
-                  <Text style={styles.stockItemDetailText}>
-                    Vol: {item.breakdown?.volatility ? (item.breakdown.volatility * 100).toFixed(1) + '%' : 'N/A'}, Beta: {item.breakdown?.beta?.toFixed(1) || 'N/A'}, RSI: {item.breakdown?.rsi?.toFixed(0) || 'N/A'}
-                  </Text>
+                <View style={styles.modalRow}>
+                  <Text style={styles.modalLabel}>Beta</Text>
+                  <Text style={styles.modalValue}>{selectedStock.breakdown?.beta?.toFixed(3) || 'N/A'}</Text>
                 </View>
-                <View style={styles.stockItemRiskValue}>
-                  <Text style={[styles.stockItemRiskPercent, { color: getColorByRisk(item.risk) }]}>
-                    {item.risk}%
-                  </Text>
-                  <Text style={[styles.stockItemRiskCategory, { color: getColorByRisk(item.risk) }]}>
-                    {getRiskCategoryText(item.risk)}
-                  </Text>
+
+                <View style={styles.modalButtonContainer}>
+                  <TouchableOpacity
+                    onPress={() => setRiskModalVisible(false)}
+                    style={[styles.modalButton, styles.primaryButton]}
+                  >
+                    <Text style={[styles.modalButtonText, styles.primaryButtonText]}>Kapat</Text>
+                  </TouchableOpacity>
                 </View>
-                <Ionicons name="chevron-forward" size={22} color={AppColors.tertiaryText} />
-              </TouchableOpacity>
-            ))}
+              </>
+            )}
           </View>
+        </TouchableOpacity>
+      </Modal>
 
           {recommendations.length > 0 && (
             <View style={styles.sectionCard}>
-              <Text style={styles.sectionTitle}>📉 Düşük Riskli Hisse Önerileri</Text>
+              <Text style={styles.sectionTitle}>Düşük Riskli Hisse Önerileri</Text>
               {recommendations.map((rec, index) => (
                 <View key={`${rec.symbol}-${index}`} style={[styles.recommendationItem, index === recommendations.length - 1 && styles.recommendationItemLast]}>
                   <Ionicons
@@ -660,24 +677,6 @@ const PortfolioRiskScreen = () => {
         transparent
         onRequestClose={() => setFeatureModalVisible(false)}
       >
-        <View style={[styles.modalOverlay, { justifyContent: 'center', alignItems: 'center' }]}>
-          <View style={[styles.modalContainer, { padding: 24, maxWidth: 320 }]}>
-            <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 12 }}>
-              {selectedFeatureImportance?.symbol} Feature Importance (AI Açıklaması)
-            </Text>
-            {selectedFeatureImportance && Object.entries(selectedFeatureImportance.feature_importance).map(([key, value]) => (
-              <Text key={key} style={{ fontSize: 14, marginBottom: 6 }}>
-                {key}: {parseFloat(value).toFixed(4)}
-              </Text>
-            ))}
-            <TouchableOpacity
-              onPress={() => setFeatureModalVisible(false)}
-              style={[styles.emptyStateButton, { marginTop: 18 }]}
-            >
-              <Text style={styles.emptyStateButtonText}>Kapat</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
       </Modal>
     </SafeAreaView>
   );
@@ -1084,6 +1083,72 @@ const styles = StyleSheet.create({
     padding: 20,
     fontSize: 15,
     color: AppColors.secondaryText,
+  },
+  modalOverlayAlert: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContainerAlert: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    width: '100%',
+    maxWidth: 340,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+  },
+  modalTitleAlert: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1C1C1E',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  modalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  modalLabel: {
+    fontSize: 16,
+    color: '#555',
+  },
+  modalValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1C1C1E',
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#EFEFEF',
+  },
+  modalButtonContainer: {
+    marginTop: 24,
+  },
+  modalButton: {
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 10,
+    backgroundColor: '#F0F0F0',
+  },
+  primaryButton: {
+    backgroundColor: '#007AFF', 
+  },
+  modalButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#007AFF',
+  },
+  primaryButtonText: {
+    color: '#FFFFFF',
   },
 });
 

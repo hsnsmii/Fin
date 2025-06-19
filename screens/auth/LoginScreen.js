@@ -27,19 +27,20 @@ export default function LoginScreen({ navigation, route }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const { t } = useLocalization();
+  const { t } = useLocalization(); 
 
-  // Animasyonlar (login kartı için)
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
   useEffect(() => {
+
     const fromRegister = route?.params?.fromRegister;
     if (fromRegister) {
       slideAnim.setValue(-30);
     } else {
       slideAnim.setValue(30);
     }
+
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -58,11 +59,11 @@ export default function LoginScreen({ navigation, route }) {
   const handleLogin = async () => {
     setErrorMessage('');
     if (!email || !password) {
-      setErrorMessage(t('Please fill in all fields.'));
+      setErrorMessage(t('Lütfen tüm alanları doldurun.'));
       return;
     }
     setIsLoading(true);
-    Keyboard.dismiss();
+    Keyboard.dismiss(); 
     try {
       const response = await fetch(`${API_BASE_URL}/login`, {
         method: 'POST',
@@ -71,17 +72,19 @@ export default function LoginScreen({ navigation, route }) {
       });
       const data = await response.json();
       if (response.ok) {
+
         await AsyncStorage.setItem('token', data.token);
         await AsyncStorage.setItem('userId', data.userId.toString());
+
         navigation.reset({
           index: 0,
           routes: [{ name: 'Main' }],
         });
       } else {
-        setErrorMessage(data.error || t('Login failed'));
+        setErrorMessage(data.error || t('Giriş yapılamadı'));
       }
     } catch (error) {
-      setErrorMessage(t('Something went wrong'));
+      setErrorMessage(t('Bir hata oluştu'));
     } finally {
       setIsLoading(false);
     }
@@ -92,7 +95,7 @@ export default function LoginScreen({ navigation, route }) {
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="dark-content" backgroundColor="#f5f7fa" />
 
-        {/* En üstte animasyonlu logo banner */}
+        {}
         <AnimatedLogoBanner logoSource={LOGO} />
 
         <Animated.View
@@ -101,16 +104,16 @@ export default function LoginScreen({ navigation, route }) {
             { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
           ]}
         >
-          <Text style={styles.title}>{t('Login')}</Text>
-          <Text style={styles.subtitle}>{t('Welcome back! Please login.')}</Text>
+          <Text style={styles.title}>{t('Giriş Yap')}</Text>
+          <Text style={styles.subtitle}>{t('Tekrar hoş geldiniz! Lütfen giriş yapın.')}</Text>
 
           <View style={styles.formContainer}>
-            {/* E-Mail */}
+            {}
             <View style={styles.inputWrapper}>
-              <Text style={styles.label}>{t('Email')}</Text>
+              <Text style={styles.label}>{t('E-POSTA')}</Text>
               <TextInput
                 style={styles.input}
-                placeholder={t('Email Address')}
+                placeholder={t('E-posta Adresiniz')}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -119,18 +122,19 @@ export default function LoginScreen({ navigation, route }) {
               />
             </View>
 
-            {/* Password */}
+            {}
             <View style={styles.inputWrapper}>
-              <Text style={styles.label}>{t('PASSWORD')}</Text>
+              <Text style={styles.label}>{t('PAROLA')}</Text>
               <View style={styles.passwordContainer}>
                 <TextInput
                   style={styles.passwordInput}
-                  placeholder={t('Password')}
-                  secureTextEntry={!isPasswordVisible}
+                  placeholder={t('Parolanız')}
+                  secureTextEntry={!isPasswordVisible} 
                   value={password}
                   onChangeText={setPassword}
                   placeholderTextColor="#a0aec0"
                 />
+                {}
                 <TouchableOpacity onPress={() => setIsPasswordVisible(v => !v)} style={styles.eyeButton}>
                   <Ionicons
                     name={isPasswordVisible ? 'eye-off' : 'eye'}
@@ -141,17 +145,17 @@ export default function LoginScreen({ navigation, route }) {
               </View>
             </View>
 
-            {/* Error message */}
+            {}
             {errorMessage ? (
               <Text style={styles.errorMessage}>{errorMessage}</Text>
             ) : null}
 
-            {/* Forgot Password */}
+            {}
             <TouchableOpacity style={styles.forgotPassword}>
-              <Text style={styles.forgotPasswordText}>{t('Forgot Password?')}</Text>
+              <Text style={styles.forgotPasswordText}>{t('Parolanızı mı unuttunuz?')}</Text>
             </TouchableOpacity>
 
-            {/* Login Button */}
+            {}
             <TouchableOpacity
               style={styles.loginButton}
               onPress={handleLogin}
@@ -160,15 +164,15 @@ export default function LoginScreen({ navigation, route }) {
               {isLoading ? (
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
-                <Text style={styles.loginButtonText}>{t('Login')}</Text>
+                <Text style={styles.loginButtonText}>{t('Giriş Yap')}</Text>
               )}
             </TouchableOpacity>
 
-            {/* Register link */}
+            {}
             <View style={styles.registerContainer}>
-              <Text style={styles.footerText}>{t("Don't have an account? ")}</Text>
+              <Text style={styles.footerText}>{t('Hesabınız yok mu? ')}</Text>
               <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-                <Text style={styles.registerLink}>{t('Signup')}</Text>
+                <Text style={styles.registerLink}>{t('Kayıt Ol')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -181,11 +185,11 @@ export default function LoginScreen({ navigation, route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f7fa', // Arka planı çok açık mavi/turkuaz
+    backgroundColor: '#F8F9FA', 
   },
   card: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
     marginTop: -16,
     borderTopRightRadius: 56,
     borderTopLeftRadius: 56,
@@ -201,12 +205,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#0B0B45',
+    color: '#1F2937',
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
-    color: '#718096',
+    color: '#6B7280',
     fontSize: 16,
     marginBottom: 28,
     textAlign: 'center',
@@ -221,20 +225,20 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#4a5568',
+    color: '#4B5563',
     marginBottom: 8,
     letterSpacing: 0.5,
   },
   input: {
     height: 48,
-    backgroundColor: '#f7fafc',
+    backgroundColor: '#F8F9FA',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#E5E7EB',
     paddingHorizontal: 16,
     fontSize: 16,
-    color: '#2d3748',
-    shadowColor: '#718096',
+    color: '#1F2937',
+    shadowColor: '#6B7280',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
@@ -242,13 +246,13 @@ const styles = StyleSheet.create({
   },
   passwordContainer: {
     flexDirection: 'row',
-    backgroundColor: '#f7fafc',
+    backgroundColor: '#F8F9FA',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#E5E7EB',
     height: 48,
     alignItems: 'center',
-    shadowColor: '#718096',
+    shadowColor: '#6B7280',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
@@ -258,7 +262,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: '#2d3748',
+    color: '#1F2937',
     height: '100%',
   },
   eyeButton: {
@@ -267,7 +271,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   errorMessage: {
-    color: '#e53e3e',
+    color: '#EF4444',
     fontSize: 14,
     marginTop: -12,
     marginBottom: 16,
@@ -278,25 +282,25 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   forgotPasswordText: {
-    color: '#0B0B45',
+    color: '#1A237E',
     fontSize: 14,
     fontWeight: '500',
   },
   loginButton: {
-    backgroundColor: '#0B0B45',
+    backgroundColor: '#1A237E',
     borderRadius: 8,
     height: 48,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
-    shadowColor: '#2b6cb0',
+    shadowColor: '#294172',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
     elevation: 2,
   },
   loginButtonText: {
-    color: '#ffffff',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -308,11 +312,11 @@ const styles = StyleSheet.create({
     paddingBottom: 18,
   },
   footerText: {
-    color: '#718096',
+    color: '#6B7280',
     fontSize: 14,
   },
   registerLink: {
-    color: '#0B0B45',
+    color: '#1A237E',
     fontSize: 14,
     fontWeight: '600',
     marginLeft: 3,

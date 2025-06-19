@@ -3,8 +3,7 @@ import { StyleSheet } from 'react-native';
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F8F9FA', 
   },
   titleContainer: {
     marginBottom: 24,
@@ -13,38 +12,41 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#2c3e50',
-    marginBottom: 8,
+    color: '#1F2937', 
+    marginBottom: 4,
+    textAlign: 'center',
+    marginTop: 20,
   },
   subtitle: {
     fontSize: 16,
-    color: '#7f8c8d',
+    color: '#6B7280', 
     textAlign: 'center',
+    padding: 20,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#FFFFFF', 
     borderRadius: 28,
     paddingHorizontal: 15,
     marginBottom: 24,
-    shadowColor: '#000',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 5,
     elevation: 3,
     height: 56,
     borderWidth: 1,
-    borderColor: '#f0f0f0',
+    borderColor: '#E5E7EB', 
   },
   searchInput: {
     flex: 1,
     padding: 12,
     fontSize: 16,
-    color: '#2c3e50',
+    color: '#1F2937', 
   },
   searchIcon: {
-    color: '#3498db',
+    color: '#1A237E', 
     marginRight: 5,
   },
   categoryChip: {
@@ -52,37 +54,37 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
     marginRight: 10,
-    backgroundColor: '#f5f7fa',
+    backgroundColor: '#F8F9FA', 
     minWidth: 100,
     alignItems: 'center',
   },
   categoryChipActive: {
-    backgroundColor: '#3498db',
+    backgroundColor: '#1A237E', 
   },
   categoryText: {
     fontSize: 15,
     fontWeight: '500',
-    color: '#7f8c8d',
+    color: '#6B7280', 
   },
   categoryTextActive: {
-    color: '#ffffff',
+    color: '#FFFFFF', 
     fontWeight: '600',
   },
   questionsContainer: {
     flex: 1,
   },
   questionContainer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#FFFFFF', 
     borderRadius: 12,
     marginBottom: 12,
-    shadowColor: '#000',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 4,
     elevation: 2,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#f0f0f0',
+    borderColor: '#E5E7EB', 
   },
   questionHeader: {
     flexDirection: 'row',
@@ -93,7 +95,7 @@ const styles = StyleSheet.create({
   questionText: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#2c3e50',
+    color: '#1F2937', 
     flex: 1,
     marginRight: 12,
     lineHeight: 24,
@@ -102,23 +104,22 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#f1f8fe',
+    backgroundColor: '#E5E7EB', 
     justifyContent: 'center',
     alignItems: 'center',
   },
   answerContainer: {
     padding: 18,
     paddingTop: 0,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#F8F9FA', 
     borderTopWidth: 1,
-    borderTopColor: '#ecf0f1',
+    borderTopColor: '#E5E7EB', 
   },
   answerText: {
     fontSize: 16,
-    color: '#34495e',
+    color: '#1F2937', 
     lineHeight: 24,
   },
-  // "Tüm Soruları Göster" butonuna ait stiller kaldırıldı
   noResultsContainer: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -126,13 +127,29 @@ const styles = StyleSheet.create({
   },
   noResultsText: {
     fontSize: 18,
-    color: '#7f8c8d',
+    color: '#6B7280', 
     textAlign: 'center',
   },
   noResultsIcon: {
     marginBottom: 16,
-    color: '#bdc3c7',
-  }
+    color: '#E5E7EB', 
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+    position: 'relative',
+  },
+  backButton: {
+    position: 'absolute',
+    left: 20,
+    zIndex: 1,
+    marginTop: 70,
+  },
+  titleWrapper: {
+    alignItems: 'center',
+  },
 });
 
 export default styles;

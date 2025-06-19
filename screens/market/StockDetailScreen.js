@@ -8,18 +8,19 @@ import {
   Modal,
   Alert,
   Dimensions,
-  SafeAreaView
+  SafeAreaView,
+  Pressable,
+  useColorScheme,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LineChart } from 'react-native-chart-kit';
 import { Feather } from '@expo/vector-icons';
 
-import { getStockDetails, getStockHistory } from '../../services/fmpApi';
+import { getStockDetails, getStockHistory, getIncomeStatement } from '../../services/fmpApi';
 import { API_BASE_URL, ML_BASE_URL } from '../../services/config';
-import { styles, theme } from "../../styles/StockDetailStyle"; 
+import { getStyles, lightTheme, darkTheme } from "../../styles/StockDetailStyle";
 
 const screenWidth = Dimensions.get('window').width;
-
 
 const calculateBeta = (stockHistory, marketHistory) => {
   if (!stockHistory || !marketHistory || stockHistory.length < 21 || marketHistory.length < 21) return null;
@@ -41,9 +42,8 @@ const calculateBeta = (stockHistory, marketHistory) => {
     marketVariance += Math.pow(marketReturns[i] - meanMarket, 2);
   }
 
-  return marketVariance === 0 ? 0 : covariance / marketVariance;
+  return marketVariance === 0 ? null : covariance / marketVariance; 
 };
-
 const calculateIndicators = (history) => {
   if (!history || history.length < 20) return null;
   const closes = history.map(h => h.close).reverse();
@@ -67,44 +67,66 @@ const calculateIndicators = (history) => {
 
 const StockDetailScreen = ({ route, navigation }) => {
   const { symbol } = route.params;
+
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
+  const styles = getStyles(theme);
+
   const [stock, setStock] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [watchlists, setWatchlists] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(false); 
+  const [isBookmarked, setIsBookmarked] = useState(false);
   const [riskPercentage, setRiskPercentage] = useState(null);
-  const [timeRange, setTimeRange] = useState('1A'); 
+  const [timeRange, setTimeRange] = useState('1A');
+  const [tooltipData, setTooltipData] = useState(null);
 
   useEffect(() => {
+    setTooltipData(null);
+
     const fetchStockData = async () => {
       setLoading(true);
-      setRiskPercentage(null); 
+      setRiskPercentage(null);
       try {
 
-        const [detail, historical, marketHistorical, userId] = await Promise.all([
+        const [detail, historical, marketHistorical, incomeStatementData, userId] = await Promise.all([
           getStockDetails(symbol),
           getStockHistory(symbol, timeRange),
-          getStockHistory('SPY', timeRange), 
+          getStockHistory('SPY', timeRange),
+          getIncomeStatement(symbol), 
           AsyncStorage.getItem('userId'),
         ]);
 
-        setStock(detail);
+        const calculatedBeta = calculateBeta(historical, marketHistorical);
+
+        let calculatedPe = null;
+        if (incomeStatementData && incomeStatementData.length > 0 && detail.price) {
+          const latestEPS = incomeStatementData[0].eps;
+
+          if (latestEPS && latestEPS > 0) {
+            calculatedPe = detail.price / latestEPS;
+          }
+        }
+
+        setStock({
+          ...detail,
+          beta: calculatedBeta, 
+          pe: calculatedPe,     
+        });
+
         setHistory(historical);
 
         const indicators = calculateIndicators(historical);
-        const beta = calculateBeta(historical, marketHistorical);
 
-        if (indicators && beta !== null) {
-          const payload = { ...indicators, beta, symbol };
-          console.log("ML Modeline Gönderilen Veriler:", payload);
+        if (indicators && calculatedBeta !== null) {
+          const payload = { ...indicators, beta: calculatedBeta, symbol };
           const response = await fetch(`${ML_BASE_URL}/predict-risk`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           });
           const data = await response.json();
-          console.log("Yapay Zeka Tahmin Sonucu:", data);
           setRiskPercentage(data.risk_percentage ?? null);
         }
 
@@ -112,8 +134,7 @@ const StockDetailScreen = ({ route, navigation }) => {
           const response = await fetch(`${API_BASE_URL}/api/watchlists/${userId}`);
           const userWatchlists = await response.json();
           setWatchlists(userWatchlists);
-
-          const isStockInAnyWatchlist = userWatchlists.some(list => 
+          const isStockInAnyWatchlist = userWatchlists.some(list =>
             list.stocks && list.stocks.some(s => s.symbol === symbol)
           );
           setIsBookmarked(isStockInAnyWatchlist);
@@ -128,11 +149,12 @@ const StockDetailScreen = ({ route, navigation }) => {
     };
 
     fetchStockData();
-  }, [symbol, timeRange]); 
+  }, [symbol, timeRange]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: '',
+      title: stock ? stock.companyName : symbol,
+      headerTitleStyle: { color: theme.colors.text },
       headerBackTitleVisible: false,
       headerShadowVisible: false,
       headerStyle: { backgroundColor: theme.colors.background },
@@ -143,13 +165,12 @@ const StockDetailScreen = ({ route, navigation }) => {
             name="star"
             size={24}
             color={isBookmarked ? theme.colors.accent : theme.colors.textSecondary}
-
             fill={isBookmarked ? theme.colors.accent : 'transparent'}
           />
         </TouchableOpacity>
       ),
     });
-  }, [navigation, isBookmarked, handleAddWithFallback]); 
+  }, [navigation, isBookmarked, theme, stock, handleAddWithFallback]);
 
   const handleAddToWatchlist = async (listId) => {
     try {
@@ -171,21 +192,16 @@ const StockDetailScreen = ({ route, navigation }) => {
       Alert.alert('Hata', `Ekleme sırasında sorun oluştu: ${err.message}`);
     }
   };
-
   const handleAddWithFallback = async () => {
     if (isBookmarked) {
-
-        Alert.alert('Bilgi', `${symbol} zaten bir takip listenizde bulunuyor. Takipten çıkarmak için listelerinizi düzenleyebilirsiniz.`);
-
+        Alert.alert('Bilgi', `${symbol} zaten bir takip listenizde bulunuyor.`);
         return;
     }
-
     const userId = await AsyncStorage.getItem('userId');
     if (!userId) {
         Alert.alert("Giriş Gerekli", "Hisse eklemek için lütfen giriş yapın.");
         return;
     }
-
     if (watchlists.length === 0) {
       try {
         const response = await fetch(`${API_BASE_URL}/api/watchlists`, {
@@ -194,7 +210,7 @@ const StockDetailScreen = ({ route, navigation }) => {
           body: JSON.stringify({ name: 'Favorilerim', user_id: userId }),
         });
         const newList = await response.json();
-        setWatchlists([newList]); 
+        setWatchlists([newList]);
         await handleAddToWatchlist(newList.id);
       } catch (error) {
          Alert.alert('Hata', 'Varsayılan liste oluşturulurken bir hata oluştu.');
@@ -206,58 +222,64 @@ const StockDetailScreen = ({ route, navigation }) => {
 
   const getChartData = () => {
     if (!history || history.length === 0) return { labels: [], datasets: [{ data: [0] }] };
-
-    const maxLabels = 7;
-    const step = history.length <= maxLabels ? 1 : Math.ceil(history.length / maxLabels);
-
-    const chartLabels = history
-        .map((h, i) => (i % step === 0) ? (h.label || h.date) : '') 
-        .reverse();
-
+    const chartLabels = history.map(() => '');
     const chartPrices = history.map(h => h.close).reverse();
-
     return {
       labels: chartLabels,
-      datasets: [{ data: chartPrices, strokeWidth: 2 }],
+      datasets: [{
+        data: chartPrices,
+        strokeWidth: 2.5,
+        color: () => (stock?.changes >= 0 ? theme.colors.positive : theme.colors.negative)
+      }],
     };
   };
 
-  const renderPriceChange = () => {
-    if (!stock || typeof stock.changes === 'undefined') return null;
-    const isPositive = (stock.changes || 0) >= 0;
-    const change = stock.changes || 0;
-    const changePercent = stock.changesPercentage || 0;
-
+  const renderTooltip = () => {
+    if (!tooltipData) return null;
+    const tooltipWidth = 120;
+    let xPosition = tooltipData.x - (tooltipWidth / 2);
+    if (xPosition < 16) xPosition = 16;
+    if (xPosition + tooltipWidth > screenWidth - 16) xPosition = screenWidth - tooltipWidth - 16;
     return (
-      <View style={[styles.priceChangeContainer, isPositive ? styles.positiveBg : styles.negativeBg]}>
-        <Feather name={isPositive ? 'arrow-up' : 'arrow-down'} size={14} color={theme.colors.text} />
-        <Text style={styles.priceChangeText}>
-          {change.toFixed(2)} ({changePercent.toFixed(2)}%)
-        </Text>
+      <View style={[styles.tooltipContainer, { left: xPosition, top: tooltipData.y - 70 }]}>
+        <Text style={styles.tooltipPrice}>${tooltipData.value.toFixed(2)}</Text>
+        <Text style={styles.tooltipDate}>{tooltipData.date}</Text>
       </View>
     );
   };
 
-  const renderKeyStats = () => (
-    <View style={styles.statsContainer}>
-        <View style={styles.statBox}>
-            <Text style={styles.statLabel}>Piyasa Değeri</Text>
-            <Text style={styles.statValue}>${(stock.marketCap / 1e9).toFixed(2)}B</Text>
-        </View>
-        <View style={styles.statBox}>
-            <Text style={styles.statLabel}>F/K Oranı</Text>
-            <Text style={styles.statValue}>{stock.pe ? stock.pe.toFixed(2) : 'N/A'}</Text>
-        </View>
-        <View style={styles.statBox}>
-            <Text style={styles.statLabel}>Beta</Text>
-            <Text style={styles.statValue}>{stock.beta ? stock.beta.toFixed(2) : 'N/A'}</Text>
-        </View>
-         <View style={styles.statBox}>
-            <Text style={styles.statLabel}>Sektör</Text>
-            <Text style={styles.statValue}>{stock.sector || 'N/A'}</Text>
-        </View>
-    </View>
-  );
+  const renderPriceChange = () => {
+    if (!stock || typeof stock.changes === 'undefined') return null;
+    const changeValue = stock.changes || 0;
+    const isPositive = changeValue >= 0;
+    const percentageValue = stock.changesPercentage || 0;
+    const color = isPositive ? theme.colors.positive : theme.colors.negative;
+    return (
+      <View style={styles.priceChangeContainer}>
+        <Feather name={isPositive ? 'arrow-up-right' : 'arrow-down-right'} size={18} color={color} />
+        <Text style={[styles.priceChangeText, { color }]}>{changeValue.toFixed(2)} ({percentageValue.toFixed(2)}%)</Text>
+      </View>
+    );
+  };
+
+  const renderKeyStats = () => {
+    const stats = [
+      { label: 'Piyasa Değeri', value: `$${(stock.marketCap / 1e9).toFixed(2)}B` },
+      { label: 'F/K Oranı', value: stock.pe ? stock.pe.toFixed(2) : 'N/A' },
+      { label: 'Beta', value: stock.beta ? stock.beta.toFixed(2) : 'N/A' },
+      { label: 'Sektör', value: stock.sector || 'N/A' },
+    ];
+    return (
+      <View style={styles.statsListContainer}>
+        {stats.map((stat, index) => (
+          <View key={stat.label} style={[styles.statRow, index === stats.length - 1 && styles.statRowLast]}>
+            <Text style={styles.statLabel}>{stat.label}</Text>
+            <Text style={styles.statValue}>{stat.value}</Text>
+          </View>
+        ))}
+      </View>
+    );
+  };
 
   if (loading || !stock) {
     return <View style={styles.loadingContainer}><ActivityIndicator size="large" color={theme.colors.primary} /></View>;
@@ -265,10 +287,13 @@ const StockDetailScreen = ({ route, navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        onScrollBeginDrag={() => setTooltipData(null)}
+        contentContainerStyle={{ paddingBottom: 20 }}
+      >
         <View style={styles.headerContainer}>
           <Text style={styles.symbol}>{symbol}</Text>
-          <Text style={styles.companyName}>{stock.companyName}</Text>
         </View>
 
         <View style={styles.priceContainer}>
@@ -276,17 +301,50 @@ const StockDetailScreen = ({ route, navigation }) => {
           {renderPriceChange()}
         </View>
 
-        <View style={styles.card}>
+        <View>
             <LineChart
                 data={getChartData()}
-                width={screenWidth - 32}
-                height={220}
+                width={screenWidth}
+                height={250}
+                withDots={false}
                 withInnerLines={false}
                 withOuterLines={false}
-                yAxisLabel="$"
-                chartConfig={theme.chartConfig}
+                withHorizontalLabels={false}
+                withVerticalLabels={false}
+                chartConfig={{
+                    ...theme.chartConfig,
+                    fillShadowGradient: stock?.changes >= 0 ? theme.colors.positive : theme.colors.negative,
+                    fillShadowGradientOpacity: 0.1,
+                }}
                 bezier
                 style={styles.chart}
+                onDataPointClick={(data) => {
+                    if (tooltipData && tooltipData.index === data.index) {
+                      setTooltipData(null);
+                    } else {
+                      const originalPoint = history.slice().reverse()[data.index];
+                      if (originalPoint) {
+                        setTooltipData({
+                            x: data.x,
+                            y: data.y,
+                            value: data.value,
+                            date: new Date(originalPoint.date).toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' }),
+                            index: data.index,
+                        });
+                      }
+                    }
+                }}
+                decorator={() => {
+                    if (!tooltipData) return null;
+                    return (
+                      <View>
+                        <View style={[styles.decoratorLine, { left: tooltipData.x, height: 250 }]} />
+                        <View style={[styles.decoratorDot, { left: tooltipData.x - 7, top: tooltipData.y - 7 }]} />
+                        {renderTooltip()}
+                      </View>
+                    );
+                }}
+                withShadow
             />
             <View style={styles.timeRangeSelector}>
                 {['1G', '1H', '1A', '1Y', '5Y'].map(range => (
@@ -307,7 +365,7 @@ const StockDetailScreen = ({ route, navigation }) => {
             {riskPercentage !== null ? (
               <View style={styles.riskContent}>
                   <Text style={styles.riskScore}>%{riskPercentage.toFixed(0)}</Text>
-                  <View style={{ flex: 1, marginLeft: 15 }}>
+                  <View style={{ flex: 1, marginLeft: 20 }}>
                       <Text style={styles.riskLabel}>
                           {riskPercentage < 40 ? 'Düşük Risk' : riskPercentage < 70 ? 'Orta Risk' : 'Yüksek Risk'}
                       </Text>
@@ -326,20 +384,19 @@ const StockDetailScreen = ({ route, navigation }) => {
             <Text style={styles.descriptionText}>{stock.description || 'Açıklama bulunamadı.'}</Text>
         </View>
 
-        <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={() => setModalVisible(false)}>
-            <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPressOut={() => setModalVisible(false)} />
+        <Modal visible={modalVisible} transparent animationType="fade" onRequestClose={() => setModalVisible(false)}>
+            <Pressable style={styles.modalOverlay} onPress={() => setModalVisible(false)} />
             <View style={styles.modalContent}>
                 <View style={styles.modalHandle} />
                 <Text style={styles.modalTitle}>Listeye Ekle</Text>
                 {watchlists.map(list => (
                     <TouchableOpacity key={list.id} style={styles.modalItem} onPress={() => handleAddToWatchlist(list.id)}>
-                        <Feather name="list" size={20} color={theme.colors.primary} />
+                        <Feather name="list" size={22} color={theme.colors.primary} />
                         <Text style={styles.modalItemText}>{list.name}</Text>
                     </TouchableOpacity>
                 ))}
             </View>
         </Modal>
-
       </ScrollView>
     </SafeAreaView>
   );

@@ -14,8 +14,10 @@ import AccountInfoScreen from './screens/profile/AccountInfoScreen';
 import ChangePasswordScreen from './screens/profile/ChangePasswordScreen';
 import PortfolioRiskScreen from './screens/PortfolioRiskScreen';
 import GlossaryScreen from './screens/GlossaryScreen';
+import FAQScreen from './screens/FAQScreen'; 
+import MenuScreen from './screens/MenuScreen';
 
-import MainTabs from './screens/TabBar'; // <--- Tab yapısı buradan gelecek
+import MainTabs from './screens/TabBar'; 
 
 const Stack = createStackNavigator();
 
@@ -34,7 +36,8 @@ const RootNavigator = () => {
         <Stack.Screen name="AccountInfo" component={AccountInfoScreen} options={{ title: t('Account Information') }} />
         <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: t('Change Password') }} />
         <Stack.Screen name="PortfolioRisk" component={PortfolioRiskScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Glossary" component={GlossaryScreen} options={{ title: 'Yatırımcı Sözlüğü' }} />
+        <Stack.Screen name="Glossary" component={GlossaryScreen} options={{ title: 'Yatırımcı Sözlüğü', headerBackVisible: false, headerShown: false }} />
+        <Stack.Screen name="FAQ" component={FAQScreen} options={{ title: ' ', headerLeft: () => null, headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

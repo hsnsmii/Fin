@@ -6,7 +6,10 @@ import {
   SafeAreaView,
   SectionList,
   StatusBar,
+  TouchableOpacity, 
 } from 'react-native';
+
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 const glossaryData = [
   {
@@ -104,10 +107,23 @@ const TermItem = ({ title, definition, simple, where }) => (
   </View>
 );
 
-const GlossaryScreen = () => {
+const GlossaryScreen = ({ navigation }) => {
   const ListHeader = () => (
     <View style={styles.headerContainer}>
-      <Text style={styles.mainTitle}>Finover Yatırımcı Sözlüğü</Text>
+      {}
+      <View style={styles.headerRow}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.8}
+        >
+          <FontAwesome name="arrow-left" size={20} color="#1A237E" />
+        </TouchableOpacity>
+        <Text style={styles.mainTitle}>Finover Yatırımcı Sözlüğü</Text>
+        {}
+        <View style={styles.backButton} />
+      </View>
+
       <Text style={styles.introText}>
         Yatırım dünyasına ilk adımını atarken bazı terimler karmaşık gelebilir.
         Bu sözlük, Finover'ı kullanırken karşına çıkacak temel kavramları en
@@ -118,7 +134,8 @@ const GlossaryScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" />
+      {}
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
       <SectionList
         sections={glossaryData}
         keyExtractor={(item) => item.id}
@@ -135,13 +152,13 @@ const GlossaryScreen = () => {
 };
 
 const COLORS = {
-  primary: '#004D40',
-  secondary: '#1A237E',
-  background: '#f7f9fc',
-  cardBackground: '#ffffff',
-  text: '#333333',
-  textSecondary: '#666666',
-  border: '#E0E0E0',
+  primary: '#1A237E',          
+  secondary: '#10B981',        
+  background: '#F8F9FA',       
+  cardBackground: '#FFFFFF',   
+  text: '#1F2937',             
+  textSecondary: '#6B7280',    
+  border: '#E5E7EB',           
 };
 
 const styles = StyleSheet.create({
@@ -157,16 +174,27 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingTop: 16,
   },
+
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
   mainTitle: {
-    fontSize: 26,
+    fontSize: 22, 
     fontWeight: 'bold',
     color: COLORS.secondary,
-    marginBottom: 10,
+
+    textAlign: 'center',
+
+    flex: 1,
   },
   introText: {
     fontSize: 16,
     lineHeight: 24,
     color: COLORS.textSecondary,
+    textAlign: 'center', 
   },
   sectionTitle: {
     fontSize: 20,
@@ -182,6 +210,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: COLORS.border,
+    elevation: 2, 
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   termTitle: {
     fontSize: 18,
@@ -204,12 +237,23 @@ const styles = StyleSheet.create({
     borderLeftWidth: 3,
     borderLeftColor: COLORS.primary,
     paddingLeft: 12,
+    backgroundColor: '#f7f9fc', 
+    paddingVertical: 8,
+    borderRadius: 4,
   },
   whereText: {
     fontSize: 13,
     color: COLORS.primary,
     fontStyle: 'italic',
     lineHeight: 18,
+  },
+
+  backButton: {
+
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

@@ -17,11 +17,7 @@ const FAQScreen = ({ navigation }) => {
   const [selectedBox, setSelectedBox] = useState(null);
   const [activeCategory, setActiveCategory] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
-  const goToGlossary = () => {
-    navigation.navigate('Glossary');
-  };
   const questions = [
-    // Hesap
     {
       id: '1',
       category: 'account',
@@ -246,94 +242,109 @@ const FAQScreen = ({ navigation }) => {
 
   const filteredQuestions = getFilteredQuestions();
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8f9fa" />
-      <View style={styles.titleContainer}>
-        <Text style={styles.title}>Sık Sorulan Sorular</Text>
-        <Text style={styles.subtitle}>Yardım merkezimizde sık sorulan sorular</Text>
-      </View>
-      <View style={styles.searchContainer}>
-        <FontAwesome name="search" size={22} style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Soru ara..."
-          placeholderTextColor="#95a5a6"
-          value={searchQuery}
-          onChangeText={handleSearch}
-        />
-      </View>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingRight: 20 }}
-        style={{ marginBottom: 20, flexGrow: 0 }}
-      >
-        {categories.map(category => (
-          <TouchableOpacity
-            key={category.id}
+return (
+  <SafeAreaView style={styles.container}>
+    <StatusBar barStyle="dark-content" backgroundColor="#F8F9FA" />
+
+    <TouchableOpacity
+      style={styles.backButton}
+      onPress={() => navigation.goBack()}
+      activeOpacity={0.8}
+    >
+      <FontAwesome name="arrow-left" size={20} color="#1A237E" /> {/* Kurumsal Mavi */}
+    </TouchableOpacity>
+
+    <View style={styles.titleWrapper}>
+      <Text style={styles.title}>Sık Sorulan Sorular</Text>
+      <Text style={styles.subtitle}>
+        Yardım merkezimizde sık sorulan sorular
+      </Text>
+    </View>
+
+    <View style={styles.searchContainer}>
+      <FontAwesome name="search" size={22} style={styles.searchIcon} />
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Soru ara..."
+        placeholderTextColor="#6B7280" // Taş Grisi
+        value={searchQuery}
+        onChangeText={handleSearch}
+      />
+    </View>
+
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={{ paddingRight: 20 }}
+      style={{ marginBottom: 20, flexGrow: 0 }}
+    >
+      {categories.map((category) => (
+        <TouchableOpacity
+          key={category.id}
+          style={[
+            styles.categoryChip,
+            activeCategory === category.id && styles.categoryChipActive,
+          ]}
+          onPress={() => handleCategoryChange(category.id)}
+        >
+          <Text
             style={[
-              styles.categoryChip,
-              activeCategory === category.id && styles.categoryChipActive
+              styles.categoryText,
+              activeCategory === category.id && styles.categoryTextActive,
             ]}
-            onPress={() => handleCategoryChange(category.id)}
           >
-            <Text
-              style={[
-                styles.categoryText,
-                activeCategory === category.id && styles.categoryTextActive
-              ]}
+            {category.title}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
+
+    {isLoading ? (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#1A237E" /> {/* Kurumsal Mavi */}
+      </View>
+    ) : filteredQuestions.length > 0 ? (
+      <ScrollView
+        style={styles.questionsContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        {filteredQuestions.map((item) => (
+          <View key={item.id} style={styles.questionContainer}>
+            <TouchableOpacity
+              style={styles.questionHeader}
+              onPress={() => handleBoxClick(item.id)}
+              activeOpacity={0.7}
             >
-              {category.title}
-            </Text>
-          </TouchableOpacity>
+              <Text style={styles.questionText}>{item.question}</Text>
+              <View style={styles.questionIcon}>
+                <FontAwesome
+                  name={
+                    selectedBox === item.id ? 'chevron-up' : 'chevron-down'
+                  }
+                  size={14}
+                  color="#1A237E" // Kurumsal Mavi
+                />
+              </View>
+            </TouchableOpacity>
+            {selectedBox === item.id && (
+              <View style={styles.answerContainer}>
+                <Text style={styles.answerText}>{item.answer}</Text>
+              </View>
+            )}
+          </View>
         ))}
       </ScrollView>
-      {isLoading ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator size="large" color="#3498db" />
-        </View>
-      ) : filteredQuestions.length > 0 ? (
-        <ScrollView
-          style={styles.questionsContainer}
-          showsVerticalScrollIndicator={false}
-        >
-          {filteredQuestions.map((item) => (
-            <View key={item.id} style={styles.questionContainer}>
-              <TouchableOpacity
-                style={styles.questionHeader}
-                onPress={() => handleBoxClick(item.id)}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.questionText}>{item.question}</Text>
-                <View style={styles.questionIcon}>
-                  <FontAwesome
-                    name={selectedBox === item.id ? "chevron-up" : "chevron-down"}
-                    size={14}
-                    color="#3498db"
-                  />
-                </View>
-              </TouchableOpacity>
-              {selectedBox === item.id && (
-                <View style={styles.answerContainer}>
-                  <Text style={styles.answerText}>{item.answer}</Text>
-                </View>
-              )}
-            </View>
-          ))}
-        </ScrollView>
-      ) : (
-        <View style={styles.noResultsContainer}>
-          <FontAwesome name="search" size={50} style={styles.noResultsIcon} />
-          <Text style={styles.noResultsText}>Aradığınız kriterlere uygun soru bulunamadı.</Text>
-        </View>
-      )}
-       <TouchableOpacity style={styles.glossaryButton} onPress={goToGlossary}>
-        <FontAwesome name="book" size={18} color="#fff" style={{ marginRight: 10 }} />
-        <Text style={styles.glossaryButtonText}>Yatırımcı Sözlüğü</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
-  );
+    ) : (
+      <View style={styles.noResultsContainer}>
+        <FontAwesome name="search" size={50} style={styles.noResultsIcon} />
+        <Text style={styles.noResultsText}>
+          Aradığınız kriterlere uygun soru bulunamadı.
+        </Text>
+      </View>
+    )}
+  </SafeAreaView>
+);
+
 };
 
 export default FAQScreen;

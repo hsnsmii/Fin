@@ -8,10 +8,6 @@ export const getSelectedStocks = async () => {
     'TBBK', 'SOUN', 'NPWR', 'BBAI','TKKYY', 'TKGBY'
   ];
 
-  // const symbols = [
-  //   'AAPL', 'AMZN', 
-  // ];
-
   try {
     const url = `https://financialmodelingprep.com/api/v3/quote/${symbols.join(',')}?apikey=${FMP_API_KEY}`;
     const res = await fetch(url);
@@ -33,27 +29,64 @@ export const getSelectedStocks = async () => {
   }
 };
 
-
 export const getStockDetails = async (symbol) => {
   const res = await fetch(`https://financialmodelingprep.com/api/v3/profile/${symbol}?apikey=${FMP_API_KEY}`);
   const data = await res.json();
-  return data[0];
+  if (data && data.length > 0) {
+    return data[0];
+  }
+  return null;
 };
 
-export const getStockHistory = async (symbol) => {
-    try {
-      const res = await fetch(`https://financialmodelingprep.com/api/v3/historical-price-full/${symbol}?timeseries=60&apikey=${FMP_API_KEY}`);
-      const data = await res.json();
-      return data.historical || [];
-    } catch (error) {
-      console.error('Stock history fetch error:', error);
-      return [];
+export const getStockHistory = async (symbol, timeRange = '1A') => {
+  let url = '';
+  switch (timeRange) {
+    case '1G':
+      url = `https://financialmodelingprep.com/api/v3/historical-chart/15min/${symbol}?apikey=${FMP_API_KEY}`;
+      break;
+    case '1H':
+      url = `https://financialmodelingprep.com/api/v3/historical-price-full/${symbol}?timeseries=5&apikey=${FMP_API_KEY}`;
+      break;
+    case '1A':
+      url = `https://financialmodelingprep.com/api/v3/historical-price-full/${symbol}?timeseries=30&apikey=${FMP_API_KEY}`;
+      break;
+    case '1Y':
+      url = `https://financialmodelingprep.com/api/v3/historical-price-full/${symbol}?timeseries=252&apikey=${FMP_API_KEY}`;
+      break;
+    case '5Y':
+      url = `https://financialmodelingprep.com/api/v3/historical-price-full/${symbol}?timeseries=1260&apikey=${FMP_API_KEY}`;
+      break;
+    default:
+      url = `https://financialmodelingprep.com/api/v3/historical-price-full/${symbol}?timeseries=30&apikey=${FMP_API_KEY}`;
+  }
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    return data.historical || data || [];
+  } catch (error) {
+    console.error(`Stock history fetch error for ${symbol} with range ${timeRange}:`, error);
+    return [];
+  }
+};
+
+export const getIncomeStatement = async (symbol) => {
+  try {
+    const url = `https://financialmodelingprep.com/api/v3/income-statement/${symbol}?period=annual&limit=1&apikey=${FMP_API_KEY}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data && data.length > 0) {
+      return data;
     }
-  };
+    return null;
+  } catch (error) {
+    console.error(`Gelir Tablosu çekme hatası (${symbol}):`, error);
+    throw error;
+  }
+};
 
 export const getPriceOnDate = async (symbol, date) => {
   try {
-    const formatted = typeof date === 'string' ? date : date.toISOString().split('T')[0];
+    const formatted = typeof date === 'string' ? date.split('T')[0] : date.toISOString().split('T')[0];
     const res = await fetch(
       `https://financialmodelingprep.com/api/v3/historical-price-full/${symbol}?from=${formatted}&to=${formatted}&apikey=${FMP_API_KEY}`
     );
@@ -63,24 +96,35 @@ export const getPriceOnDate = async (symbol, date) => {
     }
     return null;
   } catch (error) {
-    console.error('Price on date fetch error:', error);
+    console.error(`Price on date fetch error for ${symbol}:`, error);
     return null;
   }
 };
 
 export const getCurrentPrice = async (symbol) => {
   try {
-    const res = await fetch(
-      `https://financialmodelingprep.com/api/v3/quote/${symbol}?apikey=${FMP_API_KEY}`
-    );
+    let url;
+    const isForex = symbol.toUpperCase() === 'USDTRY';
+
+    if (isForex) {
+      url = `https://financialmodelingprep.com/api/v3/fx/${symbol}?apikey=${FMP_API_KEY}`;
+    } else {
+      url = `https://financialmodelingprep.com/api/v3/quote/${symbol}?apikey=${FMP_API_KEY}`;
+    }
+
+    const res = await fetch(url);
     const data = await res.json();
+
     if (Array.isArray(data) && data.length > 0) {
-      return parseFloat(data[0].price);
+      if (isForex) {
+        return parseFloat(data[0].ask);
+      } else {
+        return parseFloat(data[0].price);
+      }
     }
     return null;
   } catch (error) {
-    console.error('Current price fetch error:', error);
+    console.error(`Current price fetch error for ${symbol}:`, error);
     return null;
   }
 };
-  

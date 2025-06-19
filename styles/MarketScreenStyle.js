@@ -6,23 +6,23 @@ const STATUSBAR_HEIGHT = Platform.OS === 'ios' ? 44 : StatusBar.currentHeight;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#F8F9FA', 
     paddingTop: Platform.OS === 'ios' ? STATUSBAR_HEIGHT : 0,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#F8F9FA', 
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FFFFFF', 
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: '#E5E7EB', 
   },
   searchIcon: {
     marginRight: 8,
@@ -31,12 +31,12 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 40,
     fontSize: 16,
-    color: '#111827',
+    color: '#1F2937', 
     paddingVertical: 8,
   },
   listContent: {
     paddingHorizontal: 16,
-    paddingBottom: 80, // Aşağıda navigation bar olacağı için ekstra padding
+    paddingBottom: 80,
     paddingTop: 8,
   },
   item: {
@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FFFFFF', 
     borderRadius: 12,
     paddingHorizontal: 16,
     marginVertical: 6,
@@ -61,11 +61,11 @@ const styles = StyleSheet.create({
   symbol: {
     fontWeight: '700',
     fontSize: 16,
-    color: '#111827',
+    color: '#1F2937', 
     marginBottom: 4,
   },
   name: {
-    color: '#6B7280',
+    color: '#6B7280', 
     fontSize: 14,
     maxWidth: width * 0.6,
   },
@@ -81,13 +81,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   priceUp: {
-    color: '#10B981',
+    color: '#10B981', 
   },
   priceDown: {
-    color: '#EF4444',
+    color: '#EF4444', 
   },
   priceNeutral: {
-    color: '#111827',
+    color: '#1F2937', 
   },
   separator: {
     height: 1,

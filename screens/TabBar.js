@@ -10,6 +10,7 @@ import RiskHomeScreen from '../screens/risk/RiskHomeScreen';
 import PortfolioDetailScreen from '../screens/asset/PortfolioDetailScreen';
 import { useLocalization } from '../services/LocalizationContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context'; 
+import MenuScreen from '../screens/MenuScreen';
 
 
 const Tab = createBottomTabNavigator();
@@ -24,7 +25,7 @@ export default function MainTabs() {
         tabBarShowLabel: true,
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
-          height: 40 + insets.bottom, 
+          height: 60, 
           borderTopWidth: 0,
           elevation: 0,
           shadowOpacity: 0,
@@ -37,8 +38,8 @@ export default function MainTabs() {
           fontSize: 10,
           fontWeight: '500',
         },
-        tabBarActiveTintColor: '#2196F3',
-        tabBarInactiveTintColor: '#BBBBBB',
+        tabBarActiveTintColor: '#10B981',
+        tabBarInactiveTintColor: '#6B7280',
         headerShown: false,
       }}
     >
@@ -99,16 +100,13 @@ export default function MainTabs() {
         }}
       />
       <Tab.Screen
-        name="FAQ"
-        component={FAQScreen}
+      <Tab.Screen
+        name="Menu"
+        component={MenuScreen}
         options={{
-          tabBarLabel: t('FAQ'),
+          tabBarLabel: 'Menü',
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons 
-              name="help-circle" 
-              size={22} 
-              color={color} 
-            />
+            <Ionicons name="menu" size={22} color={color} />
           ),
         }}
       />

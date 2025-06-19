@@ -24,19 +24,19 @@ import { API_BASE_URL } from '../../services/config';
 const API_URL = `${API_BASE_URL}/api`;
 
 const COLORS = {
-  primary: '#1A73E8',
-  primaryLight: '#E8F0FE',
-  secondary: '#FF6F00',
-  white: '#FFFFFF',
-  black: '#000000',
-  textPrimary: '#202124',
-  textSecondary: '#5F6368',
-  background: '#F7F9FC',
-  surface: '#FFFFFF',
-  border: '#DADCE0',
-  success: '#34A853',
-  error: '#EA4335',
-  lightGray: '#f0f0f0',
+  primary: '#1A237E',         
+  primaryLight: '#E5E7EB',    
+  secondary: '#10B981',       
+  white: '#FFFFFF',           
+  black: '#1F2937',           
+  textPrimary: '#1F2937',     
+  textSecondary: '#6B7280',   
+  background: '#F8F9FA',      
+  surface: '#FFFFFF',         
+  border: '#E5E7EB',          
+  success: '#10B981',         
+  error: '#EF4444',           
+  lightGray: '#E5E7EB',       
 };
 
 const AssetsScreen = () => {

@@ -188,33 +188,33 @@ const ChangePasswordScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: '#f9fafb',
+  container: {
+    flex: 1,
+    backgroundColor: '#F8F9FA', 
     justifyContent: 'center',
   },
   content: {
     padding: 24,
   },
-  title: { 
-    fontSize: 32, 
-    fontWeight: 'bold', 
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
     marginBottom: 8,
     textAlign: 'center',
-    color: '#111827',
+    color: '#1F2937', 
   },
   subtitle: {
     fontSize: 15,
     textAlign: 'center',
-    color: '#6b7280',
+    color: '#6B7280', 
     marginBottom: 40,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF', 
     borderWidth: 1,
-    borderColor: '#d1d5db',
+    borderColor: '#E5E7EB', 
     borderRadius: 12,
     paddingHorizontal: 15,
     marginBottom: 20,
@@ -226,26 +226,26 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 55,
     fontSize: 16,
-    color: '#111827',
+    color: '#1F2937', 
   },
   button: {
-    backgroundColor: '#1d4ed8',
+    backgroundColor: '#10B981', 
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 20,
     elevation: 2,
-    shadowColor: '#1d4ed8',
+    shadowColor: '#10B981',
     shadowOpacity: 0.3,
     shadowRadius: 5,
-    shadowOffset: {width: 0, height: 3}
+    shadowOffset: { width: 0, height: 3 },
   },
   buttonDisabled: {
-    backgroundColor: '#9ca3af',
+    backgroundColor: '#E5E7EB', 
     elevation: 0,
   },
-  buttonText: { 
-    color: '#fff', 
+  buttonText: {
+    color: '#FFFFFF', 
     fontWeight: 'bold',
     fontSize: 16,
   },
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
   },
   strengthBarContainer: {
     height: 8,
-    backgroundColor: '#e5e7eb',
+    backgroundColor: '#E5E7EB', 
     borderRadius: 4,
     overflow: 'hidden',
     marginBottom: 8,
@@ -263,15 +263,17 @@ const styles = StyleSheet.create({
   strengthBar: {
     height: '100%',
     borderRadius: 4,
+    backgroundColor: '#10B981', 
   },
   strengthText: {
     fontSize: 12,
     fontWeight: '600',
     textAlign: 'right',
     marginBottom: 15,
+    color: '#6B7280', 
   },
   requirementsContainer: {
-      marginTop: 5,
+    marginTop: 5,
   },
   requirementRow: {
     flexDirection: 'row',
@@ -281,11 +283,11 @@ const styles = StyleSheet.create({
   requirementText: {
     marginLeft: 10,
     fontSize: 14,
-    color: '#4b5563',
+    color: '#6B7280', 
   },
   requirementMet: {
-    color: '#1f2937',
-  }
-});
+    color: '#1F2937', 
 
+  },
+});
 export default ChangePasswordScreen;
