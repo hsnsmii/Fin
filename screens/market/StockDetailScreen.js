@@ -65,6 +65,15 @@ const calculateIndicators = (history) => {
   return { rsi, sma_20, volatility };
 };
 
+const calculateFallbackRisk = (indicators, beta) => {
+  if (!indicators) return null;
+  const normRsi = Math.min(100, Math.max(0, indicators.rsi)) / 100;
+  const vol = Math.min(1, Math.abs(indicators.volatility));
+  const b = beta == null ? 1 : Math.min(2, Math.abs(beta)) / 2;
+  const risk = (normRsi * 0.4 + vol * 0.4 + b * 0.2) * 100;
+  return Math.round(risk);
+};
+
 const StockDetailScreen = ({ route, navigation }) => {
   const { symbol } = route.params;
 
@@ -121,13 +130,21 @@ const StockDetailScreen = ({ route, navigation }) => {
 
         if (indicators && calculatedBeta !== null) {
           const payload = { ...indicators, beta: calculatedBeta, symbol };
-          const response = await fetch(`${ML_BASE_URL}/predict-risk`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-          const data = await response.json();
-          setRiskPercentage(data.risk_percentage ?? null);
+          try {
+            const response = await fetch(`${ML_BASE_URL}/predict-risk`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+            const data = await response.json();
+            if (response.ok && data.risk_percentage != null) {
+              setRiskPercentage(data.risk_percentage);
+            } else {
+              setRiskPercentage(calculateFallbackRisk(indicators, calculatedBeta));
+            }
+          } catch (e) {
+            setRiskPercentage(calculateFallbackRisk(indicators, calculatedBeta));
+          }
         }
 
         if (userId) {
@@ -264,7 +281,10 @@ const StockDetailScreen = ({ route, navigation }) => {
 
   const renderKeyStats = () => {
     const stats = [
-      { label: 'Piyasa Değeri', value: `$${(stock.marketCap / 1e9).toFixed(2)}B` },
+      {
+        label: 'Piyasa Değeri',
+        value: stock.marketCap ? `$${(stock.marketCap / 1e9).toFixed(2)}B` : 'N/A',
+      },
       { label: 'F/K Oranı', value: stock.pe ? stock.pe.toFixed(2) : 'N/A' },
       { label: 'Beta', value: stock.beta ? stock.beta.toFixed(2) : 'N/A' },
       { label: 'Sektör', value: stock.sector || 'N/A' },

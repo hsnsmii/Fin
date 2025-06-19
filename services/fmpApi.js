@@ -33,7 +33,11 @@ export const getStockDetails = async (symbol) => {
   const res = await fetch(`https://financialmodelingprep.com/api/v3/profile/${symbol}?apikey=${FMP_API_KEY}`);
   const data = await res.json();
   if (data && data.length > 0) {
-    return data[0];
+    const profile = data[0];
+    if (profile && profile.mktCap && !profile.marketCap) {
+      profile.marketCap = profile.mktCap;
+    }
+    return profile;
   }
   return null;
 };
