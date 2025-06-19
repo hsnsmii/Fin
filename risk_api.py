@@ -6,8 +6,11 @@ import os
 from portfolio_analysis import analyze_portfolio
 from portfolio_risk import calculate_portfolio_risk_advanced
 
-# SHAP ekle
-import shap
+# SHAP (optional)
+try:
+    import shap  # type: ignore
+except Exception:  # pragma: no cover - optional dependency
+    shap = None
 
 app = Flask(__name__)
 CORS(app)
@@ -17,6 +20,9 @@ CSV_DIR = "data/csv"
 
 @app.route("/predict-risk-explain", methods=["POST"])
 def predict_risk_explain():
+    if shap is None:
+        return jsonify({"error": "SHAP kütüphanesi yüklü değil"}), 500
+
     try:
         data = request.get_json(force=True)
         symbol = data.get("symbol")
