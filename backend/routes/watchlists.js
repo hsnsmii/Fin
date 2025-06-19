@@ -3,19 +3,31 @@ module.exports = (pool) => {
   const router = express.Router();
 
   // GET /api/watchlists/:userId
- router.get('/:userId', async (req, res) => {
-  const { userId } = req.params;
-  const type = req.query.type; // Önemli: type opsiyonel
+  router.get('/:userId', async (req, res) => {
+    const { userId } = req.params;
+    const type = req.query.type; // optional
 
-  try {
-    // 1. Watchlist'leri al (type varsa ona göre filtrele)
-    const query = type
-      ? 'SELECT * FROM watchlists WHERE user_id = $1 AND type = $2'
-      : 'SELECT * FROM watchlists WHERE user_id = $1';
+    try {
+      // Filter by type if provided. When requesting type "watchlist"
+      // also return entries with NULL type for backwards compatibility.
+      let query;
+      let values;
+      if (type) {
+        if (type === 'watchlist') {
+          query =
+            'SELECT * FROM watchlists WHERE user_id = $1 AND (type = $2 OR type IS NULL)';
+          values = [userId, type];
+        } else {
+          query = 'SELECT * FROM watchlists WHERE user_id = $1 AND type = $2';
+          values = [userId, type];
+        }
+      } else {
+        query = 'SELECT * FROM watchlists WHERE user_id = $1';
+        values = [userId];
+      }
 
-    const values = type ? [userId, type] : [userId];
-    const watchlistsResult = await pool.query(query, values);
-    const watchlists = watchlistsResult.rows;
+      const watchlistsResult = await pool.query(query, values);
+      const watchlists = watchlistsResult.rows;
 
     // 2. Her watchlist için ilgili hisseleri çek
     const finalData = await Promise.all(watchlists.map(async (list) => {
@@ -52,40 +64,46 @@ module.exports = (pool) => {
   });
 
 
-
-  // POST /api/watchlists/:listId/stocks
-router.post('/:listId/stocks', async (req, res) => {
-  const { symbol, quantity, price, note, date } = req.body;
-  const { listId } = req.params;
-
-  if (!symbol || !quantity || !price) {
-    return res.status(400).json({ error: 'Eksik pozisyon bilgisi' });
-  }
-
-  try {
-    const result = await pool.query(
-      'INSERT INTO watchlist_stocks (watchlist_id, symbol, quantity, price, note, date) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [listId, symbol, quantity, price, note || '', date || new Date()]
-    );
-    res.status(201).json(result.rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-
-  
-
   // POST /api/watchlists/:listId/stocks
   router.post('/:listId/stocks', async (req, res) => {
-    const { symbol } = req.body;
+    const { symbol, symbols, quantity, price, note, date } = req.body;
     const { listId } = req.params;
+
+    // Support adding multiple symbols at once
+    if (Array.isArray(symbols)) {
+      try {
+        const inserted = [];
+        for (const sym of symbols) {
+          const result = await pool.query(
+            'INSERT INTO watchlist_stocks (watchlist_id, symbol) VALUES ($1, $2) RETURNING *',
+            [listId, sym]
+          );
+          inserted.push(result.rows[0]);
+        }
+        return res.status(201).json(inserted);
+      } catch (err) {
+        return res.status(500).json({ error: err.message });
+      }
+    }
+
+    if (!symbol) {
+      return res.status(400).json({ error: 'Eksik pozisyon bilgisi' });
+    }
+
     try {
+      if (quantity && price) {
+        const result = await pool.query(
+          'INSERT INTO watchlist_stocks (watchlist_id, symbol, quantity, price, note, date) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+          [listId, symbol, quantity, price, note || '', date || new Date()]
+        );
+        return res.status(201).json(result.rows[0]);
+      }
+
       const result = await pool.query(
         'INSERT INTO watchlist_stocks (watchlist_id, symbol) VALUES ($1, $2) RETURNING *',
         [listId, symbol]
       );
-      res.json(result.rows[0]);
+      res.status(201).json(result.rows[0]);
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
