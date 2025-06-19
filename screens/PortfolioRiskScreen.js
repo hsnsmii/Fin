@@ -471,6 +471,57 @@ const PortfolioRiskScreen = () => {
             </View>
           )}
 
+          {portfolioRiskData.length > 0 && (
+            <View style={styles.sectionCard}>
+              <Text style={styles.sectionTitle}>Portföydeki Hisseler</Text>
+              {portfolioRiskData.map((item, idx) => (
+                <TouchableOpacity
+                  key={item.symbol}
+                  style={[
+                    styles.stockItemCard,
+                    idx === portfolioRiskData.length - 1 &&
+                      styles.stockItemCardLast,
+                  ]}
+                  onPress={() => {
+                    setSelectedStock(item);
+                    setRiskModalVisible(true);
+                  }}
+                >
+                  <View
+                    style={[
+                      styles.stockItemRiskBar,
+                      { backgroundColor: getColorByRisk(item.risk) },
+                    ]}
+                  />
+                  <View style={styles.stockItemInfo}>
+                    <Text style={styles.stockItemSymbol}>{item.symbol}</Text>
+                    <Text style={styles.stockItemDetailText}>
+                      Beta: {item.breakdown?.beta?.toFixed(2) ?? 'N/A'}
+                    </Text>
+                  </View>
+                  <View style={styles.stockItemRiskValue}>
+                    <Text
+                      style={[
+                        styles.stockItemRiskPercent,
+                        { color: getColorByRisk(item.risk) },
+                      ]}
+                    >
+                      {item.risk.toFixed(1)}%
+                    </Text>
+                    <Text
+                      style={[
+                        styles.stockItemRiskCategory,
+                        { color: getColorByRisk(item.risk) },
+                      ]}
+                    >
+                      {getRiskCategoryText(item.risk)}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
           {analysisSummary && (
             <View style={styles.sectionCard}>
               <Text style={styles.sectionTitle}>Portföy Analizi</Text>
