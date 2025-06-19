@@ -85,6 +85,23 @@ app.post('/change-password', authenticateToken, async (req, res) => {
   }
 });
 
+// 📌 Get user info
+app.get('/user/:id', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT id, username, email FROM users WHERE id = $1',
+      [req.params.id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch user' });
+  }
+});
+
 // 📦 Watchlist routes
 const watchlistsRoute = require('./routes/watchlists')(pool); // ← dikkat: fonksiyon çağrısı
 app.use('/api/watchlists', watchlistsRoute);
