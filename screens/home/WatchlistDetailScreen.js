@@ -13,10 +13,11 @@ import {
   Button,
   ActivityIndicator, 
 } from 'react-native';
-import axios from 'axios'; 
+import axios from 'axios';
 import { Swipeable } from 'react-native-gesture-handler';
 import { MaterialIcons } from '@expo/vector-icons';
-import { API_BASE_URL } from '../../services/config'; 
+import { API_BASE_URL } from '../../services/config';
+import { getQuotes } from '../../services/fmpApi';
 
 const WatchlistDetailScreen = ({ route }) => {
 
@@ -31,8 +32,14 @@ const WatchlistDetailScreen = ({ route }) => {
   const fetchWatchlistStocks = async () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/api/watchlists/${listId}/stocks`);
-
-      setStocks(res.data);
+      const baseData = res.data || [];
+      const symbols = baseData.map(s => s.symbol);
+      const quotes = await getQuotes(symbols);
+      const enriched = baseData.map(item => {
+        const q = quotes.find(el => el.symbol === item.symbol) || {};
+        return { ...item, ...q };
+      });
+      setStocks(enriched);
     } catch (err) {
       console.error('Liste içeriği çekilemedi', err);
       Alert.alert("Hata", "İzleme listesi verileri alınamadı.");
