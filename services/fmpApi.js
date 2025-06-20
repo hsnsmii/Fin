@@ -151,3 +151,23 @@ export const getCurrentPrice = async (symbol) => {
     return null;
   }
 };
+
+export const getQuotes = async (symbols = []) => {
+  if (!symbols || symbols.length === 0) return [];
+  try {
+    const url = `https://financialmodelingprep.com/api/v3/quote/${symbols.join(',')}?apikey=${FMP_API_KEY}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!Array.isArray(data)) return [];
+    return data.map(q => ({
+      symbol: q.symbol,
+      name: q.name,
+      price: q.price,
+      change: q.change,
+      changePercentage: parseFloat(q.changesPercentage),
+    }));
+  } catch (error) {
+    console.error('Error fetching quotes:', error);
+    return [];
+  }
+};
