@@ -234,6 +234,23 @@ const PortfolioRiskScreen = () => {
     initialFetch();
   }, []);
 
+  // Refresh data when returning to this screen
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', async () => {
+      const lists = await fetchWatchlists();
+      const currentId = selectedList?.id || selectedList?._id;
+      if (currentId) {
+        const updated = lists.find(
+          (l) => l.id === currentId || l._id === currentId
+        );
+        if (updated) {
+          await handleListSelect(updated);
+        }
+      }
+    });
+    return unsubscribe;
+  }, [navigation, selectedList]);
+
   // Only fetch once when the screen mounts to avoid excessive network calls
   // Previously this ran on every focus, causing delays
 
