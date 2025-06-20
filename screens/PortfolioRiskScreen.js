@@ -124,7 +124,11 @@ const PortfolioRiskScreen = () => {
 
   const filteredRecommendations = useMemo(() => {
     if (weightedRisk === null) return recommendations;
-    return recommendations.filter(r => r.risk_percentage < weightedRisk);
+    const filtered = recommendations.filter(
+      (r) => r.risk_percentage < weightedRisk
+    );
+    // Eğer filtrelenmiş sonuç yoksa, en düşük risklileri göster
+    return filtered.length > 0 ? filtered : recommendations;
   }, [recommendations, weightedRisk]);
 
   // Threshold for classifying a holding as high risk when sending data
@@ -670,11 +674,23 @@ const PortfolioRiskScreen = () => {
         </TouchableOpacity>
       </Modal>
 
-          {filteredRecommendations.length > 0 && (
+          {recommendations.length > 0 && (
             <View style={styles.sectionCard}>
               <Text style={styles.sectionTitle}>Düşük Riskli Hisse Önerileri</Text>
-              {filteredRecommendations.map((rec, index) => (
-                <View key={`${rec.symbol}-${index}`} style={[styles.recommendationItem, index === filteredRecommendations.length - 1 && styles.recommendationItemLast]}>
+              {filteredRecommendations.length === 0 && (
+                <Text style={styles.emptyStateMessage}>
+                  Portföy riskinizden düşük öneri bulunamadı. En düşük riskli hisseler görüntüleniyor.
+                </Text>
+              )}
+              {(filteredRecommendations.length > 0 ? filteredRecommendations : recommendations).map((rec, index) => (
+                <View
+                  key={`${rec.symbol}-${index}`}
+                  style={[
+                    styles.recommendationItem,
+                    (filteredRecommendations.length > 0 ? filteredRecommendations : recommendations).length - 1 === index &&
+                      styles.recommendationItemLast,
+                  ]}
+                >
                   <Ionicons
                     name={"bulb-outline"}
                     size={24}
@@ -689,12 +705,6 @@ const PortfolioRiskScreen = () => {
                   </View>
                 </View>
               ))}
-            </View>
-          )}
-          {filteredRecommendations.length === 0 && recommendations.length > 0 && (
-            <View style={styles.sectionCard}>
-              <Text style={styles.sectionTitle}>Düşük Riskli Hisse Önerileri</Text>
-              <Text style={styles.emptyStateMessage}>Portföy riskinizden düşük öneri bulunamadı.</Text>
             </View>
           )}
 
