@@ -1,5 +1,9 @@
 import { FMP_API_KEY } from '@env';
 
+// Simple in-memory caches to avoid fetching the same data repeatedly
+const detailCache = {};
+const historyCache = {};
+
 export const getSelectedStocks = async () => {
   const symbols = [
     'AAPL', 'AMZN', 'BRK-B', 'META', 'MSFT', 'NVDA', 'TSLA',
@@ -30,6 +34,9 @@ export const getSelectedStocks = async () => {
 };
 
 export const getStockDetails = async (symbol) => {
+  if (detailCache[symbol]) {
+    return detailCache[symbol];
+  }
   const res = await fetch(`https://financialmodelingprep.com/api/v3/profile/${symbol}?apikey=${FMP_API_KEY}`);
   const data = await res.json();
   if (data && data.length > 0) {
@@ -37,12 +44,17 @@ export const getStockDetails = async (symbol) => {
     if (profile && profile.mktCap && !profile.marketCap) {
       profile.marketCap = profile.mktCap;
     }
+    detailCache[symbol] = profile;
     return profile;
   }
   return null;
 };
 
 export const getStockHistory = async (symbol, timeRange = '1A') => {
+  const cacheKey = `${symbol}-${timeRange}`;
+  if (historyCache[cacheKey]) {
+    return historyCache[cacheKey];
+  }
   let url = '';
   switch (timeRange) {
     case '1G':
@@ -66,7 +78,9 @@ export const getStockHistory = async (symbol, timeRange = '1A') => {
   try {
     const res = await fetch(url);
     const data = await res.json();
-    return data.historical || data || [];
+    const result = data.historical || data || [];
+    historyCache[cacheKey] = result;
+    return result;
   } catch (error) {
     console.error(`Stock history fetch error for ${symbol} with range ${timeRange}:`, error);
     return [];

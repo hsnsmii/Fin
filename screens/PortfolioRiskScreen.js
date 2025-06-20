@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   View, Text, ActivityIndicator, StyleSheet, TouchableOpacity, Modal,
   Dimensions, ScrollView, SafeAreaView, Alert, TextInput
@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { PieChart } from 'react-native-chart-kit';
 import { getStockHistory, getStockDetails } from '../services/fmpApi';
 import { API_BASE_URL, ML_BASE_URL } from '../services/config';
-import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 const AppColors = {
   background: '#F8F9FA',          
@@ -234,11 +234,8 @@ const PortfolioRiskScreen = () => {
     initialFetch();
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      initialFetch();
-    }, [])
-  );
+  // Only fetch once when the screen mounts to avoid excessive network calls
+  // Previously this ran on every focus, causing delays
 
   // Portföy risk verisi
   const fetchPortfolioRisk = async (stocks) => {
